@@ -65,6 +65,13 @@ android {
     includeInApk = false
     includeInBundle = true
   }
+  // The in-app language switch needs every locale on-device: never let
+  // Play strip values-bn from English-system installs.
+  bundle {
+    language {
+      enableSplit = false
+    }
+  }
 }
 
 ksp {

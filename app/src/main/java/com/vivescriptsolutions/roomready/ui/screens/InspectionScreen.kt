@@ -54,6 +54,7 @@ import com.vivescriptsolutions.roomready.ui.components.CalmSectionCard
 import com.vivescriptsolutions.roomready.ui.components.EvidencePhotoThumbnail
 import com.vivescriptsolutions.roomready.ui.components.RoomStatusChip
 import com.vivescriptsolutions.roomready.ui.components.localizedChecklistStepTitle
+import com.vivescriptsolutions.roomready.ui.locale.digitString
 import com.vivescriptsolutions.roomready.ui.viewmodel.RoomDetailUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,7 +83,7 @@ fun InspectionScreen(
         title = {
           Text(
             text =
-              if (room != null) stringResource(R.string.inspection_title_format, room.name)
+              if (room != null) digitString(R.string.inspection_title_format, room.name)
               else stringResource(R.string.app_name),
             style = MaterialTheme.typography.titleLarge,
           )
@@ -135,7 +136,7 @@ fun InspectionScreen(
           Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
               text =
-                stringResource(
+                digitString(
                   R.string.inspection_elapsed_format,
                   ChecklistTemplates.formatElapsed(elapsedMillis.coerceAtLeast(0L)),
                 ),

@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.vivescriptsolutions.roomready.domain.AppLanguage
 import com.vivescriptsolutions.roomready.domain.ConnectionMode
 import com.vivescriptsolutions.roomready.domain.StaffRole
 import kotlinx.coroutines.flow.Flow
@@ -52,6 +53,9 @@ class UserPreferencesRepository(private val context: Context) {
     val CUSTOM_STAFF_NAMES = stringSetPreferencesKey("custom_staff_names")
     val CONNECTION_MODE = stringPreferencesKey("connection_mode")
     val PMS_BASE_URL = stringPreferencesKey("pms_base_url")
+    val APP_LANGUAGE = stringPreferencesKey("app_language")
+    val NOTIFICATIONS_ASKED = booleanPreferencesKey("notifications_asked")
+    val STUCK_NOTIFIED_RUN_IDS = stringSetPreferencesKey("stuck_notified_run_ids")
   }
 
   val sessionFlow: Flow<UserSession> =
@@ -126,6 +130,36 @@ class UserPreferencesRepository(private val context: Context) {
   suspend fun setBaseUrl(baseUrl: String) {
     context.roomReadyDataStore.edit { prefs ->
       prefs[Keys.PMS_BASE_URL] = baseUrl.trim().trimEnd('/')
+    }
+  }
+
+  fun observeAppLanguage(): Flow<AppLanguage> =
+    context.roomReadyDataStore.data.map { prefs ->
+      prefs[Keys.APP_LANGUAGE]?.let { raw ->
+        runCatching { AppLanguage.valueOf(raw) }.getOrNull()
+      } ?: AppLanguage.SYSTEM
+    }
+
+  suspend fun appLanguage(): AppLanguage = observeAppLanguage().first()
+
+  suspend fun setAppLanguage(language: AppLanguage) {
+    context.roomReadyDataStore.edit { prefs -> prefs[Keys.APP_LANGUAGE] = language.name }
+  }
+
+  suspend fun notificationsAsked(): Boolean =
+    context.roomReadyDataStore.data.first()[Keys.NOTIFICATIONS_ASKED] ?: false
+
+  suspend fun markNotificationsAsked() {
+    context.roomReadyDataStore.edit { prefs -> prefs[Keys.NOTIFICATIONS_ASKED] = true }
+  }
+
+  suspend fun stuckNotifiedRunIds(): Set<Long> =
+    context.roomReadyDataStore.data.first()[Keys.STUCK_NOTIFIED_RUN_IDS]
+      .orEmpty().mapNotNull { it.toLongOrNull() }.toSet()
+
+  suspend fun setStuckNotifiedRunIds(ids: Set<Long>) {
+    context.roomReadyDataStore.edit { prefs ->
+      prefs[Keys.STUCK_NOTIFIED_RUN_IDS] = ids.map { it.toString() }.toSet()
     }
   }
 }

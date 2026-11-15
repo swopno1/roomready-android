@@ -63,6 +63,7 @@ import com.vivescriptsolutions.roomready.domain.TicketStatus
 import com.vivescriptsolutions.roomready.domain.formatReturnReason
 import com.vivescriptsolutions.roomready.ui.components.CalmSectionCard
 import com.vivescriptsolutions.roomready.ui.components.localizedChecklistStepTitle
+import com.vivescriptsolutions.roomready.ui.locale.digitString
 import com.vivescriptsolutions.roomready.ui.viewmodel.RoomDetailUiState
 import kotlinx.coroutines.delay
 
@@ -116,7 +117,7 @@ fun ChecklistRunScreen(
           Text(
             text =
               if (room != null) {
-                stringResource(R.string.run_title_format, room.name)
+                digitString(R.string.run_title_format, room.name)
               } else {
                 stringResource(R.string.app_name)
               },
@@ -260,7 +261,7 @@ fun ChecklistRunScreen(
                 color = MaterialTheme.colorScheme.onSurface,
               )
               Text(
-                text = stringResource(R.string.run_elapsed_format, elapsedText),
+                text = digitString(R.string.run_elapsed_format, elapsedText),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.testTag("run_elapsed_timer"),
@@ -271,7 +272,7 @@ fun ChecklistRunScreen(
               modifier = Modifier.fillMaxWidth(),
             )
             Text(
-              text = stringResource(R.string.checklist_progress_format, doneCount, steps.size),
+              text = digitString(R.string.checklist_progress_format, doneCount, steps.size),
               style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
               color = MaterialTheme.colorScheme.primary,
               modifier = Modifier.testTag("run_progress_text"),
@@ -311,7 +312,7 @@ fun ChecklistRunScreen(
         }
         if (!canFinish) {
           Text(
-            text = stringResource(R.string.run_finish_locked_hint, steps.size),
+            text = digitString(R.string.run_finish_locked_hint, steps.size),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp),

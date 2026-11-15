@@ -42,12 +42,16 @@ We practice strict data minimization:
 - **No Account System:** The Application has no sign-in or registration.
 - **Minimal Permissions:** We request no Microphone, Location,
   Contacts, SMS, Phone State, Storage, Calendar, or Nearby Devices
-  permission. Three permissions are declared: the normal-level
+  permission. Four permissions are declared: the normal-level
   `ACCESS_NETWORK_STATE` (dashboard connectivity indicator only),
   `CAMERA`, requested at first photo use with a plain-language
-  explanation, solely for optional in-app evidence photos, and
+  explanation, solely for optional in-app evidence photos,
   `INTERNET`, used only for opt-in Live-mode PMS sync (§3) to the
-  server address you configure, over HTTPS only. Photos stay in
+  server address you configure, over HTTPS only, and
+  `POST_NOTIFICATIONS` (runtime on Android 13+, asked once after
+  your first finished clean), used only for on-device cleaning
+  alerts — no push service, no data leaves the phone for alerts.
+  Photos stay in
   app-private storage and are shared only if you tap share (system
   share sheet via FileProvider); sync never transmits photos. The
   merged release manifest otherwise contains only the app's own

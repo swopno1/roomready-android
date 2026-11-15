@@ -57,6 +57,7 @@ import com.vivescriptsolutions.roomready.domain.TicketStatus
 import com.vivescriptsolutions.roomready.ui.components.CalmSectionCard
 import com.vivescriptsolutions.roomready.ui.components.EvidencePhotoThumbnail
 import com.vivescriptsolutions.roomready.ui.components.formatTimeShort
+import com.vivescriptsolutions.roomready.ui.locale.digitString
 import com.vivescriptsolutions.roomready.ui.theme.badgeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,7 +103,7 @@ fun TicketCreateSheet(
           onExpandedChange = { if (fixedRoomId == null) roomExpanded = it },
         ) {
           OutlinedTextField(
-            value = selectedRoom?.let { stringResource(R.string.room_title_format, it.name) }.orEmpty(),
+            value = selectedRoom?.let { digitString(R.string.room_title_format, it.name) }.orEmpty(),
             onValueChange = {},
             readOnly = true,
             enabled = fixedRoomId == null,
@@ -120,7 +121,7 @@ fun TicketCreateSheet(
               DropdownMenuItem(
                 text = {
                   Text(
-                    text = stringResource(R.string.room_title_format, room.name),
+                    text = digitString(R.string.room_title_format, room.name),
                     style = MaterialTheme.typography.bodyLarge,
                   )
                 },

@@ -3,10 +3,10 @@
     <string name="app_name">RoomReady</string>
 
     <!-- Branding & Demo Notice -->
-    <string name="demo_resort_name">Sundarban Palms</string>
+    <string name="demo_resort_name">সুন্দরবন পামস</string>
     <string name="demo_mode_badge">ডেমো</string>
     <string name="demo_mode_banner_title">ডেমো রিসোর্ট মোড</string>
-    <string name="demo_mode_banner_subtitle">বিমান মোডেও RoomReady ব্যবহার করে দেখতে ৩ ধরনের ১২টি নমুনা রুম লোড করা আছে।</string>
+    <string name="demo_mode_banner_subtitle">চেষ্টা করার জন্য ১২টি নমুনা রুম। ইন্টারনেট ছাড়াই চলে।</string>
     <string name="offline_badge">অফলাইন</string>
     <string name="app_tagline">ছোট রিসোর্টের জন্য শান্ত, অফলাইন-ফার্স্ট হাউসকিপিং</string>
 
@@ -22,7 +22,7 @@
     <string name="role_housekeeper_desc">রুম পরিষ্কার করুন, ৮ ধাপের চেকলিস্ট সম্পন্ন করুন এবং রুম পরিদর্শনে পাঠান।</string>
     <string name="role_supervisor_desc">সমাপ্ত রুম পরিদর্শন করুন, প্রস্তুত অবস্থা অনুমোদন করুন এবং বন্ধ রুম পরিচালনা করুন।</string>
     <string name="role_system">সিস্টেম</string>
-    <string name="role_system_desc">স্বয়ংক্রিয় PMS সিঙ্ক সিদ্ধান্ত।</string>
+    <string name="role_system_desc">সিঙ্কের লেখা নোট।</string>
 
     <!-- Room Statuses -->
     <string name="status_all">সব</string>
@@ -34,9 +34,9 @@
     <string name="filter_count_format">%1$s (%2$d)</string>
 
     <!-- Room Types & Floors -->
-    <string name="room_type_deluxe_king">Deluxe King</string>
-    <string name="room_type_family_suite">Family Suite</string>
-    <string name="room_type_garden_cottage">Garden Cottage</string>
+    <string name="room_type_deluxe_king">ডিলাক্স কিং</string>
+    <string name="room_type_family_suite">ফ্যামিলি স্যুট</string>
+    <string name="room_type_garden_cottage">গার্ডেন কটেজ</string>
     <string name="floor_ground">নিচতলা উইং</string>
     <string name="floor_block_format">ব্লক %1$s</string>
     <string name="floor_unknown">—</string>
@@ -151,6 +151,15 @@
     <string name="step_stayover_beds_made">বিছানা গোছানো</string>
     <string name="step_stayover_towels">তোয়ালে</string>
     <string name="step_stayover_bins">ডাস্টবিন</string>
+    <!-- PMS contract steps (display names for the fixed Live-mode sentences) -->
+    <string name="step_pms_bed_linen">বিছানার চাদর বদলান</string>
+    <string name="step_pms_towels">পরিষ্কার তোয়ালে ও টয়লেট্রিজ</string>
+    <string name="step_pms_floors">মেঝে ভ্যাকুয়াম ও মোছা</string>
+    <string name="step_pms_bathroom">বাথরুম ভালোভাবে পরিষ্কার</string>
+    <string name="step_pms_minibar">মিনিবার দেখুন ও ভরে দিন</string>
+    <string name="step_pms_ac_power">এসি, বাতি ও সকেট দেখুন</string>
+    <string name="step_pms_balcony">বারান্দা গুছিয়ে রাখুন</string>
+    <string name="step_pms_walkthrough">শেষবার ঘুরে দেখুন</string>
 
     <!-- Turnover Checklist Run -->
     <string name="run_title_format">রুম %1$s পরিষ্কার চলছে</string>
@@ -160,7 +169,7 @@
     <string name="run_started_by_format">শুরু করেছেন %1$s</string>
     <string name="run_pause">বিরতি</string>
     <string name="run_finish">সমাপ্ত — পরিদর্শনে পাঠান</string>
-    <string name="run_finish_locked_hint">সমাপ্ত চালু করতে সব %1$dটি ধাপ চেক করুন। কোনো বিকল্প পথ নেই।</string>
+    <string name="run_finish_locked_hint">সমাপ্ত চালু করতে সব %1$dটি ধাপ চেক করুন।</string>
     <string name="run_finished_snackbar">পরিষ্কার সম্পন্ন — রুম পরিদর্শনে পাঠানো হয়েছে</string>
     <string name="action_resume_cleaning">পরিষ্কার আবার শুরু করুন</string>
     <string name="template_picker_title">পরিষ্কারের ধরন বেছে নিন</string>
@@ -206,13 +215,13 @@
 
     <!-- Tickets Tab (Placeholder + Live Local Tickets) -->
     <string name="tickets_header_title">রক্ষণাবেক্ষণ ও টিকিট</string>
-    <string name="tickets_placeholder_note">টিকিট বরাদ্দ ও ছবি সংযুক্তি ভবিষ্যতে আসছে। এই ডিভাইসে সংরক্ষিত টিকিট নিচে দেখা যাবে।</string>
+    <string name="tickets_placeholder_note">এই ফোনে সংরক্ষণ করা টিকিট নিচে দেখা যাবে।</string>
     <string name="tickets_empty_state">এখনো কোনো টিকিট নেই। সমস্যা জানাতে যেকোনো রুম খুলুন।</string>
     <string name="tickets_room_badge_format">রুম %1$s</string>
 
     <!-- Dashboard Tab (Placeholder + Live Local Counts) -->
     <string name="dashboard_header_title">রিসোর্টের চিত্র</string>
-    <string name="dashboard_placeholder_note">টার্নঅ্যারাউন্ড টাইমার ও PMS সিঙ্ক ভবিষ্যতে আসছে। বাকি সব নিচে আপনার ডাটাবেস থেকে সরাসরি দেখা যাবে।</string>
+    <string name="dashboard_placeholder_note">নিচের সব তথ্য এই ফোন থেকে সরাসরি আসে।</string>
     <string name="dashboard_total_rooms_label">মোট ডেমো রুম</string>
     <string name="dashboard_recent_activity">সাম্প্রতিক অবস্থার কার্যক্রম</string>
     <string name="dashboard_no_activity">কোনো সাম্প্রতিক অবস্থার পরিবর্তন নেই।</string>
@@ -227,16 +236,20 @@
 
     <!-- Me Tab -->
     <string name="me_header_title">শিফট প্রোফাইল</string>
+    <string name="language_title">ভাষা</string>
+    <string name="language_english">English</string>
+    <string name="language_bangla">বাংলা</string>
+    <string name="language_system">ফোনের ভাষা</string>
     <string name="me_active_staff_format">সক্রিয় কর্মী: %1$s</string>
     <string name="staff_role_header_format">%1$s · %2$s</string>
     <string name="ticket_meta_format">%1$s · %2$s · %3$s</string>
     <string name="dashboard_log_room_format">%1$s · %2$s</string>
     <string name="me_switch_role_title">ভূমিকা বদলান</string>
     <string name="me_who_are_you_title">আপনি কে?</string>
-    <string name="me_offline_card_title">১০০% অফলাইন লোকাল স্টোরেজ</string>
-    <string name="me_offline_card_body">সব রুম, চেকলিস্ট, টিকিট ও অবস্থার লগ Room ও DataStore-এ সংরক্ষিত থাকে। বিমান মোড সম্পূর্ণ সমর্থিত; PMS সিঙ্ক ঐচ্ছিক এবং পরে আসছে।</string>
+    <string name="me_offline_card_title">এই ফোনে সংরক্ষিত</string>
+    <string name="me_offline_card_body">সব রুম, চেকলিস্ট, টিকিট ও লগ এই ফোনেই থাকে। বিমান মোডে চলে। PMS সিঙ্ক ঐচ্ছিক — PMS সংযোগ থেকে চালু করুন।</string>
     <string name="me_demo_section_title">ডেমো রিসোর্ট ডাটা</string>
-    <string name="me_demo_section_body">বর্তমানে Sundarban Palms-এর ডেমো মোড চলছে (Deluxe King, Family Suite ও Garden Cottage-এর ১২টি রুম)।</string>
+    <string name="me_demo_section_body">%1$s-এর ডেমো মোড · ১২টি নমুনা রুম।</string>
     <string name="me_reset_demo_button">ডেমো ডাটা রিসেট করুন</string>
     <string name="me_reset_dialog_title">ডেমো ডাটা রিসেট করবেন?</string>
     <string name="me_reset_dialog_body">এতে ১২টি ডেমো রুম, চেকলিস্ট, টিকিট ও অবস্থার লগ শুরুর অবস্থায় ফিরে যাবে।</string>
@@ -248,7 +261,7 @@
     <string name="connection_row_title">PMS সংযোগ</string>
     <string name="connection_mode_demo">ডেমো</string>
     <string name="connection_mode_live">লাইভ</string>
-    <string name="connection_demo_body">বান্ডিল স্ন্যাপশট। শূন্য নেটওয়ার্ক — সব অফলাইনে চলে।</string>
+    <string name="connection_demo_body">এই ফোনে ডেমো রুম। ইন্টারনেট লাগে না।</string>
     <string name="connection_url_label">PMS অরিজিন (https://…)</string>
     <string name="connection_url_hint">https://demo13.vivereply.com</string>
     <string name="connection_key_label">প্রপার্টি API কি</string>
@@ -260,9 +273,25 @@
     <string name="connection_status_synced_format">সর্বশেষ সিঙ্ক %1$s · %2$sটি অপেক্ষমাণ</string>
     <string name="connection_status_syncing">সিঙ্ক হচ্ছে…</string>
     <string name="connection_status_error_format">সর্বশেষ সিঙ্ক ব্যর্থ: %1$s</string>
-    <string name="connection_saved">সংযুক্ত — স্ন্যাপশট ডাউনলোড হয়েছে।</string>
+    <string name="connection_saved">সংযুক্ত হয়েছে। রুম ডাউনলোড হয়েছে।</string>
     <string name="connection_save_failed_format">সংযোগ করা যায়নি: %1$s</string>
     <string name="connection_unauthorized">কি প্রত্যাখ্যাত হয়েছে। নতুন প্রপার্টি API কি দিন।</string>
-    <string name="connection_update_required_format">এই প্রপার্টির জন্য কন্ট্রাক্ট v%1$d দরকার — অ্যাপ আপডেট করুন। কিছুই বদলানো হয়নি।</string>
+    <string name="connection_update_required">এই প্রপার্টির জন্য নতুন RoomReady দরকার। অ্যাপ আপডেট করুন — কিছুই বদলানো হয়নি।</string>
     <string name="connection_property_format">%1$s · ব্যবসায়িক তারিখ %2$s</string>
+
+    <!-- Local Notifications -->
+    <string name="notif_channel_attention">মনোযোগ দরকার</string>
+    <string name="notif_channel_attention_desc">ফেরত আসা রুম ও জরুরি টিকিট।</string>
+    <string name="notif_channel_reminders">পরিষ্কারের অনুস্মারক</string>
+    <string name="notif_channel_reminders_desc">দীর্ঘক্ষণ চলা পরিষ্কারের অনুস্মারক।</string>
+    <string name="notif_returned_title">রুম %1$s আবার পরিষ্কার করতে হবে</string>
+    <string name="notif_returned_text">রুম %1$s আবার পরিষ্কার করতে হবে: %2$s</string>
+    <string name="notif_urgent_title">রুম %1$s-এ জরুরি সমস্যা</string>
+    <string name="notif_urgent_text">%1$s</string>
+    <string name="notif_stuck_title">রুম %1$s এখনো পরিষ্কার হচ্ছে</string>
+    <string name="notif_stuck_text">পরিষ্কার ৬০ মিনিটের বেশি চলছে।</string>
+    <string name="notif_prompt_title">পরিষ্কারের সতর্কবার্তা পাবেন?</string>
+    <string name="notif_prompt_body">রুম ফেরত এলে, জরুরি টিকিট এলে বা পরিষ্কার দীর্ঘ হলে RoomReady এখানে মনে করিয়ে দিতে পারে। সিস্টেম সেটিংস থেকে যেকোনো সময় বন্ধ করতে পারবেন।</string>
+    <string name="notif_prompt_allow">সতর্কবার্তা চালু করুন</string>
+    <string name="notif_prompt_later">এখন নয়</string>
 </resources>

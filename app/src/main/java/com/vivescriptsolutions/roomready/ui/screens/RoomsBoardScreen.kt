@@ -49,6 +49,7 @@ import com.vivescriptsolutions.roomready.ui.components.DemoModePill
 import com.vivescriptsolutions.roomready.ui.components.OfflineReadyPill
 import com.vivescriptsolutions.roomready.ui.components.RoomStatusChip
 import com.vivescriptsolutions.roomready.ui.components.formatTimeShort
+import com.vivescriptsolutions.roomready.ui.locale.digitString
 import com.vivescriptsolutions.roomready.ui.components.localizedFloorLabel
 import com.vivescriptsolutions.roomready.ui.components.localizedRoomTypeName
 import com.vivescriptsolutions.roomready.ui.theme.colorSpec
@@ -186,7 +187,7 @@ fun RoomsBoardScreen(
             label = {
               Text(
                 text =
-                  stringResource(
+                  digitString(
                     R.string.filter_count_format,
                     stringResource(R.string.status_all),
                     uiState.allRooms.size,
@@ -214,7 +215,7 @@ fun RoomsBoardScreen(
             label = {
               Text(
                 text =
-                  stringResource(
+                  digitString(
                     R.string.filter_count_format,
                     stringResource(status.labelRes),
                     count,
@@ -244,7 +245,7 @@ fun RoomsBoardScreen(
 
       Text(
         text =
-          stringResource(
+          digitString(
             R.string.rooms_summary_format,
             uiState.filteredRooms.size,
             uiState.allRooms.size,
@@ -341,7 +342,7 @@ private fun RoomCard(
       ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
           Text(
-            text = stringResource(R.string.room_title_format, room.name),
+            text = digitString(R.string.room_title_format, room.name),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface,
           )
@@ -412,7 +413,7 @@ private fun RoomCard(
               modifier = Modifier.testTag("room_urgent_badge_${room.name}"),
             ) {
               Text(
-                text = stringResource(R.string.urgent_badge_format, urgentOpenCount),
+                text = digitString(R.string.urgent_badge_format, urgentOpenCount),
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
               )
@@ -435,7 +436,7 @@ private fun RoomCard(
                   modifier = Modifier.size(14.dp),
                 )
                 Text(
-                  text = stringResource(R.string.open_tickets_badge_format, openTicketCount),
+                  text = digitString(R.string.open_tickets_badge_format, openTicketCount),
                   style = MaterialTheme.typography.labelMedium,
                 )
               }

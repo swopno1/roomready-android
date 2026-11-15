@@ -6,7 +6,7 @@
     <string name="demo_resort_name">Sundarban Palms</string>
     <string name="demo_mode_badge">DEMO</string>
     <string name="demo_mode_banner_title">Demo Resort Mode</string>
-    <string name="demo_mode_banner_subtitle">12 sample rooms across 3 room types are loaded locally so you can try RoomReady in airplane mode.</string>
+    <string name="demo_mode_banner_subtitle">12 sample rooms to try. Works with no internet.</string>
     <string name="offline_badge">Offline-ready</string>
     <string name="app_tagline">Calm, offline-first housekeeping for small resorts</string>
 
@@ -22,7 +22,7 @@
     <string name="role_housekeeper_desc">Clean rooms, complete the 8-step checklist, and send rooms to inspection.</string>
     <string name="role_supervisor_desc">Inspect finished rooms, approve Ready status, and manage out-of-service rooms.</string>
     <string name="role_system">System</string>
-    <string name="role_system_desc">Automated PMS sync decisions.</string>
+    <string name="role_system_desc">Notes written by sync.</string>
 
     <!-- Room Statuses -->
     <string name="status_all">All</string>
@@ -151,6 +151,15 @@
     <string name="step_stayover_beds_made">Beds made</string>
     <string name="step_stayover_towels">Towels</string>
     <string name="step_stayover_bins">Bins</string>
+    <!-- PMS contract steps (display names for the fixed Live-mode sentences) -->
+    <string name="step_pms_bed_linen">Change bed linen</string>
+    <string name="step_pms_towels">Fresh towels &amp; toiletries</string>
+    <string name="step_pms_floors">Vacuum &amp; mop floors</string>
+    <string name="step_pms_bathroom">Bathroom deep clean</string>
+    <string name="step_pms_minibar">Check minibar &amp; restock</string>
+    <string name="step_pms_ac_power">AC, lights &amp; sockets check</string>
+    <string name="step_pms_balcony">Balcony / veranda tidy</string>
+    <string name="step_pms_walkthrough">Final walkthrough</string>
 
     <!-- Turnover Checklist Run -->
     <string name="run_title_format">Cleaning Room %1$s</string>
@@ -160,7 +169,7 @@
     <string name="run_started_by_format">Started by %1$s</string>
     <string name="run_pause">Pause</string>
     <string name="run_finish">Finish — send to inspection</string>
-    <string name="run_finish_locked_hint">Check all %1$d steps to enable Finish. There is no override.</string>
+    <string name="run_finish_locked_hint">Check all %1$d steps to turn on Finish.</string>
     <string name="run_finished_snackbar">Cleaning finished — room sent to inspection</string>
     <string name="action_resume_cleaning">Resume cleaning</string>
     <string name="template_picker_title">Choose cleaning type</string>
@@ -206,13 +215,13 @@
 
     <!-- Tickets Tab (Placeholder + Live Local Tickets) -->
     <string name="tickets_header_title">Maintenance &amp; Tickets</string>
-    <string name="tickets_placeholder_note">Full ticket assignment and photo attachments are coming in a future pass. Local tickets saved on this device appear below.</string>
+    <string name="tickets_placeholder_note">Tickets you save on this phone appear below.</string>
     <string name="tickets_empty_state">No tickets logged yet. Open any room to report an issue.</string>
     <string name="tickets_room_badge_format">Room %1$s</string>
 
     <!-- Dashboard Tab (Placeholder + Live Local Counts) -->
     <string name="dashboard_header_title">Resort Snapshot</string>
-    <string name="dashboard_placeholder_note">Turnaround timers and PMS sync come in a future pass. Everything else below is live from your local database.</string>
+    <string name="dashboard_placeholder_note">Everything below is live from this phone.</string>
     <string name="dashboard_total_rooms_label">Total Demo Rooms</string>
     <string name="dashboard_recent_activity">Recent Status Activity</string>
     <string name="dashboard_no_activity">No recent status changes recorded.</string>
@@ -227,16 +236,20 @@
 
     <!-- Me Tab -->
     <string name="me_header_title">Shift Profile</string>
+    <string name="language_title">Language</string>
+    <string name="language_english">English</string>
+    <string name="language_bangla">বাংলা</string>
+    <string name="language_system">Phone default</string>
     <string name="me_active_staff_format">Active Staff Member: %1$s</string>
     <string name="staff_role_header_format">%1$s · %2$s</string>
     <string name="ticket_meta_format">%1$s · %2$s · %3$s</string>
     <string name="dashboard_log_room_format">%1$s · %2$s</string>
     <string name="me_switch_role_title">Switch Role</string>
     <string name="me_who_are_you_title">Who are you?</string>
-    <string name="me_offline_card_title">100% Offline Local Storage</string>
-    <string name="me_offline_card_body">All rooms, checklists, tickets, and status logs are saved locally in Room &amp; DataStore. Airplane mode is fully supported; PMS sync is optional and comes later.</string>
+    <string name="me_offline_card_title">Saved on this phone</string>
+    <string name="me_offline_card_body">All rooms, checklists, tickets, and logs stay on this phone. Airplane mode works. PMS sync is optional — turn it on in PMS Connection.</string>
     <string name="me_demo_section_title">Demo Resort Data</string>
-    <string name="me_demo_section_body">Currently running Demo Mode for Sundarban Palms (12 rooms across Deluxe King, Family Suite, and Garden Cottage).</string>
+    <string name="me_demo_section_body">Demo Mode for %1$s · 12 sample rooms.</string>
     <string name="me_reset_demo_button">Reset Demo Data</string>
     <string name="me_reset_dialog_title">Reset Demo Data?</string>
     <string name="me_reset_dialog_body">This will restore the 12 demo rooms, checklists, tickets, and status logs back to their starting state.</string>
@@ -248,7 +261,7 @@
     <string name="connection_row_title">PMS Connection</string>
     <string name="connection_mode_demo">Demo</string>
     <string name="connection_mode_live">Live</string>
-    <string name="connection_demo_body">Bundled snapshot. Zero network — everything works offline.</string>
+    <string name="connection_demo_body">Demo rooms on this phone. No internet needed.</string>
     <string name="connection_url_label">PMS origin (https://…)</string>
     <string name="connection_url_hint">https://demo13.vivereply.com</string>
     <string name="connection_key_label">Property API key</string>
@@ -260,9 +273,25 @@
     <string name="connection_status_synced_format">Last synced %1$s · %2$s pending</string>
     <string name="connection_status_syncing">Syncing…</string>
     <string name="connection_status_error_format">Last sync failed: %1$s</string>
-    <string name="connection_saved">Connected — snapshot downloaded.</string>
+    <string name="connection_saved">Connected. Rooms downloaded.</string>
     <string name="connection_save_failed_format">Could not connect: %1$s</string>
     <string name="connection_unauthorized">The key was rejected. Enter a new property API key.</string>
-    <string name="connection_update_required_format">This property needs contract v%1$d — please update the app. Nothing was changed.</string>
+    <string name="connection_update_required">This property needs a newer RoomReady. Please update the app — nothing was changed.</string>
     <string name="connection_property_format">%1$s · business date %2$s</string>
+
+    <!-- Local Notifications -->
+    <string name="notif_channel_attention">Needs attention</string>
+    <string name="notif_channel_attention_desc">Returned rooms and urgent tickets.</string>
+    <string name="notif_channel_reminders">Cleaning reminders</string>
+    <string name="notif_channel_reminders_desc">Reminders for cleans running long.</string>
+    <string name="notif_returned_title">Room %1$s needs re-cleaning</string>
+    <string name="notif_returned_text">Room %1$s needs re-cleaning: %2$s</string>
+    <string name="notif_urgent_title">Urgent issue in Room %1$s</string>
+    <string name="notif_urgent_text">%1$s</string>
+    <string name="notif_stuck_title">Room %1$s is still cleaning</string>
+    <string name="notif_stuck_text">Cleaning has run over 60 minutes.</string>
+    <string name="notif_prompt_title">Get cleaning alerts?</string>
+    <string name="notif_prompt_body">RoomReady can remind you here when a room is returned, an urgent ticket arrives, or a clean runs long. You can turn this off anytime in system Settings.</string>
+    <string name="notif_prompt_allow">Allow alerts</string>
+    <string name="notif_prompt_later">Not now</string>
 </resources>

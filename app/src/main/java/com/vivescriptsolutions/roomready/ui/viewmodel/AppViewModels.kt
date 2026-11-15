@@ -14,6 +14,7 @@ import com.vivescriptsolutions.roomready.data.local.StatusLogEntity
 import com.vivescriptsolutions.roomready.data.local.TicketEntity
 import com.vivescriptsolutions.roomready.data.preferences.UserSession
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
+import com.vivescriptsolutions.roomready.domain.AppLanguage
 import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
 import com.vivescriptsolutions.roomready.domain.ConnectionMode
@@ -41,6 +42,7 @@ import com.vivescriptsolutions.roomready.domain.TicketPriority
 import com.vivescriptsolutions.roomready.domain.TicketStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -98,7 +100,7 @@ sealed interface ConnectionMessage {
 
   data object Unauthorized : ConnectionMessage
 
-  data class UpdateRequired(val foundVersion: Int?) : ConnectionMessage
+  data object UpdateRequired : ConnectionMessage
 }
 
 data class ConnectionUiState(
@@ -337,6 +339,20 @@ class MainAppViewModel(
     viewModelScope.launch { repository.switchStaffName(staffName) }
   }
 
+  val appLanguage: StateFlow<AppLanguage> =
+    repository.observeAppLanguage().stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(5000),
+      initialValue = AppLanguage.SYSTEM,
+    )
+
+  fun setAppLanguage(language: AppLanguage, onSaved: () -> Unit = {}) {
+    viewModelScope.launch {
+      repository.setAppLanguage(language)
+      onSaved()
+    }
+  }
+
   fun setTicketFilter(status: TicketStatus?) {
     selectedTicketFilter.value = status
   }
@@ -390,6 +406,14 @@ class RoomDetailViewModel(
   private val repository: HousekeepingRepository,
 ) : ViewModel() {
   private val actionError = MutableStateFlow<String?>(null)
+
+  /**
+   * One-shot notification-permission prompt: raised after a successful
+   * finish (first value) when never asked; cleared on dismiss. The
+   * route shows the rationale dialog and the system prompt.
+   */
+  private val _notificationPrompt = MutableStateFlow(false)
+  val notificationPrompt: StateFlow<Boolean> = _notificationPrompt.asStateFlow()
 
   private val detailCore: StateFlow<RoomDetailUiState> =
     combine(
@@ -479,8 +503,24 @@ class RoomDetailViewModel(
           staffName = staffName,
           role = role,
         )
-        .onSuccess { onFinished() }
+        .onSuccess {
+          onFinished()
+          maybePromptNotifications()
+        }
         .onFailure { error -> actionError.value = error.message }
+    }
+  }
+
+  fun dismissNotificationPrompt() {
+    viewModelScope.launch {
+      repository.markNotificationsAsked()
+      _notificationPrompt.value = false
+    }
+  }
+
+  private suspend fun maybePromptNotifications() {
+    if (!repository.notificationsAsked()) {
+      _notificationPrompt.value = true
     }
   }
 
@@ -539,6 +579,9 @@ class RoomDetailViewModel(
           staffName = staffName,
           role = role,
         )
+        .onSuccess {
+          if (toStatus == RoomStatus.CLEANED) maybePromptNotifications()
+        }
         .onFailure { error -> actionError.value = error.message }
     }
   }
@@ -694,7 +737,7 @@ class ConnectionViewModel(
             is BootstrapOutcome.Applied -> ConnectionMessage.Saved
             is BootstrapOutcome.Unauthorized -> ConnectionMessage.Unauthorized
             is BootstrapOutcome.UpdateRequired ->
-              ConnectionMessage.UpdateRequired(outcome.foundVersion)
+              ConnectionMessage.UpdateRequired
             is BootstrapOutcome.Failed -> ConnectionMessage.Failed(outcome.reason)
           }
       } finally {

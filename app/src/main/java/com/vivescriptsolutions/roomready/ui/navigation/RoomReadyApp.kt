@@ -1,6 +1,12 @@
 package com.vivescriptsolutions.roomready.ui.navigation
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,6 +36,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -52,8 +59,15 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.vivescriptsolutions.roomready.R
+import com.vivescriptsolutions.roomready.data.notifications.RoomDeepLink
+import com.vivescriptsolutions.roomready.data.preferences.UserSession
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
 import com.vivescriptsolutions.roomready.data.sync.SyncRepository
+import com.vivescriptsolutions.roomready.domain.AppLanguage
+import com.vivescriptsolutions.roomready.ui.locale.LocalBanglaDigits
+import com.vivescriptsolutions.roomready.ui.locale.findActivity
+import com.vivescriptsolutions.roomready.ui.locale.isBanglaUi
+import com.vivescriptsolutions.roomready.ui.locale.localizedDigits
 import com.vivescriptsolutions.roomready.ui.screens.ChecklistRunScreen
 import com.vivescriptsolutions.roomready.ui.screens.ConnectionScreen
 import com.vivescriptsolutions.roomready.ui.screens.DashboardScreen
@@ -73,6 +87,7 @@ import com.vivescriptsolutions.roomready.ui.viewmodel.ConnectionViewModel
 import com.vivescriptsolutions.roomready.ui.viewmodel.MainAppViewModel
 import com.vivescriptsolutions.roomready.ui.viewmodel.RoomDetailViewModel
 import com.vivescriptsolutions.roomready.ui.viewmodel.TicketDetailViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 
 object Routes {
@@ -127,12 +142,39 @@ fun RoomReadyApp(
   repository: HousekeepingRepository,
   connectivityMonitor: ConnectivityMonitor,
   syncRepository: SyncRepository,
+  deepLinkChannel: Channel<RoomDeepLink> = Channel(Channel.BUFFERED),
 ) {
   val mainViewModel: MainAppViewModel =
     viewModel(factory = MainAppViewModel.Factory(repository, connectivityMonitor))
   val session by mainViewModel.sessionState.collectAsStateWithLifecycle()
   val isInitialized by mainViewModel.isAppInitialized.collectAsStateWithLifecycle()
+  val appLanguage by mainViewModel.appLanguage.collectAsStateWithLifecycle()
 
+  CompositionLocalProvider(LocalBanglaDigits provides isBanglaUi(appLanguage)) {
+    RoomReadyContent(
+      repository = repository,
+      connectivityMonitor = connectivityMonitor,
+      syncRepository = syncRepository,
+      mainViewModel = mainViewModel,
+      session = session,
+      isInitialized = isInitialized,
+      appLanguage = appLanguage,
+      deepLinkChannel = deepLinkChannel,
+    )
+  }
+}
+
+@Composable
+private fun RoomReadyContent(
+  repository: HousekeepingRepository,
+  connectivityMonitor: ConnectivityMonitor,
+  syncRepository: SyncRepository,
+  mainViewModel: MainAppViewModel,
+  session: UserSession,
+  isInitialized: Boolean,
+  appLanguage: AppLanguage,
+  deepLinkChannel: Channel<RoomDeepLink>,
+) {
   if (!isInitialized) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
       CircularProgressIndicator()
@@ -184,6 +226,18 @@ fun RoomReadyApp(
     }
   }
 
+  // Notification taps land on the relevant room or ticket. The channel
+  // delivers each tap once; unknown rooms/tickets fail navigation
+  // silently by popping back (detail screens handle nulls).
+  LaunchedEffect(navController, deepLinkChannel) {
+    for (link in deepLinkChannel) {
+      when (link) {
+        is RoomDeepLink.Room -> navController.navigate(Routes.roomDetail(link.roomId))
+        is RoomDeepLink.Ticket -> navController.navigate(Routes.ticketDetail(link.ticketId))
+      }
+    }
+  }
+
   Scaffold(
     modifier = Modifier.fillMaxSize(),
     containerColor = MaterialTheme.colorScheme.background,
@@ -214,7 +268,7 @@ fun RoomReadyApp(
                   BadgedBox(
                     badge = {
                       Badge(modifier = Modifier.testTag("tickets_nav_urgent_badge")) {
-                        Text(text = ticketsTabState.urgentOpenCount.toString())
+                        Text(text = localizedDigits(ticketsTabState.urgentOpenCount.toString()))
                       }
                     }
                   ) {
@@ -343,6 +397,12 @@ fun RoomReadyApp(
             }
           },
           onOpenConnection = { navController.navigate(Routes.CONNECTION) },
+          appLanguage = appLanguage,
+          onLanguageChange = { language ->
+            mainViewModel.setAppLanguage(language) {
+              context.findActivity()?.recreate()
+            }
+          },
           modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
         )
       }
@@ -378,6 +438,46 @@ fun RoomReadyApp(
           if (error != null) {
             snackbarHostState.showSnackbar(error)
             detailViewModel.clearActionError()
+          }
+        }
+        // Ask-once notification prompt, raised after the first finished
+        // clean. Below API 33 there is nothing to grant: dismiss
+        // silently. Denied = silently off, never re-asked.
+        val showNotifPrompt by detailViewModel.notificationPrompt.collectAsStateWithLifecycle()
+        val notifPermissionLauncher =
+          rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+          ) {
+            detailViewModel.dismissNotificationPrompt()
+          }
+        if (showNotifPrompt) {
+          if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            LaunchedEffect(Unit) { detailViewModel.dismissNotificationPrompt() }
+          } else {
+            AlertDialog(
+              onDismissRequest = { detailViewModel.dismissNotificationPrompt() },
+              title = { Text(text = stringResource(R.string.notif_prompt_title)) },
+              text = { Text(text = stringResource(R.string.notif_prompt_body)) },
+              confirmButton = {
+                TextButton(
+                  onClick = {
+                    notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                  },
+                  modifier = Modifier.testTag("notif_prompt_allow_button"),
+                ) {
+                  Text(text = stringResource(R.string.notif_prompt_allow))
+                }
+              },
+              dismissButton = {
+                TextButton(
+                  onClick = { detailViewModel.dismissNotificationPrompt() },
+                  modifier = Modifier.testTag("notif_prompt_later_button"),
+                ) {
+                  Text(text = stringResource(R.string.notif_prompt_later))
+                }
+              },
+              modifier = Modifier.testTag("notif_prompt_dialog"),
+            )
           }
         }
         RoomDetailScreen(

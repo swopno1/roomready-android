@@ -2,8 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Normal-level: lets the dashboard banner show live online/offline state.
-         The app makes no network requests; nothing is transmitted. -->
+    <!-- Normal-level: lets the dashboard banner show live online/offline state. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- Dangerous: requested at first photo use only, for optional in-app
@@ -14,6 +13,11 @@
     <!-- Talks to the property's own PMS origin only, in Live mode. Demo mode
          makes zero network requests. -->
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Runtime on API 33+: local cleaning alerts only (returns, urgent
+         tickets, stuck reminders). Asked once after the first finished
+         clean; denied means silently off. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".RoomReadyApplication"
@@ -29,6 +33,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.RoomReady"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>

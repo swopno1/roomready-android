@@ -59,6 +59,26 @@ object ChecklistTemplates {
   fun labelResForKey(keyOrTitle: String): Int? =
     ChecklistStepKey.fromKeyOrTitle(keyOrTitle)?.labelRes
       ?: StayoverStepKey.fromKeyOrTitle(keyOrTitle)?.labelRes
+      ?: pmsContractStepRes(keyOrTitle)
+
+  /**
+   * Display mapping for the fixed PMS bootstrap sentences (quoted from
+   * the P7 contract). Unknown sentences return null so the raw server
+   * text still renders.
+   */
+  @StringRes
+  private fun pmsContractStepRes(sentence: String): Int? =
+    when (sentence.trim()) {
+      "Change bed linen" -> R.string.step_pms_bed_linen
+      "Fresh towels & toiletries" -> R.string.step_pms_towels
+      "Vacuum & mop floors" -> R.string.step_pms_floors
+      "Bathroom deep clean" -> R.string.step_pms_bathroom
+      "Check minibar & restock" -> R.string.step_pms_minibar
+      "AC, lights & sockets check" -> R.string.step_pms_ac_power
+      "Balcony / veranda tidy" -> R.string.step_pms_balcony
+      "Final walkthrough" -> R.string.step_pms_walkthrough
+      else -> null
+    }
 
   fun doneCount(steps: List<ChecklistStepState>): Int = steps.count { it.isDone }
 

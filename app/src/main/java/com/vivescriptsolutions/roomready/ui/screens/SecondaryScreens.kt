@@ -29,6 +29,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -50,6 +53,7 @@ import com.vivescriptsolutions.roomready.data.preferences.UserSession
 import com.vivescriptsolutions.roomready.data.repository.BannerTone
 import com.vivescriptsolutions.roomready.data.repository.offlineBannerTone
 import com.vivescriptsolutions.roomready.domain.RoomStatus
+import com.vivescriptsolutions.roomready.domain.AppLanguage
 import com.vivescriptsolutions.roomready.domain.StaffRole
 import com.vivescriptsolutions.roomready.domain.TicketPriority
 import com.vivescriptsolutions.roomready.domain.TicketStatus
@@ -60,6 +64,8 @@ import com.vivescriptsolutions.roomready.ui.components.RoomStatusChip
 import com.vivescriptsolutions.roomready.ui.components.SectionHeading
 import com.vivescriptsolutions.roomready.ui.components.StaffPickerSection
 import com.vivescriptsolutions.roomready.ui.components.formatTimeShort
+import com.vivescriptsolutions.roomready.ui.locale.digitString
+import com.vivescriptsolutions.roomready.ui.locale.localizedDigits
 import com.vivescriptsolutions.roomready.ui.theme.StatusReadyBg
 import com.vivescriptsolutions.roomready.ui.theme.badgeColors
 import com.vivescriptsolutions.roomready.ui.theme.colorSpec
@@ -195,7 +201,7 @@ fun TicketsScreen(
                   contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 ) {
                   Text(
-                    text = stringResource(R.string.tickets_room_badge_format, ticket.roomName),
+                    text = digitString(R.string.tickets_room_badge_format, ticket.roomName),
                     style = MaterialTheme.typography.labelLarge,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
                   )
@@ -389,14 +395,14 @@ fun DashboardScreen(
             verticalArrangement = Arrangement.spacedBy(4.dp),
           ) {
             Text(
-              text = stringResource(R.string.dash_readiness_format, uiState.readinessPercent),
+              text = digitString(R.string.dash_readiness_format, uiState.readinessPercent),
               style = MaterialTheme.typography.headlineLarge,
               color = MaterialTheme.colorScheme.primary,
               modifier = Modifier.testTag("dash_readiness_headline"),
             )
             Text(
               text =
-                stringResource(
+                digitString(
                   R.string.filter_count_format,
                   stringResource(R.string.dashboard_total_rooms_label),
                   uiState.totalRooms,
@@ -432,7 +438,7 @@ fun DashboardScreen(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
               ) {
                 Text(
-                  text = (uiState.statusCounts[status] ?: 0).toString(),
+                  text = localizedDigits((uiState.statusCounts[status] ?: 0).toString()),
                   style = MaterialTheme.typography.displaySmall,
                 )
                 Text(
@@ -461,7 +467,7 @@ fun DashboardScreen(
                 style = MaterialTheme.typography.titleMedium,
               )
               Text(
-                text = uiState.toInspectRooms.size.toString(),
+                text = localizedDigits(uiState.toInspectRooms.size.toString()),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.primary,
               )
@@ -487,7 +493,7 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                   ) {
                     Text(
-                      text = stringResource(R.string.room_title_format, room.name),
+                      text = digitString(R.string.room_title_format, room.name),
                       style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                     )
                     Text(
@@ -525,7 +531,7 @@ fun DashboardScreen(
                 style = MaterialTheme.typography.titleMedium,
               )
               Text(
-                text = uiState.cleansTodayCount.toString(),
+                text = localizedDigits(uiState.cleansTodayCount.toString()),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.testTag("dash_cleans_today"),
@@ -541,7 +547,7 @@ fun DashboardScreen(
               uiState.cleansTodayByPerson.forEach { person ->
                 Text(
                   text =
-                    stringResource(R.string.filter_count_format, person.name, person.count),
+                    digitString(R.string.filter_count_format, person.name, person.count),
                   style = MaterialTheme.typography.bodyLarge,
                   color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -586,7 +592,7 @@ fun DashboardScreen(
                       )
                     }
                     Text(
-                      text = count.toString(),
+                      text = localizedDigits(count.toString()),
                       style = MaterialTheme.typography.titleLarge,
                       color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -622,7 +628,7 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                   ) {
                     Text(
-                      text = stringResource(R.string.room_title_format, room.name),
+                      text = digitString(R.string.room_title_format, room.name),
                       style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                     )
                     Text(
@@ -658,9 +664,9 @@ fun DashboardScreen(
                 ) {
                   Text(
                     text =
-                      stringResource(
+                      digitString(
                         R.string.dashboard_log_room_format,
-                        stringResource(R.string.room_title_format, log.roomName),
+                        digitString(R.string.room_title_format, log.roomName),
                         stringResource(
                           R.string.status_log_transition_format,
                           stringResource(log.fromStatus.labelRes),
@@ -698,6 +704,8 @@ fun MeScreen(
   onSwitchStaffName: (String) -> Unit,
   onResetDemoData: () -> Unit,
   onOpenConnection: () -> Unit = {},
+  appLanguage: AppLanguage = AppLanguage.SYSTEM,
+  onLanguageChange: (AppLanguage) -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   var showResetDialog by remember { mutableStateOf(false) }
@@ -751,6 +759,37 @@ fun MeScreen(
 
       CalmSectionCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+          SectionHeading(text = stringResource(R.string.language_title))
+          SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            AppLanguage.entries.forEachIndexed { index, language ->
+              SegmentedButton(
+                selected = appLanguage == language,
+                onClick = { onLanguageChange(language) },
+                shape = SegmentedButtonDefaults.itemShape(index, AppLanguage.entries.size),
+                modifier =
+                  Modifier.heightIn(min = 52.dp)
+                    .testTag("language_option_${language.name.lowercase()}"),
+              ) {
+                Text(
+                  text =
+                    stringResource(
+                      when (language) {
+                        AppLanguage.SYSTEM -> R.string.language_system
+                        AppLanguage.ENGLISH -> R.string.language_english
+                        AppLanguage.BANGLA -> R.string.language_bangla
+                      }
+                    ),
+                  style = MaterialTheme.typography.titleSmall,
+                  maxLines = 1,
+                )
+              }
+            }
+          }
+        }
+      }
+
+      CalmSectionCard {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
           SectionHeading(text = stringResource(R.string.me_who_are_you_title))
           Text(
             text =
@@ -793,14 +832,19 @@ fun MeScreen(
         }
       }
 
-      CalmSectionCard {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-          SectionHeading(text = stringResource(R.string.me_demo_section_title))
-          Text(
-            text = stringResource(R.string.me_demo_section_body),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-          )
+      if (session.isDemoMode) {
+        CalmSectionCard {
+          Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            SectionHeading(text = stringResource(R.string.me_demo_section_title))
+            Text(
+              text =
+                stringResource(
+                  R.string.me_demo_section_body,
+                  stringResource(R.string.demo_resort_name),
+                ),
+              style = MaterialTheme.typography.bodyLarge,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
           OutlinedButton(
             onClick = { showResetDialog = true },
             modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("reset_demo_button"),
@@ -814,6 +858,7 @@ fun MeScreen(
               text = stringResource(R.string.me_reset_demo_button),
               style = MaterialTheme.typography.titleSmall,
             )
+          }
           }
         }
       }

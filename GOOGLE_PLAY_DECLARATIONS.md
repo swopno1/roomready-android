@@ -50,24 +50,27 @@ human decision or Console-only action.
 
 ## 5. Permissions & Sensitive Permissions
 
-- **Status:** Two normal + one runtime permission; no Play permission
-  declaration required for any of them.
+- **Status:** Two normal + two runtime permissions; no Play
+  permission declaration required for any of them.
 - **Evidence:** App manifest declares `ACCESS_NETWORK_STATE` (normal,
   connectivity indicator only), `INTERNET` (normal, used only for
   opt-in Live-mode PMS sync to a user-configured `https://` origin;
-  refused otherwise), and `CAMERA` (dangerous, requested at first
+  refused otherwise), `CAMERA` (dangerous, requested at first
   photo use with an in-app plain-language rationale; declining
   degrades to skip-with-reason, and camera hardware is
-  `required="false"` so camera-less devices can install). Photos stay
-  in app-private storage and are never transmitted by sync;
-  FileProvider sharing fires only on explicit user tap. Merged
+  `required="false"` so camera-less devices can install), and
+  `POST_NOTIFICATIONS` (runtime on API 33+, asked once after the
+  first finished clean with an in-app rationale; declining leaves
+  alerts silently off). Alerts are local only — no FCM, no push.
+  Photos stay in app-private storage and are never transmitted by
+  sync; FileProvider sharing fires only on explicit user tap. Merged
   manifest confirms no location, microphone, storage, contacts,
   calendar, or nearby-devices entries — only the app's own
   signature-level `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`
   (androidx-core internal) alongside.
 - **Recommended answer:** No sensitive-permission declarations required
-  (`INTERNET` is normal-level; CAMERA needs no special Play
-  declaration; runtime prompt handled in-app).
+  (`INTERNET` is normal-level; CAMERA and POST_NOTIFICATIONS need no
+  special Play declaration; runtime prompts handled in-app).
 - **Human confirmation:** No.
 
 ## 6. Background / Foreground Services

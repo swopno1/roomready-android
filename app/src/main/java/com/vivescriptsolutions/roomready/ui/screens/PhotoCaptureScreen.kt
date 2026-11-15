@@ -60,6 +60,7 @@ import androidx.core.content.ContextCompat
 import com.vivescriptsolutions.roomready.R
 import com.vivescriptsolutions.roomready.data.photos.PhotoStore
 import com.vivescriptsolutions.roomready.ui.components.CalmSectionCard
+import com.vivescriptsolutions.roomready.ui.locale.digitString
 import java.io.File
 
 sealed interface PhotoCaptureMode {
@@ -135,6 +136,12 @@ fun PhotoCaptureScreen(
     )
   }
 
+  val screenTitle =
+    when (mode) {
+      is PhotoCaptureMode.Run -> digitString(R.string.photo_title_run_format, mode.roomName)
+      PhotoCaptureMode.Ticket -> stringResource(R.string.photo_title_ticket)
+    }
+
   Scaffold(
     modifier = modifier.fillMaxSize().testTag("photo_screen"),
     containerColor = MaterialTheme.colorScheme.background,
@@ -143,11 +150,7 @@ fun PhotoCaptureScreen(
       TopAppBar(
         title = {
           Text(
-            text =
-              when (mode) {
-                is PhotoCaptureMode.Run -> stringResource(R.string.photo_title_run_format, mode.roomName)
-                PhotoCaptureMode.Ticket -> stringResource(R.string.photo_title_ticket)
-              },
+            text = screenTitle,
             style = MaterialTheme.typography.titleLarge,
           )
         },
@@ -263,7 +266,7 @@ fun PhotoCaptureScreen(
         if (bitmap != null) {
           Image(
             bitmap = bitmap.asImageBitmap(),
-            contentDescription = null,
+            contentDescription = screenTitle,
             modifier = Modifier.fillMaxWidth().weight(1f).testTag("photo_captured_preview"),
           )
         } else {

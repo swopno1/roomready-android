@@ -70,6 +70,7 @@ import com.vivescriptsolutions.roomready.ui.components.EvidencePhotoThumbnail
 import com.vivescriptsolutions.roomready.ui.components.RoomStatusChip
 import com.vivescriptsolutions.roomready.ui.components.SectionHeading
 import com.vivescriptsolutions.roomready.ui.components.formatTimeShort
+import com.vivescriptsolutions.roomready.ui.locale.digitString
 import com.vivescriptsolutions.roomready.ui.components.localizedChecklistStepTitle
 import com.vivescriptsolutions.roomready.ui.components.localizedFloorLabel
 import com.vivescriptsolutions.roomready.ui.components.localizedRoomTypeName
@@ -115,7 +116,7 @@ fun RoomDetailScreen(
           if (room != null) {
             Column {
               Text(
-                text = stringResource(R.string.room_title_format, room.name),
+                text = digitString(R.string.room_title_format, room.name),
                 style = MaterialTheme.typography.titleLarge,
               )
               Text(
@@ -176,7 +177,8 @@ fun RoomDetailScreen(
       modifier =
         Modifier
           .widthIn(max = 720.dp)
-          .fillMaxSize(),
+          .fillMaxSize()
+          .testTag("room_detail_list"),
       contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
       verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -332,7 +334,7 @@ fun RoomDetailScreen(
                 color = MaterialTheme.colorScheme.onSurface,
               )
               Text(
-                text = stringResource(R.string.checklist_progress_format, doneCount, steps.size),
+                text = digitString(R.string.checklist_progress_format, doneCount, steps.size),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
               )
@@ -509,7 +511,7 @@ fun RoomDetailScreen(
       text = {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
           Text(
-            text = stringResource(R.string.template_picker_body, pickerRoom.name),
+            text = digitString(R.string.template_picker_body, pickerRoom.name),
             style = MaterialTheme.typography.bodyLarge,
           )
           Button(

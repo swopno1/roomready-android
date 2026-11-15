@@ -46,6 +46,7 @@ import com.vivescriptsolutions.roomready.R
 import com.vivescriptsolutions.roomready.domain.ConnectionMode
 import com.vivescriptsolutions.roomready.ui.components.CalmSectionCard
 import com.vivescriptsolutions.roomready.ui.components.formatTimeShort
+import com.vivescriptsolutions.roomready.ui.locale.digitString
 import com.vivescriptsolutions.roomready.ui.viewmodel.ConnectionMessage
 import com.vivescriptsolutions.roomready.ui.viewmodel.ConnectionUiState
 
@@ -197,7 +198,7 @@ fun ConnectionScreen(
                       uiState.lastError != null ->
                         stringResource(R.string.connection_status_error_format, uiState.lastError)
                       uiState.lastSyncAt != null ->
-                        stringResource(
+                        digitString(
                           R.string.connection_status_synced_format,
                           formatTimeShort(uiState.lastSyncAt),
                           uiState.pendingCount,
@@ -247,7 +248,7 @@ private fun ConnectionMessageText(message: ConnectionMessage?) {
       is ConnectionMessage.Disconnected -> stringResource(R.string.connection_status_idle)
       is ConnectionMessage.Unauthorized -> stringResource(R.string.connection_unauthorized)
       is ConnectionMessage.UpdateRequired ->
-        stringResource(R.string.connection_update_required_format, message.foundVersion ?: -1)
+        stringResource(R.string.connection_update_required)
       is ConnectionMessage.Failed ->
         stringResource(R.string.connection_save_failed_format, message.detail)
     }

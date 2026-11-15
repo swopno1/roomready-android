@@ -72,7 +72,8 @@ platform behavior, not app collection. In opt-in Live mode, §3 applies.
 
 - App-sandbox storage; permissions are normal-level
   `ACCESS_NETWORK_STATE` (connectivity indicator), `INTERNET` (Live
-  sync only, HTTPS-only), and `CAMERA` (runtime, evidence photos);
+  sync only, HTTPS-only), `CAMERA` (runtime, evidence photos), and
+  `POST_NOTIFICATIONS` (runtime on API 33+, local alerts only);
   API key in Keystore-backed encrypted storage, never logged; no
   exported components beyond the launcher activity plus stock SDK
   receivers; no WebView, deep links, foreground services, or exact

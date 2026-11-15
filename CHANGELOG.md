@@ -4,6 +4,43 @@ All notable changes to the RoomReady Android application.
 
 ## [Unreleased]
 
+### P9 — Local notifications (stretch)
+
+- Local-only alerts, no FCM or server push: inspection return
+  ("Room X needs re-cleaning: \<reason\>"), urgent ticket created,
+  and one reminder per clean stuck over 60 minutes (half-hourly
+  WorkManager sweep, no constraints).
+- `POST_NOTIFICATIONS` asked once after the first finished clean
+  with an in-app rationale; denied or dismissed means silently off,
+  never re-asked. Tapping opens the relevant room or ticket
+  (singleTop + parsed deep-link extras).
+- Two channels (Needs attention / Cleaning reminders); key/staff
+  data never leaves the device for alerts. Legal, declaration, and
+  data-safety docs updated for the new permission.
+
+### P8 — Bengali + localisation + low-literacy UX
+
+- Full Bengali (বাংলা) second language: every screen, status, step,
+  priority, sync state, rationale, and empty state translated; demo
+  room-type names and the 8 fixed PMS contract steps resolve to
+  localized display strings (unknown server text still renders raw).
+- Me → Language switch (Phone default / English / বাংলা) applies
+  instantly via activity recreate; choice persists in DataStore and
+  applies at startup. Play language splits disabled so values-bn
+  always ships on-device.
+- Bengali digits (০–৯) for counts, timers, and room numbers in
+  Bengali UI via a digit-aware string helper (%d args also
+  auto-localize through the wrapped configuration locale).
+- Copy hardened for low literacy: stale "coming later" notes removed,
+  dev jargon (Room/DataStore, "contract v", "zero network") replaced
+  with plain words; demo card hidden in Live mode.
+- TalkBack labels on all icon-buttons; decorative icons verified
+  paired with words; status always icon + word; primary actions in
+  the bottom two-thirds (proven by test for room detail).
+- Tests: language-completeness gate (keys/blanks/placeholders/
+  untranslated), locale + digit + PMS-step tests, 1.3× font-scale
+  render tests, clickables-labeled traversal tests.
+
 ### P7 — PMS sync layer (pairs with server W2)
 
 - Me → PMS Connection screen: Demo (bundled snapshot, zero network)

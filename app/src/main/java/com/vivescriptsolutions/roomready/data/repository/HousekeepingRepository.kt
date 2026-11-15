@@ -16,6 +16,9 @@ import com.vivescriptsolutions.roomready.data.local.TicketPriorityCount
 import com.vivescriptsolutions.roomready.data.preferences.PmsConnection
 import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesRepository
 import com.vivescriptsolutions.roomready.data.preferences.UserSession
+import com.vivescriptsolutions.roomready.data.notifications.NotificationEvent
+import com.vivescriptsolutions.roomready.data.notifications.findStuckRunIds
+import com.vivescriptsolutions.roomready.domain.AppLanguage
 import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
 import com.vivescriptsolutions.roomready.domain.ChecklistTemplates
 import com.vivescriptsolutions.roomready.domain.ConnectionMode
@@ -38,6 +41,7 @@ class HousekeepingRepository(
   private val db: AppDatabase,
   private val prefs: UserPreferencesRepository,
   private val onOutboxAppended: () -> Unit = {},
+  private val onNotify: (NotificationEvent) -> Unit = {},
 ) {
   /**
    * Session with the staff roster overridden by the synced PMS roster in
@@ -95,6 +99,10 @@ class HousekeepingRepository(
     db.checklistRunDao().observeReturnedRunFlags()
 
   fun observeConnection(): Flow<PmsConnection> = prefs.observeConnection()
+
+  fun observeAppLanguage(): Flow<AppLanguage> = prefs.observeAppLanguage()
+
+  suspend fun setAppLanguage(language: AppLanguage) = prefs.setAppLanguage(language)
 
   fun observeOutboxCount(): Flow<Int> = db.outboxDao().observeCount()
 
@@ -267,6 +275,7 @@ class HousekeepingRepository(
     nowMillis: Long = System.currentTimeMillis(),
   ): Result<Unit> {
     return runCatching {
+      var returned: NotificationEvent.RoomReturned? = null
       db.withTransaction {
         val room = db.roomDao().getRoomById(roomId) ?: error("Room $roomId not found")
         require(RoomTransitionEngine.isLegalTransition(room.status, RoomStatus.CLEANING, role)) {
@@ -274,9 +283,46 @@ class HousekeepingRepository(
         }
         require(reason != null) { "A return reason is required" }
         inspectReturnTx(room, reason, note, staffName, role, nowMillis)
+        returned =
+          NotificationEvent.RoomReturned(
+            roomId = room.id,
+            roomName = room.name,
+            reason = formatReturnReason(reason.defaultLabel, note),
+          )
       }
+      // Local notification fires only on success, after commit.
+      returned?.let(onNotify)
     }
   }
+
+  /**
+   * Stuck-clean sweep for the reminder worker: notifies once per
+   * unfinished run older than 60 minutes. Finished runs are pruned
+   * from the notified set so a later episode re-notifies.
+   */
+  suspend fun checkStuckCleans(nowMillis: Long) {
+    val runs = db.checklistRunDao().getAll()
+    val notified = prefs.stuckNotifiedRunIds()
+    val stuckIds = findStuckRunIds(runs, nowMillis, notified)
+    val unfinishedIds = runs.filter { it.finishedAt == null }.map { it.id }.toSet()
+    prefs.setStuckNotifiedRunIds((notified + stuckIds).intersect(unfinishedIds))
+    val byId = runs.associateBy { it.id }
+    stuckIds.forEach { id ->
+      val run = byId[id] ?: return@forEach
+      val room = db.roomDao().getRoomById(run.roomId) ?: return@forEach
+      onNotify(
+        NotificationEvent.StuckCleaning(
+          roomId = room.id,
+          roomName = room.name,
+          elapsedMinutes = (nowMillis - run.startedAt) / 60_000L,
+        )
+      )
+    }
+  }
+
+  suspend fun notificationsAsked(): Boolean = prefs.notificationsAsked()
+
+  suspend fun markNotificationsAsked() = prefs.markNotificationsAsked()
 
   /**
    * Starts a cleaning run: creates the ChecklistRun from the right template
@@ -606,7 +652,8 @@ class HousekeepingRepository(
   ): Long? {
     val cleanTitle = title.trim()
     if (cleanTitle.isEmpty()) return null
-    return db.withTransaction {
+    val ticketId =
+      db.withTransaction {
       val id =
         db.ticketDao()
           .insert(
@@ -644,6 +691,10 @@ class HousekeepingRepository(
       }
       id
     }
+    if (priority == TicketPriority.URGENT) {
+      onNotify(NotificationEvent.UrgentTicket(ticketId, roomId, roomName, cleanTitle))
+    }
+    return ticketId
   }
 
   suspend fun resolveTicket(

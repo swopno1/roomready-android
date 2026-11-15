@@ -37,6 +37,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import com.vivescriptsolutions.roomready.ui.locale.digitString
+import com.vivescriptsolutions.roomready.ui.locale.localizedDigits
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -165,7 +167,7 @@ fun OfflineReadyPill(modifier: Modifier = Modifier) {
 fun localizedFloorLabel(floor: Int, block: String? = null): String {
   if (floor < 0) {
     return if (!block.isNullOrBlank()) {
-      stringResource(R.string.floor_block_format, block)
+      digitString(R.string.floor_block_format, block)
     } else {
       stringResource(R.string.floor_unknown)
     }
@@ -173,7 +175,7 @@ fun localizedFloorLabel(floor: Int, block: String? = null): String {
   return if (floor == 0) {
     stringResource(R.string.floor_ground)
   } else {
-    stringResource(R.string.floor_number, floor)
+    digitString(R.string.floor_number, floor)
   }
 }
 
@@ -235,9 +237,10 @@ fun EvidencePhotoThumbnail(
   }
 }
 
+@Composable
 fun formatTimeShort(millis: Long): String {
-  val formatter = SimpleDateFormat("h:mm a", Locale.getDefault())
-  return formatter.format(Date(millis))
+  val formatter = remember(millis) { SimpleDateFormat("h:mm a", Locale.getDefault()) }
+  return localizedDigits(formatter.format(Date(millis)))
 }
 
 @OptIn(ExperimentalLayoutApi::class)
