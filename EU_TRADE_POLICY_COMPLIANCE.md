@@ -2,8 +2,10 @@
 
 **Date:** November 15, 2026
 **App:** RoomReady – Resort Housekeeping (`com.vivescriptsolutions.roomready`), v1 (1.0)
-**Basis:** inspection of the actual implementation (offline Room + DataStore
-app; zero permissions; no network, accounts, ads, analytics, or payments).
+**Basis:** inspection of the actual implementation (offline-first Room +
+DataStore app; Demo mode transmits nothing; opt-in Live mode syncs
+operational data with the user's own property system over HTTPS; four
+permissions; no accounts, ads, analytics, payments, or push service).
 
 > This is an engineering assessment, not legal advice. Items marked
 > **[Human]** require founder confirmation or qualified counsel before
@@ -13,20 +15,26 @@ app; zero permissions; no network, accounts, ads, analytics, or payments).
 
 ## 1. GDPR
 
-**Applies to the developer in a minimal way; barely touches the app.**
+**Applies to the developer in a minimal way; the property running Live
+mode carries the controller duties for synced data.**
 
-- The Application transmits no personal data to the developer or any
-  third party (verified: no `INTERNET` permission, no networking code,
-  no analytics/crash/advertising SDKs). There is therefore no
+- The Application transmits nothing to the developer or any third
+  party (verified: no analytics/crash/advertising SDKs, no push
+  service, no ViveScript servers). There is therefore no
   developer-side processing of user data to register, and no data
   breach notification surface on our servers — because there are none.
+- In opt-in Live mode the app transmits operational data (room
+  statuses, tickets, acting staff display names) to the property PMS
+  origin the user configured, over HTTPS only. Under GDPR roles, the
+  *property/employer* operating that system is the controller of the
+  synced copy; ViveScript Solutions LLC never receives it.
 - Personal data entered by the user (staff display names, free-text
-  notes/tickets) is stored only on-device, plus the user's own Google
-  system backup if they leave Android Auto Backup enabled. Under GDPR
-  roles, the *user/employer* operating the device is the controller of
-  that on-device data; ViveScript Solutions LLC never receives it.
+  notes/tickets) is stored on-device, plus the user's own Google
+  system backup if they leave Android Auto Backup enabled.
 - Data-subject rights are served through on-device controls (in-app
-  reset, uninstall) plus the contact in PRIVACY_POLICY.md §8.
+  Disconnect/reset, uninstall) plus the contact in PRIVACY_POLICY.md
+  §9. Rights over the property-PMS copy are exercised against the
+  property, not against us.
 - **[Human]** Confirm with counsel that no Data Processing Agreement or
   records-of-processing entry is required given zero developer-side
   processing. Do not publish a "GDPR certified/compliant" badge — no
@@ -44,10 +52,11 @@ required inside the app.
 - The app is a free utility with no purchases, subscriptions, ads, or
   paid tiers, so price-transparency, withdrawal, and digital-content
   conformity rules for paid content do not attach.
-- Descriptions must still be accurate: the listing must not promise
-  cloud sync, multi-device sharing, PMS integration, or notifications
-  (none exist in v1). The drafted listing in
-  `roomready_PlayStore_Details.md` describes offline-only behavior.
+- Descriptions must still be accurate: the listing must describe the
+  optional Live PMS sync and on-device alerts exactly as shipped —
+  property-configured sync over HTTPS, alerts generated on-device,
+  no push service, no ViveScript servers. The drafted listing in
+  `roomready_PlayStore_Details.md` was rewritten to match v1 behavior.
 
 ## 4. Digital Services Act (DSA)
 

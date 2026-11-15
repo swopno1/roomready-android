@@ -80,6 +80,8 @@ human decision or Console-only action.
   permissions, no exact alarms, no push. Outbox sync runs on a
   network-constrained one-shot WorkManager worker with exponential
   backoff (`PmsSyncWorker`), enqueued only after Live-mode mutations.
+  Stuck-clean reminders run on a half-hourly unconstrained periodic
+  worker (`StuckReminderWorker`); both are local-only.
 - **Recommended answer:** No declarations.
 - **Human confirmation:** No.
 
@@ -137,7 +139,7 @@ human decision or Console-only action.
 - **Evidence:** Release build fails fast without `KEYSTORE_PATH` /
   `STORE_PASSWORD` / `KEY_PASSWORD` ("Keystore file not set for signing
   config release"); R8 release AAB verified with a throwaway local key
-  (4.3 MB, mapping emitted, then key deleted). No keystore is committed
+  (6.9 MB, then key shredded). No keystore is committed
   or stored in-repo.
 - **Recommended answer:** Founder signs the upload AAB with the
   production upload key enrolled in Play App Signing.

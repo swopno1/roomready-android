@@ -26,8 +26,8 @@ has been submitted to Play Console.
 
 | Locale | Listing text | App UI | Status |
 |---|---|---|---|
-| en-US (default) | Final, counts verified | `values/` (155 strings) | Ready |
-| bn-BD | Final, counts verified | `values-bn/` (155 strings, parity-tested) | Ready |
+| en-US (default) | Final, counts verified | `values/` (253 strings) | Ready |
+| bn-BD | Final, counts verified | `values-bn/` (253 strings, parity-tested) | Ready |
 
 No other listing locales planned for v1. Listing translations describe
 the same shipped functionality; product names (RoomReady, ViveReply)
@@ -40,7 +40,8 @@ preserved in both.
 | Website | https://www.vivescriptsolutions.com/en/apps/roomready |
 | Privacy policy | https://www.vivescriptsolutions.com/en/apps/roomready/privacy |
 | Terms | https://www.vivescriptsolutions.com/en/apps/roomready/terms |
-| Support email | privacy@vivescriptsolutions.com |
+| Support email | support@vivescriptsolutions.com |
+| Privacy contact | privacy@vivescriptsolutions.com |
 | Developer | ViveScript Solutions LLC |
 
 ## 4. Graphics Status

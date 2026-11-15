@@ -109,6 +109,11 @@ share sheet. Skipping a run photo records only your one-line reason
 (no photo is taken). Deleting data (§6) removes photo references;
 photo files live and die with the app's private storage.
 
+Cleaning alerts (returned rooms, urgent tickets, long-clean reminders)
+are generated and shown entirely on-device from the data above. There
+is no push service: turning alerts off in system Settings stops them
+completely, with nothing transmitted at any point.
+
 ---
 
 ## 5. Android System Backup

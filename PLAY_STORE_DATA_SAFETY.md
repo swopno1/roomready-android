@@ -18,8 +18,9 @@ mapping.
 | AndroidX (Compose, Material3, Navigation, Room, DataStore, Lifecycle, Activity, Core) | UI + local storage only; no collection |
 | Kotlin coroutines | In-process concurrency; no collection |
 | OkHttp (+ `INTERNET` permission) | PMS sync transport; used **only** in opt-in Live mode, HTTPS origins only, to the property server address the user typed |
-| AndroidX WorkManager | Local background scheduler for the sync worker; no collection itself |
+| AndroidX WorkManager | Local background scheduler for the sync + reminder workers; no collection itself |
 | AndroidX security-crypto | Keystore-backed encrypted storage for the PMS API key; no collection |
+| CameraX (+ `CAMERA` permission) | In-app evidence photos to app-private storage; never transmitted; no collection |
 | JUnit / Robolectric / Espresso (test only) | Not shipped in release |
 | Advertising SDKs | **None** |
 | Analytics / crash reporting / Firebase | **None** |

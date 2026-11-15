@@ -4,6 +4,21 @@ All notable changes to the RoomReady Android application.
 
 ## [Unreleased]
 
+### Modernization pass 2 (skill re-run, pre-v1)
+
+- Toolchain re-verified at latest compatible stable (AGP 9.5.1,
+  Gradle 9.9.1, Kotlin 2.3.21 — 2.4 blocked, no KSP 2.4 exists).
+- Bengali imperative-mood fixes on two PMS step strings.
+- Legal refresh: terms rewritten for shipped v1 (inspection, photos,
+  Live sync, alerts, Bengali); EU assessment rewritten for Live-mode
+  roles; privacy gains the on-device alerts paragraph.
+- Support/privacy email split: support@ for support, privacy@ for
+  privacy (listing, metadata, terms).
+- Play listing (EN+BN) rewritten to describe shipped v1; counts
+  re-verified. Fresh release notes (EN+BN, ≤500 chars).
+- Declarations: reminder worker + 6.9 MB AAB size recorded. Data
+  Safety gains the CameraX inventory row.
+
 ### P9 — Local notifications (stretch)
 
 - Local-only alerts, no FCM or server push: inspection return

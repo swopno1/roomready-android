@@ -5,7 +5,7 @@
 **Publisher:** ViveScript Solutions LLC
 **Website:** [https://www.vivescriptsolutions.com/en/apps/roomready](https://www.vivescriptsolutions.com/en/apps/roomready)
 **Live version of these terms:** [https://www.vivescriptsolutions.com/en/apps/roomready/terms](https://www.vivescriptsolutions.com/en/apps/roomready/terms)
-**Contact:** [privacy@vivescriptsolutions.com](mailto:privacy@vivescriptsolutions.com)
+**Contact:** [support@vivescriptsolutions.com](mailto:support@vivescriptsolutions.com)
 
 > Status note: the website pages above follow the ViveScript Solutions
 > app-site convention. The founder must confirm the URLs and publish these
@@ -26,16 +26,23 @@ tickets. By installing or using the Application, you agree to these Terms.
 
 ## 2. The Service
 
-RoomReady provides, entirely on-device and without accounts or internet:
+RoomReady provides, without accounts and fully usable offline:
 
 - A rooms board with housekeeping statuses (Dirty, Cleaning, Cleaned,
   Ready, Out of Service).
 - Turnover checklist runs, including a stayover-refresh variant.
-- Maintenance tickets with priorities and resolution tracking.
-- A local status-activity log and shift profile (role + display name).
+- Supervisor inspection (pass or return-with-reason).
+- Maintenance tickets with priorities, photos, and resolution tracking.
+- A readiness dashboard, local status-activity log, and shift profile
+  (role + display name).
+- Optional on-device cleaning alerts (no push service).
+- An optional Live mode that syncs room statuses and tickets with the
+  property's own management system over HTTPS. Demo mode (the default)
+  uses no internet at all.
 
 The Application ships with fictional demo resort data so teams can
-evaluate it immediately, including in airplane mode.
+evaluate it immediately, including in airplane mode. The interface is
+available in English and Bengali.
 
 ---
 
@@ -58,9 +65,11 @@ not to:
 - **Operational judgment:** RoomReady is an organizational aid. Staff and
   supervisors remain responsible for verifying rooms, guest safety, and
   regulatory compliance (fire, hygiene, labor) under their own procedures.
-- **Device stewardship:** Because all data lives on the device, you are
+- **Device stewardship:** Because app data lives on the device, you are
   responsible for device access control (screen lock, authorized users).
   Anyone holding an unlocked device with the app can view its local data.
+  In Live mode you are additionally responsible for safeguarding the
+  property API key entered on the device.
 - **Backups:** If you rely on shift records, keep your own copies. The
   in-app reset and uninstall permanently remove local data from the
   device (subject only to your own Google system backup, if enabled).
@@ -87,9 +96,10 @@ property of their owner and may not be extracted or reused.
 
 ## 7. Service Limitations
 
-- The app is provided as a local utility: no cloud sync, no multi-device
-  sharing, no PMS integration, and no push notifications exist in this
-  version. Marketing pages describe only shipped behavior.
+- Live PMS sync is optional and configured by you; we operate no sync
+  servers and are not responsible for the availability or content of
+  your property system. Cleaning alerts are generated on-device only;
+  no push-notification service exists.
 - We do not guarantee uninterrupted operation on rooted, modified, or
   unsupported devices.
 - Demo seed data (rooms, names, tickets) is fictional; any resemblance to
@@ -120,7 +130,8 @@ installed copies continue to function locally without our involvement.
 
 ## 10. Support and Contact
 
-For support, privacy questions, or data inquiries:
+For support: [support@vivescriptsolutions.com](mailto:support@vivescriptsolutions.com).
+For privacy questions or data inquiries:
 [privacy@vivescriptsolutions.com](mailto:privacy@vivescriptsolutions.com).
 
 ---
