@@ -12,10 +12,10 @@
 |---|---|
 | Command | `:app:bundleRelease` (R8 + `shrinkResources`, verified enabled in `app/build.gradle.kts`) |
 | Result | BUILD SUCCESSFUL, signed with a throwaway local key (created, used, shredded — never in the repo) |
-| AAB size | 7,234,235 bytes (**6.9 MB**) — target <25 MB: PASS (built pre-downgrade; rebuild with the operator key at submission) |
+| AAB size | 6,557,051 bytes (**~6.25 MiB**) — target <25 MB: PASS (rebuild with the operator key at submission) |
 | versionCode / versionName | 1 / "1.0" |
-| Toolchain | AGP 9.1.1, Gradle 9.9.1, Kotlin 2.3.21, KSP 2.3.14, compileSdk 36.1, targetSdk 36, minSdk 24 (founder-pinned stable set) |
-| lintRelease | 0 errors, 35 warnings (34 pre-existing on this base, 1 new `PluralsCandidate` matching the accepted pattern) |
+| Toolchain | AGP 9.1.1, Gradle wrapper 9.9.1, Kotlin 2.3.21, KSP 2.3.14, compileSdk 36.1, targetSdk 36, minSdk 24 (founder-pinned stable set) |
+| lintRelease | 0 errors, 34 warnings |
 
 ## 2. Signing
 
@@ -78,9 +78,9 @@ encrypted storage.
   by the property.
 - Accounts: none — no deletion URL required.
 
-> **D1 — founder decision:** this prompt's brief says "no personal
+> **D1 — founder decision:** an earlier brief said "no personal
 > data", but staff display names (often real names) travel to the
-> user's own PMS in Live mode, so this draft declares Name. If the
+> user's own PMS once connected, so this draft declares Name. If the
 > founder's position is that shift labels are not personal data,
 > adjust the filing — the engineering fact is recorded above.
 
@@ -96,7 +96,7 @@ encrypted storage.
 
 ## Verdict
 
-**READY** — all six engineering gates pass (bundle 6.9 MB, loud
+**READY** — all six engineering gates pass (bundle ~6.25 MiB, loud
 signing failure, exact permission set, clean secret sweep,
 1/"1.0", lintRelease 0 errors). Remaining work is founder-only (§6
 + decision D1). No engineering blockers.

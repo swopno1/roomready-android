@@ -108,12 +108,12 @@ No previous upload → propose versionCode 1, versionName "1.0"
 
 ## 8. Tests Executed and Results
 
-- `:app:testDebugUnitTest`: **125/125 pass** (state matrix, runs,
+- `:app:testDebugUnitTest`: **125/125 pass across 19 suites** (state matrix, runs,
   tickets, dashboard, inspection, photos, sync fake-server, locale,
   low-literacy UI, notifications, airplane-mode, production-shape).
 - `:app:lintDebug` + `:app:lintRelease`: **0 errors** both
-  (35 warnings: 34 pre-existing on this base, 1 accepted pattern).
-- `:app:assembleDebug`: success. `:app:bundleRelease`: 6.9 MB AAB
+  (34 warnings).
+- `:app:assembleDebug`: success. `:app:bundleRelease`: 6,557,051-byte AAB
   with R8 (throwaway local key, shredded after); without secrets it
   fails fast with a clear signing error.
 - BN key/blank/placeholder/untranslated gate: 240/240, green.

@@ -5,9 +5,8 @@
 (seed test deleted, `ProductionShapeTest` added covering empty state,
 first-sync roster, disconnect warning, upgrade purge, and migration
 8→9).
-**Headline:** 125/125 unit tests pass, lint 0 errors (35 warnings:
-34 pre-existing on this base, 1 new `PluralsCandidate` matching the
-accepted pattern), `assembleDebug` succeeds.
+**Headline:** 125/125 unit tests pass across 19 suites, lint 0 errors
+(34 warnings), `assembleDebug` succeeds.
 
 ---
 

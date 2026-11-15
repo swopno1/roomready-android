@@ -15,7 +15,7 @@ below names the command, file, or test that proves it.
   preferences. Navigation Compose; no DI framework (hand
   `AppContainer`); WorkManager (sync + reminders); CameraX (photos);
   OkHttp (PMS transport).
-- Toolchain (founder-pinned stable set): AGP 9.1.1, Gradle 9.9.1,
+- Toolchain (founder-pinned stable set): AGP 9.1.1, Gradle wrapper 9.9.1,
   Kotlin 2.3.21, KSP 2.3.14, Java 17, compileSdk 36.1, targetSdk 36,
   minSdk 24. Evidence: `gradle/libs.versions.toml`,
   `gradle-wrapper.properties`, `app/build.gradle.kts`.
@@ -66,7 +66,8 @@ below names the command, file, or test that proves it.
   security-crypto, CameraX, OkHttp, Robolectric, androidx.test. Each
   implementation dep is imported by main sources (surveyed).
 - Release: R8 minify + resource shrink enabled; signed AAB built
-  (6.9 MB) with a throwaway local key, then key shredded. Release
+  (6,557,051 bytes / ~6.25 MiB) with a throwaway local key, then key
+  shredded. Release
   without secrets fails fast with "Keystore file not set for signing
   config release" (operator key documented, never generated/committed).
 
@@ -113,10 +114,10 @@ below names the command, file, or test that proves it.
 
 | Check | Command / source | Result |
 |---|---|---|
-| Unit tests | `:app:testDebugUnitTest` | 125/125 pass, 0 fail |
+| Unit tests | `:app:testDebugUnitTest` | 125/125 pass across 19 suites, 0 fail |
 | Lint debug+release | `:app:lintDebug :app:lintRelease` | 0 errors both |
 | Debug build | `:app:assembleDebug` | success, APK produced |
-| Release bundle | `:app:bundleRelease` (+throwaway key) | 6.9 MB AAB, R8 (rebuild with operator key at submission) |
+| Release bundle | `:app:bundleRelease` (+throwaway key) | 6,557,051-byte AAB, R8 (rebuild with operator key at submission) |
 | Release fail-fast | `:app:bundleRelease` (no secrets) | clean signing error |
 | BN parity | `LanguageCompletenessTest` | 240/240, green |
 | Listing counts | char-count script | all within limits |

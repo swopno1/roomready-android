@@ -139,7 +139,7 @@ human decision or Console-only action.
 - **Evidence:** Release build fails fast without `KEYSTORE_PATH` /
   `STORE_PASSWORD` / `KEY_PASSWORD` ("Keystore file not set for signing
   config release"); R8 release AAB verified with a throwaway local key
-  (6.9 MB, then key shredded). No keystore is committed
+  (6,557,051 bytes / ~6.25 MiB, then key shredded). No keystore is committed
   or stored in-repo.
 - **Recommended answer:** Founder signs the upload AAB with the
   production upload key enrolled in Play App Signing.

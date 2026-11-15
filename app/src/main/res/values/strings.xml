@@ -144,7 +144,7 @@
     <string name="step_stayover_beds_made">Beds made</string>
     <string name="step_stayover_towels">Towels</string>
     <string name="step_stayover_bins">Bins</string>
-    <!-- PMS contract steps (display names for the fixed Live-mode sentences) -->
+    <!-- PMS contract steps (display names for the fixed PMS sentences) -->
     <string name="step_pms_bed_linen">Change bed linen</string>
     <string name="step_pms_towels">Fresh towels &amp; toiletries</string>
     <string name="step_pms_floors">Vacuum &amp; mop floors</string>
@@ -240,7 +240,7 @@
     <string name="me_switch_role_title">Switch Role</string>
     <string name="me_who_are_you_title">Who are you?</string>
     <string name="me_offline_card_title">Saved on this phone</string>
-    <string name="me_offline_card_body">All rooms, checklists, tickets, and logs stay on this phone. Airplane mode works. PMS sync is optional — turn it on in PMS Connection.</string>
+    <string name="me_offline_card_body">All rooms, checklists, tickets, and logs stay on this phone. After connecting, everything keeps working offline on the last synced data.</string>
 
     <!-- PMS Connection -->
     <string name="connection_title">PMS Connection</string>

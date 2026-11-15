@@ -144,7 +144,7 @@
     <string name="step_stayover_beds_made">বিছানা গোছানো</string>
     <string name="step_stayover_towels">তোয়ালে</string>
     <string name="step_stayover_bins">ডাস্টবিন</string>
-    <!-- PMS contract steps (display names for the fixed Live-mode sentences) -->
+    <!-- PMS contract steps (display names for the fixed PMS sentences) -->
     <string name="step_pms_bed_linen">বিছানার চাদর বদলান</string>
     <string name="step_pms_towels">পরিষ্কার তোয়ালে ও টয়লেট্রিজ</string>
     <string name="step_pms_floors">মেঝে ভ্যাকুয়াম ও মোছা</string>
@@ -240,7 +240,7 @@
     <string name="me_switch_role_title">ভূমিকা বদলান</string>
     <string name="me_who_are_you_title">আপনি কে?</string>
     <string name="me_offline_card_title">এই ফোনে সংরক্ষিত</string>
-    <string name="me_offline_card_body">সব রুম, চেকলিস্ট, টিকিট ও লগ এই ফোনেই থাকে। বিমান মোডে চলে। PMS সিঙ্ক ঐচ্ছিক — PMS সংযোগ থেকে চালু করুন।</string>
+    <string name="me_offline_card_body">সব রুম, চেকলিস্ট, টিকিট ও লগ এই ফোনেই থাকে। সংযোগের পর শেষ সিঙ্ক করা ডাটা দিয়ে সবকিছু অফলাইনে চলতে থাকে।</string>
 
     <!-- PMS Connection -->
     <string name="connection_title">PMS সংযোগ</string>
