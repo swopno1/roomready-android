@@ -48,13 +48,15 @@ human decision or Console-only action.
 
 ## 5. Permissions & Sensitive Permissions
 
-- **Status:** Nothing to declare.
-- **Evidence:** App manifest declares zero `uses-permission`. Merged
-  release manifest contains only the app's own signature-level
-  `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` (androidx-core internal)
-  and no `INTERNET`, location, camera, microphone, storage, contacts,
-  calendar, or nearby-devices entries (verified via release manifest
-  dump).
+- **Status:** One normal permission; nothing sensitive to declare.
+- **Evidence:** App manifest declares only `ACCESS_NETWORK_STATE`
+  (normal protection level, install-time, no runtime prompt, no Play
+  declaration required), used solely for the dashboard's live
+  connectivity indicator. Merged release manifest confirms no
+  `INTERNET`, location, camera, microphone, storage, contacts,
+  calendar, or nearby-devices entries — only the app's own
+  signature-level `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`
+  (androidx-core internal) alongside it.
 - **Recommended answer:** No sensitive-permission declarations required.
 - **Human confirmation:** No.
 

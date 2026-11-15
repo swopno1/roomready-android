@@ -5,7 +5,14 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.vivescriptsolutions.roomready.domain.RoomStatus
+import com.vivescriptsolutions.roomready.domain.TicketPriority
+import com.vivescriptsolutions.roomready.domain.TicketStatus
 import kotlinx.coroutines.flow.Flow
+
+data class StatusCount(val status: RoomStatus, val count: Int)
+
+data class TicketPriorityCount(val priority: TicketPriority, val count: Int)
 
 @Dao
 interface RoomTypeDao {
@@ -35,6 +42,12 @@ interface RoomDao {
 
   @Query("SELECT * FROM rooms WHERE id = :roomId")
   suspend fun getRoomById(roomId: Long): RoomEntity?
+
+  @Query("SELECT status, COUNT(*) AS count FROM rooms GROUP BY status")
+  fun observeStatusCounts(): Flow<List<StatusCount>>
+
+  @Query("SELECT * FROM rooms WHERE status = :status ORDER BY updatedAt ASC")
+  fun observeRoomsByStatus(status: RoomStatus): Flow<List<RoomEntity>>
 
   @Query("SELECT COUNT(*) FROM rooms")
   suspend fun count(): Int
@@ -81,6 +94,9 @@ interface TicketDao {
   @Query("SELECT * FROM tickets WHERE id = :ticketId")
   suspend fun getTicketById(ticketId: Long): TicketEntity?
 
+  @Query("SELECT priority, COUNT(*) AS count FROM tickets WHERE status = :status GROUP BY priority")
+  fun observeCountByPriority(status: TicketStatus): Flow<List<TicketPriorityCount>>
+
   @Query("SELECT * FROM tickets WHERE roomId = :roomId ORDER BY status ASC, createdAt DESC")
   fun observeTicketsForRoom(roomId: Long): Flow<List<TicketEntity>>
 
@@ -107,6 +123,9 @@ interface StatusLogDao {
 
   @Query("SELECT * FROM status_logs ORDER BY changedAt DESC LIMIT :limit")
   fun observeRecentLogs(limit: Int = 25): Flow<List<StatusLogEntity>>
+
+  @Query("SELECT * FROM status_logs WHERE toStatus = :toStatus AND changedAt >= :sinceMillis ORDER BY changedAt DESC")
+  fun observeLogsSince(toStatus: RoomStatus, sinceMillis: Long): Flow<List<StatusLogEntity>>
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   suspend fun insert(log: StatusLogEntity): Long

@@ -58,6 +58,7 @@ import com.vivescriptsolutions.roomready.ui.screens.MeScreen
 import com.vivescriptsolutions.roomready.ui.screens.OnboardingScreen
 import com.vivescriptsolutions.roomready.ui.screens.RoomDetailScreen
 import com.vivescriptsolutions.roomready.ui.screens.RoomsBoardScreen
+import com.vivescriptsolutions.roomready.data.connectivity.ConnectivityMonitor
 import com.vivescriptsolutions.roomready.ui.screens.TicketDetailScreen
 import com.vivescriptsolutions.roomready.ui.screens.TicketsScreen
 import com.vivescriptsolutions.roomready.ui.viewmodel.MainAppViewModel
@@ -104,9 +105,12 @@ enum class BottomNavTab(
 }
 
 @Composable
-fun RoomReadyApp(repository: HousekeepingRepository) {
+fun RoomReadyApp(
+  repository: HousekeepingRepository,
+  connectivityMonitor: ConnectivityMonitor,
+) {
   val mainViewModel: MainAppViewModel =
-    viewModel(factory = MainAppViewModel.Factory(repository))
+    viewModel(factory = MainAppViewModel.Factory(repository, connectivityMonitor))
   val session by mainViewModel.sessionState.collectAsStateWithLifecycle()
   val isInitialized by mainViewModel.isAppInitialized.collectAsStateWithLifecycle()
 
@@ -274,6 +278,15 @@ fun RoomReadyApp(repository: HousekeepingRepository) {
         val dashboardState by mainViewModel.dashboardTabState.collectAsStateWithLifecycle()
         DashboardScreen(
           uiState = dashboardState,
+          onSelectStatus = mainViewModel::setFilter,
+          onOpenRooms = {
+            navController.navigate(Routes.ROOMS) {
+              popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+              launchSingleTop = true
+              restoreState = true
+            }
+          },
+          onOpenRoom = { roomId -> navController.navigate(Routes.roomDetail(roomId)) },
           modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
         )
       }

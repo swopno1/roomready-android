@@ -35,11 +35,14 @@ We practice strict data minimization:
   email addresses, phone numbers, postal addresses, or government
   identification. Staff names you enter stay on your device (see §3).
 - **No Account System:** The Application has no sign-in or registration.
-- **No Sensitive Permissions:** We request zero Android permissions — no
-  Camera, Microphone, Location, Contacts, SMS, Phone State, Storage,
-  Calendar, or Nearby Devices. The release manifest contains no
-  user-facing permission (verified against the merged release manifest;
-  the only entry is the app's own signature-level internal permission).
+- **No Sensitive Permissions:** We request no Camera, Microphone,
+  Location, Contacts, SMS, Phone State, Storage, Calendar, or Nearby
+  Devices permission. The single declared permission is the normal-level
+  `ACCESS_NETWORK_STATE`, used only to show the dashboard's live
+  online/offline indicator — it reveals nothing about you and the app
+  still makes zero network requests. The merged release manifest
+  otherwise contains only the app's own signature-level internal
+  permission (verified).
 - **No Network Activity:** The app declares no `INTERNET` permission and
   contains no networking code, so it cannot transmit anything.
 - **No Advertising, Analytics, or Crash SDKs:** No AdMob, Firebase,

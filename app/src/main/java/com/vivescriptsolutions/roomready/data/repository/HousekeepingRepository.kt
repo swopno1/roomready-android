@@ -6,8 +6,10 @@ import com.vivescriptsolutions.roomready.data.local.ChecklistRunEntity
 import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.local.RoomEntity
 import com.vivescriptsolutions.roomready.data.local.RoomTypeEntity
+import com.vivescriptsolutions.roomready.data.local.StatusCount
 import com.vivescriptsolutions.roomready.data.local.StatusLogEntity
 import com.vivescriptsolutions.roomready.data.local.TicketEntity
+import com.vivescriptsolutions.roomready.data.local.TicketPriorityCount
 import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesRepository
 import com.vivescriptsolutions.roomready.data.preferences.UserSession
 import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
@@ -44,6 +46,17 @@ class HousekeepingRepository(
 
   fun observeRecentLogs(limit: Int = 25): Flow<List<StatusLogEntity>> =
     db.statusLogDao().observeRecentLogs(limit)
+
+  fun observeStatusCounts(): Flow<List<StatusCount>> = db.roomDao().observeStatusCounts()
+
+  fun observeRoomsByStatus(status: RoomStatus): Flow<List<RoomEntity>> =
+    db.roomDao().observeRoomsByStatus(status)
+
+  fun observeCountByPriority(status: TicketStatus): Flow<List<TicketPriorityCount>> =
+    db.ticketDao().observeCountByPriority(status)
+
+  fun observeLogsSince(toStatus: RoomStatus, sinceMillis: Long): Flow<List<StatusLogEntity>> =
+    db.statusLogDao().observeLogsSince(toStatus, sinceMillis)
 
   suspend fun ensureDemoDataSeeded() {
     val seededNow = DemoSeeder.seedIfEmpty(db)

@@ -2,6 +2,17 @@
 
 All notable changes to the RoomReady Android application.
 
+## [Unreleased] — P4 dashboard + offline-proof
+
+- Dashboard: per-status tappable tiles (deep-link into filtered Rooms
+  board), "% rooms Ready" headline, cleans-completed-today count with
+  per-person list, open tickets by priority, and CLEANING > 60 min
+  stuck-room highlights — all computed from Room queries, no caches.
+- Signature offline-proof banner with live connectivity state via
+  `NetworkCallback` (no polling); adds the normal-level
+  `ACCESS_NETWORK_STATE` permission (indicator only, zero network
+  traffic — legal/declaration docs updated accordingly).
+
 ## [1.0] — v1, unreleased (first Play release in preparation)
 
 First public release candidate. Ships the complete P1–P3 feature set

@@ -53,9 +53,11 @@ rules, user-controlled), which is platform behavior, not app collection.
 
 ## 5. Security Practices
 
-- Local-only storage in the Android app sandbox; no permissions widening
-  the attack surface; no exported components beyond the launcher
-  activity; no WebView, deep links, or background services.
+- Local-only storage in the Android app sandbox; the sole permission is
+  normal-level `ACCESS_NETWORK_STATE` (connectivity indicator only, no
+  data access); no exported components beyond the launcher activity
+  plus stock SDK receivers; no WebView, deep links, or background
+  services.
 - No independent security review or certification is claimed.
 
 ## 6. Unknowns Requiring Confirmation

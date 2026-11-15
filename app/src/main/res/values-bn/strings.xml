@@ -165,10 +165,18 @@
 
     <!-- Dashboard Tab (Placeholder + Live Local Counts) -->
     <string name="dashboard_header_title">রিসোর্টের চিত্র</string>
-    <string name="dashboard_placeholder_note">শিফট KPI, টার্নঅ্যারাউন্ড টাইমার ও PMS সিঙ্ক ভবিষ্যতে আসছে। আপনার ডাটাবেসের সরাসরি রুম সংখ্যা নিচে দেখা যাবে।</string>
+    <string name="dashboard_placeholder_note">টার্নঅ্যারাউন্ড টাইমার ও PMS সিঙ্ক ভবিষ্যতে আসছে। বাকি সব নিচে আপনার ডাটাবেস থেকে সরাসরি দেখা যাবে।</string>
     <string name="dashboard_total_rooms_label">মোট ডেমো রুম</string>
     <string name="dashboard_recent_activity">সাম্প্রতিক অবস্থার কার্যক্রম</string>
     <string name="dashboard_no_activity">কোনো সাম্প্রতিক অবস্থার পরিবর্তন নেই।</string>
+    <string name="offline_banner_offline">অফলাইন — সব কাজ তবুও চলবে</string>
+    <string name="offline_banner_online">অনলাইন</string>
+    <string name="dash_readiness_format">%1$d%% রুম প্রস্তুত</string>
+    <string name="dash_cleans_today_title">আজ সম্পন্ন পরিষ্কার</string>
+    <string name="dash_cleans_empty">আজ এখনো কোনো পরিষ্কার সম্পন্ন হয়নি।</string>
+    <string name="dash_tickets_title">অগ্রাধিকার অনুযায়ী খোলা টিকিট</string>
+    <string name="dash_tickets_empty">কোনো খোলা টিকিট নেই।</string>
+    <string name="dash_stuck_title">৬০ মিনিটের বেশি পরিষ্কারে আটকে আছে</string>
 
     <!-- Me Tab -->
     <string name="me_header_title">শিফট প্রোফাইল</string>

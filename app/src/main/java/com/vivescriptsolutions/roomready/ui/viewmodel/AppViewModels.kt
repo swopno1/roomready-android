@@ -7,21 +7,33 @@ import com.vivescriptsolutions.roomready.data.local.ChecklistRunEntity
 import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.local.RoomEntity
 import com.vivescriptsolutions.roomready.data.local.RoomTypeEntity
+import com.vivescriptsolutions.roomready.data.local.StatusCount
+import com.vivescriptsolutions.roomready.data.local.TicketPriorityCount
 import com.vivescriptsolutions.roomready.data.local.StatusLogEntity
 import com.vivescriptsolutions.roomready.data.local.TicketEntity
 import com.vivescriptsolutions.roomready.data.preferences.UserSession
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
 import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
+import com.vivescriptsolutions.roomready.data.connectivity.ConnectivityMonitor
+import com.vivescriptsolutions.roomready.data.repository.PersonCount
+import com.vivescriptsolutions.roomready.data.repository.cleansPerPerson
 import com.vivescriptsolutions.roomready.data.repository.filterTicketsByStatus
+import com.vivescriptsolutions.roomready.data.repository.readinessPercent
+import com.vivescriptsolutions.roomready.data.repository.startOfDayMillis
+import com.vivescriptsolutions.roomready.data.repository.stuckCleaningRooms
 import com.vivescriptsolutions.roomready.data.repository.urgentOpenByRoom
 import com.vivescriptsolutions.roomready.data.repository.urgentOpenCount
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import com.vivescriptsolutions.roomready.domain.RoomStatus
 import com.vivescriptsolutions.roomready.domain.RoomTransitionAction
 import com.vivescriptsolutions.roomready.domain.RoomTransitionEngine
 import com.vivescriptsolutions.roomready.domain.StaffRole
 import com.vivescriptsolutions.roomready.domain.TicketPriority
 import com.vivescriptsolutions.roomready.domain.TicketStatus
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -68,14 +80,37 @@ data class TicketDetailUiState(
   val session: UserSession = UserSession(),
 )
 
+private data class DashboardNumbers(
+  val statusRows: List<StatusCount>,
+  val cleaningRooms: List<RoomEntity>,
+  val cleansToday: List<StatusLogEntity>,
+  val ticketRows: List<TicketPriorityCount>,
+)
+
+private data class DashboardContext(
+  val recentLogs: List<StatusLogEntity>,
+  val session: UserSession,
+  val online: Boolean,
+  val now: Long,
+)
+
 data class DashboardTabUiState(
   val totalRooms: Int = 0,
   val statusCounts: Map<RoomStatus, Int> = emptyMap(),
+  val readinessPercent: Int = 0,
+  val cleansTodayCount: Int = 0,
+  val cleansTodayByPerson: List<PersonCount> = emptyList(),
+  val openTicketsByPriority: Map<TicketPriority, Int> = emptyMap(),
+  val stuckCleaningRooms: List<RoomEntity> = emptyList(),
+  val isOnline: Boolean = true,
   val recentLogs: List<StatusLogEntity> = emptyList(),
   val session: UserSession = UserSession(),
 )
 
-class MainAppViewModel(private val repository: HousekeepingRepository) : ViewModel() {
+class MainAppViewModel(
+  private val repository: HousekeepingRepository,
+  connectivityMonitor: ConnectivityMonitor,
+) : ViewModel() {
   private val selectedFilter = MutableStateFlow<RoomStatus?>(null)
   private val searchQuery = MutableStateFlow("")
   private val selectedTicketFilter = MutableStateFlow<TicketStatus?>(null)
@@ -168,18 +203,66 @@ class MainAppViewModel(private val repository: HousekeepingRepository) : ViewMod
         initialValue = TicketsTabUiState(),
       )
 
+  // Ticks every minute so the stuck-room highlight and "today" boundary
+  // stay live without polling any data source (Room pushes data changes).
+  private val minuteTicker: Flow<Long> =
+    flow {
+      while (true) {
+        emit(System.currentTimeMillis())
+        delay(60_000L)
+      }
+    }
+
+  private val cleansTodayFlow: Flow<List<StatusLogEntity>> =
+    minuteTicker.flatMapLatest { now ->
+      repository.observeLogsSince(RoomStatus.CLEANED, startOfDayMillis(now))
+    }
+
+  val onlineState: StateFlow<Boolean> =
+    connectivityMonitor.isOnline.stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(5000),
+      initialValue = true,
+    )
+
+  // Every number below is computed from Room queries at collection time —
+  // no cached copies. P7 swaps the snapshot underneath; these queries
+  // target the same tables and keep working untouched.
   val dashboardTabState: StateFlow<DashboardTabUiState> =
     combine(
-        repository.observeAllRooms(),
-        repository.observeRecentLogs(15),
-        repository.sessionFlow,
-      ) { rooms, logs, session ->
-        val counts = RoomStatus.entries.associateWith { status -> rooms.count { it.status == status } }
+        combine(
+          repository.observeStatusCounts(),
+          repository.observeRoomsByStatus(RoomStatus.CLEANING),
+          cleansTodayFlow,
+          repository.observeCountByPriority(TicketStatus.OPEN),
+        ) { statusRows, cleaningRooms, cleansToday, ticketRows ->
+          DashboardNumbers(statusRows, cleaningRooms, cleansToday, ticketRows)
+        },
+        combine(
+          repository.observeRecentLogs(15),
+          repository.sessionFlow,
+          connectivityMonitor.isOnline,
+          minuteTicker,
+        ) { recentLogs, session, online, now ->
+          DashboardContext(recentLogs, session, online, now)
+        },
+      ) { numbers, context ->
+        val counts =
+          RoomStatus.entries.associateWith { status ->
+            numbers.statusRows.firstOrNull { it.status == status }?.count ?: 0
+          }
+        val total = counts.values.sum()
         DashboardTabUiState(
-          totalRooms = rooms.size,
+          totalRooms = total,
           statusCounts = counts,
-          recentLogs = logs,
-          session = session,
+          readinessPercent = readinessPercent(counts[RoomStatus.READY] ?: 0, total),
+          cleansTodayCount = numbers.cleansToday.size,
+          cleansTodayByPerson = cleansPerPerson(numbers.cleansToday),
+          openTicketsByPriority = numbers.ticketRows.associate { it.priority to it.count },
+          stuckCleaningRooms = stuckCleaningRooms(numbers.cleaningRooms, context.now),
+          isOnline = context.online,
+          recentLogs = context.recentLogs,
+          session = context.session,
         )
       }
       .stateIn(
@@ -246,10 +329,13 @@ class MainAppViewModel(private val repository: HousekeepingRepository) : ViewMod
     }
   }
 
-  class Factory(private val repository: HousekeepingRepository) : ViewModelProvider.Factory {
+  class Factory(
+    private val repository: HousekeepingRepository,
+    private val connectivityMonitor: ConnectivityMonitor,
+  ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
-      MainAppViewModel(repository) as T
+      MainAppViewModel(repository, connectivityMonitor) as T
   }
 }
 

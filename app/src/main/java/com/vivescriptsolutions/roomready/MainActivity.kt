@@ -19,7 +19,10 @@ class MainActivity : ComponentActivity() {
     val appContainer = (application as RoomReadyApplication).container
     setContent {
       RoomReadyTheme {
-        RoomReadyApp(repository = appContainer.housekeepingRepository)
+        RoomReadyApp(
+          repository = appContainer.housekeepingRepository,
+          connectivityMonitor = appContainer.connectivityMonitor,
+        )
       }
     }
   }

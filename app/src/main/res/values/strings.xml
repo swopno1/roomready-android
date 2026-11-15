@@ -165,10 +165,18 @@
 
     <!-- Dashboard Tab (Placeholder + Live Local Counts) -->
     <string name="dashboard_header_title">Resort Snapshot</string>
-    <string name="dashboard_placeholder_note">Shift KPIs, turnaround timers, and PMS sync come in a future pass. Live room counts from your local database are shown below.</string>
+    <string name="dashboard_placeholder_note">Turnaround timers and PMS sync come in a future pass. Everything else below is live from your local database.</string>
     <string name="dashboard_total_rooms_label">Total Demo Rooms</string>
     <string name="dashboard_recent_activity">Recent Status Activity</string>
     <string name="dashboard_no_activity">No recent status changes recorded.</string>
+    <string name="offline_banner_offline">Offline — everything still works</string>
+    <string name="offline_banner_online">Online</string>
+    <string name="dash_readiness_format">%1$d%% rooms Ready</string>
+    <string name="dash_cleans_today_title">Cleans completed today</string>
+    <string name="dash_cleans_empty">No cleans completed yet today.</string>
+    <string name="dash_tickets_title">Open tickets by priority</string>
+    <string name="dash_tickets_empty">No open tickets.</string>
+    <string name="dash_stuck_title">Stuck in Cleaning over 60 min</string>
 
     <!-- Me Tab -->
     <string name="me_header_title">Shift Profile</string>
