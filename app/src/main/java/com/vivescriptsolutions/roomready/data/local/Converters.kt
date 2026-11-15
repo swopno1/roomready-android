@@ -42,6 +42,12 @@ class Converters {
   fun toChecklistRunKind(value: String): ChecklistRunKind = ChecklistRunKind.valueOf(value)
 
   @TypeConverter
+  fun fromOutboxKind(value: OutboxKind): String = value.name
+
+  @TypeConverter
+  fun toOutboxKind(value: String): OutboxKind = OutboxKind.valueOf(value)
+
+  @TypeConverter
   fun fromStringList(value: List<String>): String {
     val array = JSONArray()
     value.forEach { array.put(it) }

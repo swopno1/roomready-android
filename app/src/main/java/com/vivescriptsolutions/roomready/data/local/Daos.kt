@@ -24,11 +24,23 @@ interface RoomTypeDao {
   @Query("SELECT * FROM room_types WHERE id = :id")
   suspend fun getById(id: Long): RoomTypeEntity?
 
+  @Query("SELECT * FROM room_types WHERE pmsTypeId = :pmsTypeId")
+  suspend fun getByPmsTypeId(pmsTypeId: String): RoomTypeEntity?
+
+  @Query("DELETE FROM room_types WHERE pmsTypeId IS NOT NULL AND pmsTypeId NOT IN (:keepIds) AND id NOT IN (SELECT roomTypeId FROM rooms)")
+  suspend fun deletePmsTypesNotIn(keepIds: List<String>)
+
+  @Query("DELETE FROM room_types WHERE isDemo = 1 AND id NOT IN (SELECT roomTypeId FROM rooms)")
+  suspend fun deleteUnreferencedDemoTypes()
+
   @Query("SELECT COUNT(*) FROM room_types")
   suspend fun count(): Int
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   suspend fun insertAll(roomTypes: List<RoomTypeEntity>): List<Long>
+
+  @Update
+  suspend fun update(roomType: RoomTypeEntity)
 
   @Query("DELETE FROM room_types")
   suspend fun deleteAll()
@@ -44,6 +56,18 @@ interface RoomDao {
 
   @Query("SELECT * FROM rooms WHERE id = :roomId")
   suspend fun getRoomById(roomId: Long): RoomEntity?
+
+  @Query("SELECT * FROM rooms WHERE pmsUnitId = :pmsUnitId")
+  suspend fun getRoomByPmsUnitId(pmsUnitId: String): RoomEntity?
+
+  @Query("SELECT * FROM rooms WHERE pmsUnitId IS NOT NULL")
+  suspend fun getPmsRooms(): List<RoomEntity>
+
+  @Query("SELECT * FROM rooms")
+  suspend fun getAllRooms(): List<RoomEntity>
+
+  @Query("DELETE FROM rooms WHERE id = :roomId")
+  suspend fun deleteById(roomId: Long)
 
   @Query("SELECT status, COUNT(*) AS count FROM rooms GROUP BY status")
   fun observeStatusCounts(): Flow<List<StatusCount>>
@@ -66,6 +90,9 @@ interface RoomDao {
 
 @Dao
 interface ChecklistRunDao {
+  @Query("SELECT DISTINCT roomId FROM checklist_runs WHERE finishedAt IS NULL")
+  suspend fun unfinishedRoomIds(): List<Long>
+
   @Query("SELECT * FROM checklist_runs WHERE roomId = :roomId ORDER BY startedAt DESC LIMIT 1")
   fun observeLatestForRoom(roomId: Long): Flow<ChecklistRunEntity?>
 
@@ -98,6 +125,9 @@ interface TicketDao {
 
   @Query("SELECT * FROM tickets WHERE id = :ticketId")
   suspend fun getTicketById(ticketId: Long): TicketEntity?
+
+  @Query("SELECT * FROM tickets WHERE pmsTicketId = :pmsTicketId")
+  suspend fun getByPmsTicketId(pmsTicketId: String): TicketEntity?
 
   @Query("SELECT priority, COUNT(*) AS count FROM tickets WHERE status = :status GROUP BY priority")
   fun observeCountByPriority(status: TicketStatus): Flow<List<TicketPriorityCount>>
@@ -139,5 +169,59 @@ interface StatusLogDao {
   suspend fun insertAll(logs: List<StatusLogEntity>): List<Long>
 
   @Query("DELETE FROM status_logs")
+  suspend fun deleteAll()
+}
+
+@Dao
+interface StaffDao {
+  @Query("SELECT * FROM staff_members ORDER BY name ASC")
+  fun observeAll(): Flow<List<StaffMemberEntity>>
+
+  @Query("SELECT * FROM staff_members ORDER BY name ASC")
+  suspend fun getAll(): List<StaffMemberEntity>
+
+  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  suspend fun insertAll(members: List<StaffMemberEntity>)
+
+  @Query("DELETE FROM staff_members")
+  suspend fun deleteAll()
+}
+
+@Dao
+interface OutboxDao {
+  @Query("SELECT * FROM outbox_entries ORDER BY id ASC")
+  suspend fun getAllOrdered(): List<OutboxEntry>
+
+  @Query("SELECT COUNT(*) FROM outbox_entries")
+  fun observeCount(): Flow<Int>
+
+  @Query("SELECT COUNT(*) FROM outbox_entries")
+  suspend fun count(): Int
+
+  @Insert
+  suspend fun insert(entry: OutboxEntry): Long
+
+  @Update
+  suspend fun update(entry: OutboxEntry)
+
+  @Query("DELETE FROM outbox_entries WHERE id = :id")
+  suspend fun deleteById(id: Long)
+
+  @Query("DELETE FROM outbox_entries")
+  suspend fun deleteAll()
+}
+
+@Dao
+interface SyncStateDao {
+  @Query("SELECT * FROM sync_state WHERE id = 1")
+  suspend fun get(): SyncStateEntity?
+
+  @Query("SELECT * FROM sync_state WHERE id = 1")
+  fun observe(): Flow<SyncStateEntity?>
+
+  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  suspend fun upsert(state: SyncStateEntity)
+
+  @Query("DELETE FROM sync_state")
   suspend fun deleteAll()
 }

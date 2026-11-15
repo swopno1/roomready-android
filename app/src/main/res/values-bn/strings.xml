@@ -21,6 +21,8 @@
     <string name="role_supervisor">সুপারভাইজার</string>
     <string name="role_housekeeper_desc">রুম পরিষ্কার করুন, ৮ ধাপের চেকলিস্ট সম্পন্ন করুন এবং রুম পরিদর্শনে পাঠান।</string>
     <string name="role_supervisor_desc">সমাপ্ত রুম পরিদর্শন করুন, প্রস্তুত অবস্থা অনুমোদন করুন এবং বন্ধ রুম পরিচালনা করুন।</string>
+    <string name="role_system">সিস্টেম</string>
+    <string name="role_system_desc">স্বয়ংক্রিয় PMS সিঙ্ক সিদ্ধান্ত।</string>
 
     <!-- Room Statuses -->
     <string name="status_all">সব</string>
@@ -36,6 +38,9 @@
     <string name="room_type_family_suite">Family Suite</string>
     <string name="room_type_garden_cottage">Garden Cottage</string>
     <string name="floor_ground">নিচতলা উইং</string>
+    <string name="floor_block_format">ব্লক %1$s</string>
+    <string name="floor_unknown">—</string>
+    <string name="offline_banner_queued_format">· %1$dটি অপেক্ষমাণ</string>
     <string name="floor_number">%1$d তলা</string>
     <string name="room_title_format">রুম %1$s</string>
     <string name="room_meta_format">%1$s · %2$s</string>
@@ -237,4 +242,27 @@
     <string name="me_reset_dialog_body">এতে ১২টি ডেমো রুম, চেকলিস্ট, টিকিট ও অবস্থার লগ শুরুর অবস্থায় ফিরে যাবে।</string>
     <string name="me_reset_confirm">রিসেট</string>
     <string name="me_reset_done_snackbar">ডেমো রিসোর্ট ডাটা পুনরুদ্ধার হয়েছে</string>
+
+    <!-- PMS Connection -->
+    <string name="connection_title">PMS সংযোগ</string>
+    <string name="connection_row_title">PMS সংযোগ</string>
+    <string name="connection_mode_demo">ডেমো</string>
+    <string name="connection_mode_live">লাইভ</string>
+    <string name="connection_demo_body">বান্ডিল স্ন্যাপশট। শূন্য নেটওয়ার্ক — সব অফলাইনে চলে।</string>
+    <string name="connection_url_label">PMS অরিজিন (https://…)</string>
+    <string name="connection_url_hint">https://demo13.vivereply.com</string>
+    <string name="connection_key_label">প্রপার্টি API কি</string>
+    <string name="connection_key_hint">rk.…</string>
+    <string name="connection_save_connect">সংরক্ষণ ও সংযোগ</string>
+    <string name="connection_sync_now">এখনই সিঙ্ক করুন</string>
+    <string name="connection_disconnect">সংযোগ বিচ্ছিন্ন করুন</string>
+    <string name="connection_status_idle">এখনো সংযুক্ত নয়।</string>
+    <string name="connection_status_synced_format">সর্বশেষ সিঙ্ক %1$s · %2$sটি অপেক্ষমাণ</string>
+    <string name="connection_status_syncing">সিঙ্ক হচ্ছে…</string>
+    <string name="connection_status_error_format">সর্বশেষ সিঙ্ক ব্যর্থ: %1$s</string>
+    <string name="connection_saved">সংযুক্ত — স্ন্যাপশট ডাউনলোড হয়েছে।</string>
+    <string name="connection_save_failed_format">সংযোগ করা যায়নি: %1$s</string>
+    <string name="connection_unauthorized">কি প্রত্যাখ্যাত হয়েছে। নতুন প্রপার্টি API কি দিন।</string>
+    <string name="connection_update_required_format">এই প্রপার্টির জন্য কন্ট্রাক্ট v%1$d দরকার — অ্যাপ আপডেট করুন। কিছুই বদলানো হয়নি।</string>
+    <string name="connection_property_format">%1$s · ব্যবসায়িক তারিখ %2$s</string>
 </resources>

@@ -4,6 +4,29 @@ All notable changes to the RoomReady Android application.
 
 ## [Unreleased]
 
+### P7 — PMS sync layer (pairs with server W2)
+
+- Me → PMS Connection screen: Demo (bundled snapshot, zero network)
+  or Live (PMS origin + property API key) with last-sync time, honest
+  status line, Sync now, and Disconnect. HTTPS origins only.
+- Live mode replaces local inventory with the PMS bootstrap snapshot
+  (room types, units, checklist steps, staff roster, property identity)
+  in one Room transaction; Demo data is reseeded on disconnect.
+- Outbox + WorkManager worker (network-constrained, exponential
+  backoff) pushes status actions and ticket writes in order, then pulls
+  and merges; offline is silent and the banner shows pending count.
+- Contract v1 enforced (mismatch = honest update-needed state, nothing
+  touched); malformed payloads rejected whole; 401 wipes the key and
+  returns to Connection; 409 surfaces the conflict, never forces.
+- Out-of-service is PMS-driven and read-only in Live mode (Demo keeps
+  local marking); staff picker uses the synced roster in Live mode.
+- New normal-level `INTERNET` permission (Live sync only, HTTPS-only);
+  API key in Keystore-backed encrypted storage, never logged.
+  Legal/declaration/data-safety docs updated for Live-mode sync.
+- Schema v8 + migration 7→8; fake-server (MockWebServer) suite covers
+  push order, retry, 401 wipe, 409 conflict, merge matrix, bootstrap
+  replace, malformed rejection, and outbox drain.
+
 ### P6 — Photo evidence (CameraX)
 
 - Finishing a checklist requires an after photo (full-resolution

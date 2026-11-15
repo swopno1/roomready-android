@@ -162,12 +162,20 @@ fun OfflineReadyPill(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun localizedFloorLabel(floor: Int): String =
-  if (floor == 0) {
+fun localizedFloorLabel(floor: Int, block: String? = null): String {
+  if (floor < 0) {
+    return if (!block.isNullOrBlank()) {
+      stringResource(R.string.floor_block_format, block)
+    } else {
+      stringResource(R.string.floor_unknown)
+    }
+  }
+  return if (floor == 0) {
     stringResource(R.string.floor_ground)
   } else {
     stringResource(R.string.floor_number, floor)
   }
+}
 
 @Composable
 fun localizedRoomTypeName(rawName: String): String =

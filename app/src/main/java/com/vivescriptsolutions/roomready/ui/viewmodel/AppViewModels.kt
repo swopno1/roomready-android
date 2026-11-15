@@ -16,6 +16,7 @@ import com.vivescriptsolutions.roomready.data.preferences.UserSession
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
 import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
+import com.vivescriptsolutions.roomready.domain.ConnectionMode
 import com.vivescriptsolutions.roomready.data.connectivity.ConnectivityMonitor
 import com.vivescriptsolutions.roomready.data.repository.PersonCount
 import com.vivescriptsolutions.roomready.data.repository.cleansPerPerson
@@ -25,6 +26,9 @@ import com.vivescriptsolutions.roomready.data.repository.startOfDayMillis
 import com.vivescriptsolutions.roomready.data.repository.stuckCleaningRooms
 import com.vivescriptsolutions.roomready.data.repository.urgentOpenByRoom
 import com.vivescriptsolutions.roomready.data.repository.urgentOpenCount
+import com.vivescriptsolutions.roomready.data.sync.BootstrapOutcome
+import com.vivescriptsolutions.roomready.data.sync.SyncOutcome
+import com.vivescriptsolutions.roomready.data.sync.SyncRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -83,6 +87,32 @@ data class TicketDetailUiState(
   val session: UserSession = UserSession(),
 )
 
+sealed interface ConnectionMessage {
+  data object Saved : ConnectionMessage
+
+  data object Synced : ConnectionMessage
+
+  data object Disconnected : ConnectionMessage
+
+  data class Failed(val detail: String) : ConnectionMessage
+
+  data object Unauthorized : ConnectionMessage
+
+  data class UpdateRequired(val foundVersion: Int?) : ConnectionMessage
+}
+
+data class ConnectionUiState(
+  val mode: ConnectionMode = ConnectionMode.DEMO,
+  val baseUrl: String? = null,
+  val propertyName: String? = null,
+  val businessDate: String? = null,
+  val lastSyncAt: Long? = null,
+  val lastError: String? = null,
+  val pendingCount: Int = 0,
+  val syncing: Boolean = false,
+  val message: ConnectionMessage? = null,
+)
+
 private data class DashboardNumbers(
   val statusRows: List<StatusCount>,
   val cleaningRooms: List<RoomEntity>,
@@ -95,6 +125,7 @@ private data class DashboardContext(
   val recentLogs: List<StatusLogEntity>,
   val session: UserSession,
   val online: Boolean,
+  val outboxCount: Int,
   val now: Long,
 )
 
@@ -108,6 +139,7 @@ data class DashboardTabUiState(
   val stuckCleaningRooms: List<RoomEntity> = emptyList(),
   val toInspectRooms: List<RoomEntity> = emptyList(),
   val isOnline: Boolean = true,
+  val outboxPendingCount: Int = 0,
   val recentLogs: List<StatusLogEntity> = emptyList(),
   val session: UserSession = UserSession(),
 )
@@ -225,7 +257,7 @@ class MainAppViewModel(
 
   private val cleansTodayFlow: Flow<List<StatusLogEntity>> =
     minuteTicker.flatMapLatest { now ->
-      repository.observeLogsSince(RoomStatus.CLEANED, startOfDayMillis(now))
+      repository.observeLogsSince(RoomStatus.CLEANED, repository.todayStartMillis(now))
     }
 
   val onlineState: StateFlow<Boolean> =
@@ -253,9 +285,10 @@ class MainAppViewModel(
           repository.observeRecentLogs(15),
           repository.sessionFlow,
           connectivityMonitor.isOnline,
+          repository.observeOutboxCount(),
           minuteTicker,
-        ) { recentLogs, session, online, now ->
-          DashboardContext(recentLogs, session, online, now)
+        ) { recentLogs, session, online, outboxCount, now ->
+          DashboardContext(recentLogs, session, online, outboxCount, now)
         },
       ) { numbers, context ->
         val counts =
@@ -273,6 +306,7 @@ class MainAppViewModel(
           stuckCleaningRooms = stuckCleaningRooms(numbers.cleaningRooms, context.now),
           toInspectRooms = numbers.toInspectRooms,
           isOnline = context.online,
+          outboxPendingCount = context.outboxCount,
           recentLogs = context.recentLogs,
           session = context.session,
         )
@@ -362,6 +396,7 @@ class RoomDetailViewModel(
         repository.observeRoom(roomId),
         repository.observeRoomTypes(),
         repository.observeLatestChecklistRun(roomId),
+        repository.observeConnection(),
         combine(
           repository.observeTicketsForRoom(roomId),
           repository.observeLogsForRoom(roomId),
@@ -369,13 +404,21 @@ class RoomDetailViewModel(
         ) { tickets, logs, session ->
           Triple(tickets, logs, session)
         },
-      ) { room, roomTypes, checklistRun, extras ->
+      ) { room, roomTypes, checklistRun, connection, extras ->
         val (tickets, logs, session) = extras
+        val mode = connection.mode
         val roomType = roomTypes.firstOrNull { it.id == room?.roomTypeId }
         val activeRole = session.role ?: StaffRole.HOUSEKEEPER
+        // OUT_OF_SERVICE is PMS-driven and read-only in Live mode. Demo keeps it.
+        val liveMode = mode == ConnectionMode.LIVE
         val legalActions =
           if (room != null) {
             RoomTransitionEngine.legalActionsFor(room.status, activeRole)
+              .filter { action ->
+                !liveMode ||
+                  (action.toStatus != RoomStatus.OUT_OF_SERVICE &&
+                    room.status != RoomStatus.OUT_OF_SERVICE)
+              }
           } else {
             emptyList()
           }
@@ -598,5 +641,106 @@ class TicketDetailViewModel(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
       TicketDetailViewModel(ticketId, repository) as T
+  }
+}
+
+class ConnectionViewModel(
+  private val sync: SyncRepository,
+) : ViewModel() {
+  private val syncing = MutableStateFlow(false)
+  private val message = MutableStateFlow<ConnectionMessage?>(null)
+
+  val uiState: StateFlow<ConnectionUiState> =
+    combine(
+      sync.observeConnection(),
+      sync.observeSyncState(),
+      sync.observeOutboxCount(),
+      syncing,
+      message,
+    ) { connection, syncState, pending, syncingNow, msg ->
+      ConnectionUiState(
+        mode = connection.mode,
+        baseUrl = connection.baseUrl,
+        propertyName = syncState?.propertyName,
+        businessDate = syncState?.businessDate,
+        lastSyncAt = syncState?.lastSyncAt,
+        lastError = syncState?.lastError,
+        pendingCount = pending,
+        syncing = syncingNow,
+        message = msg,
+      )
+    }.stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(5000),
+      initialValue = ConnectionUiState(),
+    )
+
+  init {
+    sync.clearAuthRevoked()
+  }
+
+  fun setMode(mode: ConnectionMode) {
+    message.value = null
+    viewModelScope.launch { sync.setMode(mode) }
+  }
+
+  fun saveConnection(baseUrl: String, rawKey: String) {
+    message.value = null
+    viewModelScope.launch {
+      syncing.value = true
+      try {
+        message.value =
+          when (val outcome = sync.saveConnection(baseUrl, rawKey)) {
+            is BootstrapOutcome.Applied -> ConnectionMessage.Saved
+            is BootstrapOutcome.Unauthorized -> ConnectionMessage.Unauthorized
+            is BootstrapOutcome.UpdateRequired ->
+              ConnectionMessage.UpdateRequired(outcome.foundVersion)
+            is BootstrapOutcome.Failed -> ConnectionMessage.Failed(outcome.reason)
+          }
+      } finally {
+        syncing.value = false
+      }
+    }
+  }
+
+  fun syncNow() {
+    message.value = null
+    viewModelScope.launch {
+      syncing.value = true
+      try {
+        message.value =
+          when (val outcome = sync.syncNow()) {
+            is SyncOutcome.Completed ->
+              if (outcome.errors.isEmpty()) ConnectionMessage.Synced
+              else ConnectionMessage.Failed(outcome.errors.first())
+            is SyncOutcome.AuthRevoked -> ConnectionMessage.Unauthorized
+            is SyncOutcome.Offline ->
+              ConnectionMessage.Failed("Offline — changes stay queued")
+            is SyncOutcome.NotConfigured ->
+              ConnectionMessage.Failed("Connect a property first")
+          }
+      } finally {
+        syncing.value = false
+      }
+    }
+  }
+
+  fun disconnect() {
+    viewModelScope.launch {
+      sync.disconnect()
+      message.value = ConnectionMessage.Disconnected
+    }
+  }
+
+  fun clearMessage() {
+    message.value = null
+  }
+
+  class Factory(
+    private val sync: SyncRepository,
+  ) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T =
+      ConnectionViewModel(sync) as T
   }
 }

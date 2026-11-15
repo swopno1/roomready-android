@@ -22,6 +22,7 @@ class MainActivity : ComponentActivity() {
         RoomReadyApp(
           repository = appContainer.housekeepingRepository,
           connectivityMonitor = appContainer.connectivityMonitor,
+          syncRepository = appContainer.syncRepository,
         )
       }
     }

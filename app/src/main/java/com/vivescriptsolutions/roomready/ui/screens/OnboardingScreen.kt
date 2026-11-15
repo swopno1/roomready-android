@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -190,6 +191,7 @@ fun RoleSelectionCard(
     when (role) {
       StaffRole.HOUSEKEEPER -> Icons.Filled.CleaningServices
       StaffRole.SUPERVISOR -> Icons.Filled.VerifiedUser
+      StaffRole.SYSTEM -> Icons.Filled.Sync
     }
   Surface(
     onClick = onClick,

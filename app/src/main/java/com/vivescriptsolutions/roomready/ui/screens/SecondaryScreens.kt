@@ -284,8 +284,18 @@ private fun TicketFilterChip(
 }
 
 @Composable
-fun OfflineProofBanner(isOnline: Boolean) {
+fun OfflineProofBanner(isOnline: Boolean, pendingCount: Int = 0) {
   val positive = offlineBannerTone(isOnline) == BannerTone.POSITIVE
+  val baseText =
+    stringResource(
+      if (positive) R.string.offline_banner_offline else R.string.offline_banner_online
+    )
+  val text =
+    if (pendingCount > 0) {
+      baseText + " " + stringResource(R.string.offline_banner_queued_format, pendingCount)
+    } else {
+      baseText
+    }
   Surface(
     shape = MaterialTheme.shapes.medium,
     color =
@@ -308,10 +318,7 @@ fun OfflineProofBanner(isOnline: Boolean) {
         modifier = Modifier.size(20.dp),
       )
       Text(
-        text =
-          stringResource(
-            if (positive) R.string.offline_banner_offline else R.string.offline_banner_online
-          ),
+        text = text,
         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
       )
     }
@@ -339,7 +346,7 @@ fun DashboardScreen(
       verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
       item {
-        OfflineProofBanner(isOnline = uiState.isOnline)
+        OfflineProofBanner(isOnline = uiState.isOnline, pendingCount = uiState.outboxPendingCount)
       }
 
       item {
@@ -690,6 +697,7 @@ fun MeScreen(
   onSwitchRole: (StaffRole) -> Unit,
   onSwitchStaffName: (String) -> Unit,
   onResetDemoData: () -> Unit,
+  onOpenConnection: () -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   var showResetDialog by remember { mutableStateOf(false) }
@@ -769,6 +777,19 @@ fun MeScreen(
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
           )
+        }
+      }
+
+      CalmSectionCard {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+          SectionHeading(text = stringResource(R.string.connection_row_title))
+          OutlinedButton(
+            onClick = onOpenConnection,
+            modifier =
+              Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("open_connection_button"),
+          ) {
+            Text(text = stringResource(R.string.connection_row_title))
+          }
         }
       }
 

@@ -53,7 +53,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.vivescriptsolutions.roomready.R
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
+import com.vivescriptsolutions.roomready.data.sync.SyncRepository
 import com.vivescriptsolutions.roomready.ui.screens.ChecklistRunScreen
+import com.vivescriptsolutions.roomready.ui.screens.ConnectionScreen
 import com.vivescriptsolutions.roomready.ui.screens.DashboardScreen
 import com.vivescriptsolutions.roomready.ui.screens.InspectionScreen
 import com.vivescriptsolutions.roomready.ui.screens.MeScreen
@@ -67,6 +69,7 @@ import com.vivescriptsolutions.roomready.ui.screens.PhotoCaptureMode
 import com.vivescriptsolutions.roomready.ui.screens.PhotoCaptureScreen
 import com.vivescriptsolutions.roomready.ui.screens.TicketDetailScreen
 import com.vivescriptsolutions.roomready.ui.screens.TicketsScreen
+import com.vivescriptsolutions.roomready.ui.viewmodel.ConnectionViewModel
 import com.vivescriptsolutions.roomready.ui.viewmodel.MainAppViewModel
 import com.vivescriptsolutions.roomready.ui.viewmodel.RoomDetailViewModel
 import com.vivescriptsolutions.roomready.ui.viewmodel.TicketDetailViewModel
@@ -77,6 +80,7 @@ object Routes {
   const val TICKETS = "tickets"
   const val DASHBOARD = "dashboard"
   const val ME = "me"
+  const val CONNECTION = "connection"
   const val ROOM_DETAIL = "room_detail/{roomId}"
   const val CHECKLIST_RUN = "checklist_run/{roomId}"
   const val TICKET_DETAIL = "ticket_detail/{ticketId}"
@@ -122,6 +126,7 @@ enum class BottomNavTab(
 fun RoomReadyApp(
   repository: HousekeepingRepository,
   connectivityMonitor: ConnectivityMonitor,
+  syncRepository: SyncRepository,
 ) {
   val mainViewModel: MainAppViewModel =
     viewModel(factory = MainAppViewModel.Factory(repository, connectivityMonitor))
@@ -163,6 +168,21 @@ fun RoomReadyApp(
   // changes such as locale switches recompose with fresh values.
   val resetDoneMessage = stringResource(R.string.me_reset_done_snackbar)
   val runFinishedMessage = stringResource(R.string.run_finished_snackbar)
+  val unauthorizedMessage = stringResource(R.string.connection_unauthorized)
+
+  // Contract: 401 wipes the key and returns to the Connection screen.
+  // The flag is cleared on navigate so the next revocation re-fires.
+  LaunchedEffect(navController) {
+    syncRepository.authRevoked.collect { revoked ->
+      if (revoked) {
+        syncRepository.clearAuthRevoked()
+        coroutineScope.launch {
+          snackbarHostState.showSnackbar(unauthorizedMessage)
+        }
+        navController.navigate(Routes.CONNECTION) { launchSingleTop = true }
+      }
+    }
+  }
 
   Scaffold(
     modifier = Modifier.fillMaxSize(),
@@ -322,6 +342,22 @@ fun RoomReadyApp(
               }
             }
           },
+          onOpenConnection = { navController.navigate(Routes.CONNECTION) },
+          modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
+        )
+      }
+
+      composable(Routes.CONNECTION) {
+        val connectionViewModel: ConnectionViewModel =
+          viewModel(factory = ConnectionViewModel.Factory(syncRepository))
+        val connectionState by connectionViewModel.uiState.collectAsStateWithLifecycle()
+        ConnectionScreen(
+          uiState = connectionState,
+          onBack = { navController.popBackStack() },
+          onSetMode = connectionViewModel::setMode,
+          onSaveConnection = connectionViewModel::saveConnection,
+          onSyncNow = connectionViewModel::syncNow,
+          onDisconnect = connectionViewModel::disconnect,
           modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
         )
       }

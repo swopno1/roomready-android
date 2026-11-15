@@ -350,7 +350,7 @@ private fun RoomCard(
               stringResource(
                 R.string.room_meta_format,
                 localizedRoomTypeName(room.roomTypeName),
-                localizedFloorLabel(room.floor),
+                localizedFloorLabel(room.floor, room.block),
               ),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -8,8 +8,10 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.vivescriptsolutions.roomready.domain.ConnectionMode
 import com.vivescriptsolutions.roomready.domain.StaffRole
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 private val Context.roomReadyDataStore: DataStore<Preferences> by
@@ -36,6 +38,11 @@ val DEFAULT_STAFF_ROSTER: List<String> =
     "Sajib Mia",
   )
 
+data class PmsConnection(
+  val mode: ConnectionMode = ConnectionMode.DEMO,
+  val baseUrl: String? = null,
+)
+
 class UserPreferencesRepository(private val context: Context) {
   private object Keys {
     val SELECTED_ROLE = stringPreferencesKey("selected_role")
@@ -43,6 +50,8 @@ class UserPreferencesRepository(private val context: Context) {
     val IS_DEMO_MODE = booleanPreferencesKey("is_demo_mode")
     val HAS_SEEDED_DEMO = booleanPreferencesKey("has_seeded_demo")
     val CUSTOM_STAFF_NAMES = stringSetPreferencesKey("custom_staff_names")
+    val CONNECTION_MODE = stringPreferencesKey("connection_mode")
+    val PMS_BASE_URL = stringPreferencesKey("pms_base_url")
   }
 
   val sessionFlow: Flow<UserSession> =
@@ -94,6 +103,29 @@ class UserPreferencesRepository(private val context: Context) {
     context.roomReadyDataStore.edit { prefs ->
       prefs[Keys.HAS_SEEDED_DEMO] = true
       prefs[Keys.IS_DEMO_MODE] = true
+    }
+  }
+
+  fun observeConnection(): Flow<PmsConnection> =
+    context.roomReadyDataStore.data.map { prefs ->
+      PmsConnection(
+        mode =
+          prefs[Keys.CONNECTION_MODE]?.let { raw ->
+            runCatching { ConnectionMode.valueOf(raw) }.getOrNull()
+          } ?: ConnectionMode.DEMO,
+        baseUrl = prefs[Keys.PMS_BASE_URL]?.takeIf { it.isNotBlank() },
+      )
+    }
+
+  suspend fun connection(): PmsConnection = observeConnection().first()
+
+  suspend fun setConnectionMode(mode: ConnectionMode) {
+    context.roomReadyDataStore.edit { prefs -> prefs[Keys.CONNECTION_MODE] = mode.name }
+  }
+
+  suspend fun setBaseUrl(baseUrl: String) {
+    context.roomReadyDataStore.edit { prefs ->
+      prefs[Keys.PMS_BASE_URL] = baseUrl.trim().trimEnd('/')
     }
   }
 }

@@ -16,8 +16,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
       ChecklistRunEntity::class,
       TicketEntity::class,
       StatusLogEntity::class,
+      StaffMemberEntity::class,
+      OutboxEntry::class,
+      SyncStateEntity::class,
     ],
-  version = 7,
+  version = 8,
   exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -31,6 +34,12 @@ abstract class AppDatabase : RoomDatabase() {
   abstract fun ticketDao(): TicketDao
 
   abstract fun statusLogDao(): StatusLogDao
+
+  abstract fun staffDao(): StaffDao
+
+  abstract fun outboxDao(): OutboxDao
+
+  abstract fun syncStateDao(): SyncStateDao
 
   companion object {
     const val DATABASE_NAME = "roomready.db"
@@ -92,9 +101,39 @@ abstract class AppDatabase : RoomDatabase() {
         }
       }
 
+    val MIGRATION_7_8: Migration =
+      object : Migration(7, 8) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+          db.execSQL("ALTER TABLE room_types ADD COLUMN pmsTypeId TEXT")
+          db.execSQL("ALTER TABLE rooms ADD COLUMN pmsUnitId TEXT")
+          db.execSQL("ALTER TABLE rooms ADD COLUMN block TEXT")
+          db.execSQL("ALTER TABLE rooms ADD COLUMN departsToday INTEGER NOT NULL DEFAULT 0")
+          db.execSQL("ALTER TABLE rooms ADD COLUMN pmsUnitStatus TEXT")
+          db.execSQL("ALTER TABLE rooms ADD COLUMN pmsHousekeepingAt INTEGER")
+          db.execSQL("ALTER TABLE tickets ADD COLUMN pmsTicketId TEXT")
+          db.execSQL("ALTER TABLE status_logs ADD COLUMN source TEXT NOT NULL DEFAULT 'local'")
+          db.execSQL(
+            "CREATE TABLE IF NOT EXISTS staff_members " +
+              "(pmsId TEXT NOT NULL, name TEXT NOT NULL, role TEXT NOT NULL, PRIMARY KEY(pmsId))"
+          )
+          db.execSQL(
+            "CREATE TABLE IF NOT EXISTS outbox_entries " +
+              "(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, createdAt INTEGER NOT NULL, " +
+              "kind TEXT NOT NULL, unitPmsId TEXT, ticketLocalId INTEGER, payloadJson TEXT NOT NULL, " +
+              "attempts INTEGER NOT NULL, lastError TEXT)"
+          )
+          db.execSQL("CREATE INDEX IF NOT EXISTS index_outbox_entries_createdAt ON outbox_entries(createdAt)")
+          db.execSQL(
+            "CREATE TABLE IF NOT EXISTS sync_state " +
+              "(id INTEGER NOT NULL, propertyName TEXT, propertyTimezone TEXT, businessDate TEXT, " +
+              "contractVersion INTEGER, lastSyncAt INTEGER, lastError TEXT, PRIMARY KEY(id))"
+          )
+        }
+      }
+
     fun build(context: Context): AppDatabase =
       Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, DATABASE_NAME)
-        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
         .build()
   }
 }

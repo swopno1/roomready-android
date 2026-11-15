@@ -17,6 +17,7 @@ data class RoomTypeEntity(
   val name: String,
   val checklistTemplateSteps: List<String>,
   val isDemo: Boolean = true,
+  val pmsTypeId: String? = null,
 )
 
 @Entity(
@@ -44,6 +45,13 @@ data class RoomEntity(
   val isDemo: Boolean = true,
   val notes: String = "",
   val isOccupied: Boolean = false,
+  // PMS snapshot columns (null/absent in Demo mode). floor uses 0 as the
+  // "unknown" sentinel because the column predates sync and stays non-null.
+  val pmsUnitId: String? = null,
+  val block: String? = null,
+  val departsToday: Boolean = false,
+  val pmsUnitStatus: String? = null,
+  val pmsHousekeepingAt: Long? = null,
 )
 
 @Entity(
@@ -100,6 +108,7 @@ data class TicketEntity(
   val resolvedBy: String? = null,
   val resolvedAt: Long? = null,
   val photoPath: String? = null,
+  val pmsTicketId: String? = null,
   val isDemo: Boolean = true,
 )
 
@@ -126,4 +135,49 @@ data class StatusLogEntity(
   val changedByRole: StaffRole,
   val changedAt: Long,
   val reason: String? = null,
+  val source: String = SOURCE_LOCAL,
+) {
+  companion object {
+    const val SOURCE_LOCAL = "local"
+    const val SOURCE_PMS = "pms"
+  }
+}
+
+@Entity(tableName = "staff_members")
+data class StaffMemberEntity(
+  @PrimaryKey val pmsId: String,
+  val name: String,
+  val role: StaffRole,
+)
+
+enum class OutboxKind {
+  STATUS,
+  TICKET_CREATE,
+  TICKET_PATCH,
+}
+
+@Entity(
+  tableName = "outbox_entries",
+  indices = [Index(value = ["createdAt"])],
+)
+data class OutboxEntry(
+  @PrimaryKey(autoGenerate = true) val id: Long = 0,
+  val createdAt: Long,
+  val kind: OutboxKind,
+  val unitPmsId: String?,
+  val ticketLocalId: Long?,
+  val payloadJson: String,
+  val attempts: Int = 0,
+  val lastError: String? = null,
+)
+
+@Entity(tableName = "sync_state")
+data class SyncStateEntity(
+  @PrimaryKey val id: Int = 1,
+  val propertyName: String? = null,
+  val propertyTimezone: String? = null,
+  val businessDate: String? = null,
+  val contractVersion: Int? = null,
+  val lastSyncAt: Long? = null,
+  val lastError: String? = null,
 )

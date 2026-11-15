@@ -17,6 +17,9 @@ enum class StaffRole(
 ) {
   HOUSEKEEPER(R.string.role_housekeeper, R.string.role_housekeeper_desc),
   SUPERVISOR(R.string.role_supervisor, R.string.role_supervisor_desc),
+  // Attribution for PMS sync merge decisions. In no transition's allowed-role
+  // set, so it can never act; never offered in any role picker.
+  SYSTEM(R.string.role_system, R.string.role_system_desc),
 }
 
 enum class TicketPriority(@StringRes val labelRes: Int) {

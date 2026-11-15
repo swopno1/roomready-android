@@ -29,6 +29,11 @@ object DemoSeeder {
       db.checklistRunDao().deleteAll()
       db.roomDao().deleteAll()
       db.roomTypeDao().deleteAll()
+      // A demo reset also drops Live-mode residue: queued PMS writes,
+      // the synced roster, and the sync snapshot header.
+      db.outboxDao().deleteAll()
+      db.staffDao().deleteAll()
+      db.syncStateDao().deleteAll()
       insertDemoRecords(db, nowMillis)
     }
   }

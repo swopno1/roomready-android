@@ -9,12 +9,16 @@ import com.vivescriptsolutions.roomready.data.local.RoomTypeEntity
 import com.vivescriptsolutions.roomready.data.local.RunReturnFlag
 import com.vivescriptsolutions.roomready.data.local.StatusCount
 import com.vivescriptsolutions.roomready.data.local.StatusLogEntity
+import com.vivescriptsolutions.roomready.data.local.OutboxEntry
+import com.vivescriptsolutions.roomready.data.local.OutboxKind
 import com.vivescriptsolutions.roomready.data.local.TicketEntity
 import com.vivescriptsolutions.roomready.data.local.TicketPriorityCount
+import com.vivescriptsolutions.roomready.data.preferences.PmsConnection
 import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesRepository
 import com.vivescriptsolutions.roomready.data.preferences.UserSession
 import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
 import com.vivescriptsolutions.roomready.domain.ChecklistTemplates
+import com.vivescriptsolutions.roomready.domain.ConnectionMode
 import com.vivescriptsolutions.roomready.domain.ReturnReason
 import com.vivescriptsolutions.roomready.domain.failedStepKeysForReason
 import com.vivescriptsolutions.roomready.domain.formatReturnReason
@@ -23,13 +27,38 @@ import com.vivescriptsolutions.roomready.domain.RoomTransitionEngine
 import com.vivescriptsolutions.roomready.domain.StaffRole
 import com.vivescriptsolutions.roomready.domain.TicketPriority
 import com.vivescriptsolutions.roomready.domain.TicketStatus
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import org.json.JSONObject
 
 class HousekeepingRepository(
   private val db: AppDatabase,
   private val prefs: UserPreferencesRepository,
+  private val onOutboxAppended: () -> Unit = {},
 ) {
-  val sessionFlow: Flow<UserSession> = prefs.sessionFlow
+  /**
+   * Session with the staff roster overridden by the synced PMS roster in
+   * Live mode (Demo mode keeps the local list). Also reports Live mode as
+   * non-demo so demo-only UI gives way to synced content.
+   */
+  val sessionFlow: Flow<UserSession> =
+    combine(
+      prefs.sessionFlow,
+      db.staffDao().observeAll(),
+      prefs.observeConnection(),
+    ) { session, staff, connection ->
+      if (connection.mode == ConnectionMode.LIVE) {
+        session.copy(
+          staffRoster = staff.map { it.name }.distinct().sorted(),
+          isDemoMode = false,
+        )
+      } else {
+        session
+      }
+    }
 
   fun observeAllRooms(): Flow<List<RoomEntity>> = db.roomDao().observeAllRooms()
 
@@ -65,7 +94,35 @@ class HousekeepingRepository(
   fun observeReturnedRunFlags(): Flow<List<RunReturnFlag>> =
     db.checklistRunDao().observeReturnedRunFlags()
 
+  fun observeConnection(): Flow<PmsConnection> = prefs.observeConnection()
+
+  fun observeOutboxCount(): Flow<Int> = db.outboxDao().observeCount()
+
+  /**
+   * Start-of-"today" for dashboard cleans. In Live mode with a synced
+   * business date this is midnight of that date in the property timezone;
+   * otherwise the device-local day start.
+   */
+  suspend fun todayStartMillis(nowMillis: Long = System.currentTimeMillis()): Long {
+    if (prefs.connection().mode == ConnectionMode.LIVE) {
+      val sync = db.syncStateDao().get()
+      val businessDate = sync?.businessDate
+      val timezone = sync?.propertyTimezone
+      if (businessDate != null && timezone != null) {
+        val parsed =
+          runCatching {
+            SimpleDateFormat("yyyy-MM-dd", Locale.US)
+              .apply { timeZone = TimeZone.getTimeZone(timezone) }
+              .parse(businessDate)?.time
+          }.getOrNull()
+        if (parsed != null) return parsed
+      }
+    }
+    return startOfDayMillis(nowMillis)
+  }
+
   suspend fun ensureDemoDataSeeded() {
+    if (prefs.connection().mode != ConnectionMode.DEMO) return
     val seededNow = DemoSeeder.seedIfEmpty(db)
     if (seededNow) {
       prefs.markDemoSeeded()
@@ -104,12 +161,24 @@ class HousekeepingRepository(
     nowMillis: Long = System.currentTimeMillis(),
   ): Result<Unit> {
     return runCatching {
+      // OUT_OF_SERVICE is PMS-driven and read-only in Live mode (the VM
+      // hides the buttons too; this guard is the enforcement point).
+      if (prefs.connection().mode == ConnectionMode.LIVE &&
+        (toStatus == RoomStatus.OUT_OF_SERVICE)
+      ) {
+        error("Out-of-service is managed by the PMS in Live mode")
+      }
       db.withTransaction {
         val room =
           db.roomDao().getRoomById(roomId)
             ?: error("Room $roomId not found")
         require(RoomTransitionEngine.isLegalTransition(room.status, toStatus, role)) {
           "Illegal status transition from ${room.status} to $toStatus for role $role"
+        }
+        if (prefs.connection().mode == ConnectionMode.LIVE &&
+          room.status == RoomStatus.OUT_OF_SERVICE
+        ) {
+          error("Out-of-service is managed by the PMS in Live mode")
         }
 
         // Run lifecycle transitions delegate to the gated Tx bodies (which
@@ -146,6 +215,18 @@ class HousekeepingRepository(
             )
           )
         insertStatusLog(room, toStatus, staffName, role, nowMillis, reason)
+        // Only settled→DIRTY marks mirror (OUT_OF_SERVICE is PMS-driven).
+        if (toStatus == RoomStatus.DIRTY && room.status != RoomStatus.OUT_OF_SERVICE) {
+          val expected =
+            when (room.status) {
+              RoomStatus.READY -> "INSPECTED"
+              RoomStatus.CLEANED -> "CLEAN"
+              else -> null
+            }
+          if (expected != null) {
+            enqueueStatusIfLive(room, action = "MARK_DIRTY", expectedPms = expected, staffName, note = null, nowMillis)
+          }
+        }
       }
     }
   }
@@ -302,6 +383,7 @@ class HousekeepingRepository(
     db.roomDao()
       .update(room.copy(status = RoomStatus.CLEANED, assignedTo = staffName, updatedAt = nowMillis))
     insertStatusLog(room, RoomStatus.CLEANED, staffName, role, nowMillis)
+    enqueueStatusIfLive(room, action = "MARK_CLEAN", expectedPms = "DIRTY", staffName, note = null, nowMillis)
   }
 
   private suspend fun insertStatusLog(
@@ -340,6 +422,7 @@ class HousekeepingRepository(
     db.roomDao()
       .update(room.copy(status = RoomStatus.READY, assignedTo = staffName, updatedAt = nowMillis))
     insertStatusLog(room, RoomStatus.READY, staffName, role, nowMillis)
+    enqueueStatusIfLive(room, action = "INSPECT_PASS", expectedPms = "CLEAN", staffName, note = null, nowMillis)
   }
 
   private suspend fun inspectReturnTx(
@@ -370,10 +453,41 @@ class HousekeepingRepository(
       )
     db.roomDao()
       .update(room.copy(status = RoomStatus.CLEANING, assignedTo = staffName, updatedAt = nowMillis))
+    val displayReason = formatReturnReason(reason.defaultLabel, note)
     insertStatusLog(
       room, RoomStatus.CLEANING, staffName, role, nowMillis,
-      reason = formatReturnReason(reason.defaultLabel, note),
+      reason = displayReason,
     )
+    enqueueStatusIfLive(room, action = "INSPECT_FAIL", expectedPms = "CLEAN", staffName, note = displayReason, nowMillis)
+  }
+
+  /**
+   * Mirrors a local status transition to the PMS outbox. No-op unless Live
+   * mode with a PMS-mapped room. Called inside the mutation transaction so
+   * the mirror can never be lost.
+   */
+  private suspend fun enqueueStatusIfLive(
+    room: RoomEntity,
+    action: String,
+    expectedPms: String,
+    staffName: String,
+    note: String?,
+    nowMillis: Long,
+  ) {
+    if (prefs.connection().mode != ConnectionMode.LIVE) return
+    val unitPmsId = room.pmsUnitId ?: return
+    val payload = JSONObject().put("expected", expectedPms).put("action", action).put("staffName", staffName)
+    if (!note.isNullOrBlank()) payload.put("note", note)
+    db.outboxDao().insert(
+      OutboxEntry(
+        createdAt = nowMillis,
+        kind = OutboxKind.STATUS,
+        unitPmsId = unitPmsId,
+        ticketLocalId = null,
+        payloadJson = payload.toString(),
+      )
+    )
+    onOutboxAppended()
   }
 
   /**
@@ -492,20 +606,44 @@ class HousekeepingRepository(
   ): Long? {
     val cleanTitle = title.trim()
     if (cleanTitle.isEmpty()) return null
-    return db.ticketDao()
-      .insert(
-        TicketEntity(
-          roomId = roomId,
-          roomName = roomName,
-          title = cleanTitle,
-          description = description.trim(),
-          priority = priority,
-          status = TicketStatus.OPEN,
-          createdBy = createdBy,
-          createdAt = nowMillis,
-          isDemo = false,
-        )
-      )
+    return db.withTransaction {
+      val id =
+        db.ticketDao()
+          .insert(
+            TicketEntity(
+              roomId = roomId,
+              roomName = roomName,
+              title = cleanTitle,
+              description = description.trim(),
+              priority = priority,
+              status = TicketStatus.OPEN,
+              createdBy = createdBy,
+              createdAt = nowMillis,
+              isDemo = false,
+            )
+          )
+      if (prefs.connection().mode == ConnectionMode.LIVE) {
+        db.roomDao().getRoomById(roomId)?.pmsUnitId?.let { unitPmsId ->
+          val payload =
+            JSONObject()
+              .put("title", cleanTitle)
+              .put("description", description.trim())
+              .put("priority", priority.name)
+              .put("staffName", createdBy)
+          db.outboxDao().insert(
+            OutboxEntry(
+              createdAt = nowMillis,
+              kind = OutboxKind.TICKET_CREATE,
+              unitPmsId = unitPmsId,
+              ticketLocalId = id,
+              payloadJson = payload.toString(),
+            )
+          )
+          onOutboxAppended()
+        }
+      }
+      id
+    }
   }
 
   suspend fun resolveTicket(
@@ -515,14 +653,44 @@ class HousekeepingRepository(
   ) {
     val ticket = db.ticketDao().getTicketById(ticketId) ?: return
     if (ticket.status == TicketStatus.DONE) return
-    db.ticketDao()
-      .update(ticket.copy(status = TicketStatus.DONE, resolvedBy = resolvedBy, resolvedAt = nowMillis))
+    db.withTransaction {
+      db.ticketDao()
+        .update(ticket.copy(status = TicketStatus.DONE, resolvedBy = resolvedBy, resolvedAt = nowMillis))
+      enqueueTicketPatchIfLive(ticketId, TicketStatus.DONE, resolvedBy, nowMillis)
+    }
   }
 
   suspend fun reopenTicket(ticketId: Long) {
     val ticket = db.ticketDao().getTicketById(ticketId) ?: return
     if (ticket.status == TicketStatus.OPEN) return
-    db.ticketDao().update(ticket.copy(status = TicketStatus.OPEN, resolvedBy = null, resolvedAt = null))
+    // Attribution comes from the caller session where available; the worker
+    // falls back to the stored creator.
+    db.withTransaction {
+      db.ticketDao().update(ticket.copy(status = TicketStatus.OPEN, resolvedBy = null, resolvedAt = null))
+      enqueueTicketPatchIfLive(
+        ticketId, TicketStatus.OPEN, ticket.createdBy, System.currentTimeMillis(),
+      )
+    }
+  }
+
+  private suspend fun enqueueTicketPatchIfLive(
+    ticketId: Long,
+    status: TicketStatus,
+    staffName: String,
+    nowMillis: Long,
+  ) {
+    if (prefs.connection().mode != ConnectionMode.LIVE) return
+    val payload = JSONObject().put("status", status.name).put("staffName", staffName)
+    db.outboxDao().insert(
+      OutboxEntry(
+        createdAt = nowMillis,
+        kind = OutboxKind.TICKET_PATCH,
+        unitPmsId = null,
+        ticketLocalId = ticketId,
+        payloadJson = payload.toString(),
+      )
+    )
+    onOutboxAppended()
   }
 
   suspend fun toggleTicketStatus(ticket: TicketEntity, staffName: String) {

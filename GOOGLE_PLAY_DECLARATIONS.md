@@ -22,8 +22,10 @@ human decision or Console-only action.
 ## 2. Advertising
 
 - **Status:** App contains **no ads**.
-- **Evidence:** No `play-services-ads` dependency, no AdMob App ID, no
-  `INTERNET` permission (`app/build.gradle.kts`, merged release manifest).
+- **Evidence:** No `play-services-ads` dependency, no AdMob App ID
+  (`app/build.gradle.kts`, merged release manifest). The `INTERNET`
+  permission exists solely for opt-in Live-mode PMS sync to a
+  user-configured HTTPS origin — no ad traffic.
 - **Recommended answer:** "No, my app does not contain ads."
 - **UMPSDK compatibility:** N/A — no ads (per standing rule, this
   subsection stops here).
@@ -48,30 +50,33 @@ human decision or Console-only action.
 
 ## 5. Permissions & Sensitive Permissions
 
-- **Status:** One normal + one runtime permission; no Play permission
-  declaration required for either.
+- **Status:** Two normal + one runtime permission; no Play permission
+  declaration required for any of them.
 - **Evidence:** App manifest declares `ACCESS_NETWORK_STATE` (normal,
-  connectivity indicator only) and `CAMERA` (dangerous, requested at
-  first photo use with an in-app plain-language rationale; declining
+  connectivity indicator only), `INTERNET` (normal, used only for
+  opt-in Live-mode PMS sync to a user-configured `https://` origin;
+  refused otherwise), and `CAMERA` (dangerous, requested at first
+  photo use with an in-app plain-language rationale; declining
   degrades to skip-with-reason, and camera hardware is
   `required="false"` so camera-less devices can install). Photos stay
-  in app-private storage; FileProvider sharing fires only on explicit
-  user tap. Merged manifest confirms no `INTERNET`, location,
-  microphone, storage, contacts, calendar, or nearby-devices entries —
-  only the app's own signature-level
-  `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` (androidx-core internal)
-  alongside.
+  in app-private storage and are never transmitted by sync;
+  FileProvider sharing fires only on explicit user tap. Merged
+  manifest confirms no location, microphone, storage, contacts,
+  calendar, or nearby-devices entries — only the app's own
+  signature-level `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`
+  (androidx-core internal) alongside.
 - **Recommended answer:** No sensitive-permission declarations required
-  (CAMERA needs no special Play declaration; runtime prompt handled
-  in-app).
+  (`INTERNET` is normal-level; CAMERA needs no special Play
+  declaration; runtime prompt handled in-app).
 - **Human confirmation:** No.
 
 ## 6. Background / Foreground Services
 
-- **Status:** None.
+- **Status:** Background sync via WorkManager only; no services.
 - **Evidence:** No `Service` subclasses, no `FOREGROUND_SERVICE*`
-  permissions, no WorkManager, no alarms, no push. All work is
-  foreground UI + synchronous Room/DataStore I/O.
+  permissions, no exact alarms, no push. Outbox sync runs on a
+  network-constrained one-shot WorkManager worker with exponential
+  backoff (`PmsSyncWorker`), enqueued only after Live-mode mutations.
 - **Recommended answer:** No declarations.
 - **Human confirmation:** No.
 
@@ -95,8 +100,10 @@ human decision or Console-only action.
 
 - **Status:** Not applicable (no accounts).
 - **Evidence:** No sign-in/registration anywhere (`UserSession` is a
-  local shift label). Complete data removal = in-app Reset Demo Data +
-  uninstall; no server-side data exists.
+  local shift label). Complete data removal = in-app Disconnect /
+  Reset Demo Data + uninstall; no ViveScript server-side data exists
+  (a Live-mode property PMS holds its own copy, managed by the
+  property).
 - **Recommended answer:** Declare no account creation; no deletion URL
   required.
 - **Human confirmation:** No (verify Console still asks nothing once
@@ -105,10 +112,12 @@ human decision or Console-only action.
 ## 10. Data Safety
 
 - **Status:** Drafted in `PLAY_STORE_DATA_SAFETY.md`, not yet filed.
-- **Evidence:** Zero off-device collection or sharing by the app; no
-  SDKs that collect; OS-level backup disclosed.
-- **Recommended answer:** No data collected; no data shared (per the
-  drafted form mapping).
+- **Evidence:** Demo mode transmits nothing; Live mode transmits staff
+  names + housekeeping activity to the user-configured property PMS
+  over HTTPS; no SDKs that collect; OS-level backup disclosed.
+- **Recommended answer:** Data collected/shared in Live mode only, per
+  the drafted form mapping (names + app activity, encrypted in
+  transit).
 - **Human confirmation:** **[Human]** — founder files the form.
 
 ## 11. Developer & Trader Information
