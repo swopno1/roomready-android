@@ -1,6 +1,12 @@
-package com.vivescriptsolutions.roomready.data.local
+package com.vivescriptsolutions.roomready
 
 import androidx.room.withTransaction
+import com.vivescriptsolutions.roomready.data.local.AppDatabase
+import com.vivescriptsolutions.roomready.data.local.ChecklistRunEntity
+import com.vivescriptsolutions.roomready.data.local.RoomEntity
+import com.vivescriptsolutions.roomready.data.local.RoomTypeEntity
+import com.vivescriptsolutions.roomready.data.local.StatusLogEntity
+import com.vivescriptsolutions.roomready.data.local.TicketEntity
 import com.vivescriptsolutions.roomready.domain.ChecklistStepKey
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
 import com.vivescriptsolutions.roomready.domain.ChecklistTemplates
@@ -9,7 +15,12 @@ import com.vivescriptsolutions.roomready.domain.StaffRole
 import com.vivescriptsolutions.roomready.domain.TicketPriority
 import com.vivescriptsolutions.roomready.domain.TicketStatus
 
-object DemoSeeder {
+/**
+ * Test-only fixture dataset. The production app ships ZERO seeded
+ * content — every row here exists solely to give unit tests a
+ * deterministic database. Names, rooms, and tickets are fictional.
+ */
+object TestFixtures {
   const val TYPE_DELUXE_KING = "Deluxe King"
   const val TYPE_FAMILY_SUITE = "Family Suite"
   const val TYPE_GARDEN_COTTAGE = "Garden Cottage"
@@ -18,7 +29,7 @@ object DemoSeeder {
     if (db.roomDao().count() > 0) {
       return false
     }
-    seedDemoData(db, nowMillis)
+    seedFixtureData(db, nowMillis)
     return true
   }
 
@@ -29,23 +40,21 @@ object DemoSeeder {
       db.checklistRunDao().deleteAll()
       db.roomDao().deleteAll()
       db.roomTypeDao().deleteAll()
-      // A demo reset also drops Live-mode residue: queued PMS writes,
-      // the synced roster, and the sync snapshot header.
       db.outboxDao().deleteAll()
       db.staffDao().deleteAll()
       db.syncStateDao().deleteAll()
-      insertDemoRecords(db, nowMillis)
+      insertFixtureRecords(db, nowMillis)
     }
   }
 
-  private suspend fun seedDemoData(db: AppDatabase, nowMillis: Long) {
+  private suspend fun seedFixtureData(db: AppDatabase, nowMillis: Long) {
     db.withTransaction {
       if (db.roomDao().count() > 0) return@withTransaction
-      insertDemoRecords(db, nowMillis)
+      insertFixtureRecords(db, nowMillis)
     }
   }
 
-  private suspend fun insertDemoRecords(db: AppDatabase, nowMillis: Long) {
+  private suspend fun insertFixtureRecords(db: AppDatabase, nowMillis: Long) {
     val standardKeys = ChecklistStepKey.standardTemplateKeys
     val typeIds =
       db.roomTypeDao()
@@ -54,17 +63,14 @@ object DemoSeeder {
             RoomTypeEntity(
               name = TYPE_DELUXE_KING,
               checklistTemplateSteps = standardKeys,
-              isDemo = true,
             ),
             RoomTypeEntity(
               name = TYPE_FAMILY_SUITE,
               checklistTemplateSteps = standardKeys,
-              isDemo = true,
             ),
             RoomTypeEntity(
               name = TYPE_GARDEN_COTTAGE,
               checklistTemplateSteps = standardKeys,
-              isDemo = true,
             ),
           )
         )
@@ -85,7 +91,6 @@ object DemoSeeder {
           status = RoomStatus.DIRTY,
           assignedTo = null,
           updatedAt = nowMillis - 42 * minute,
-          isDemo = true,
           isOccupied = true,
         ),
         RoomEntity(
@@ -96,7 +101,6 @@ object DemoSeeder {
           status = RoomStatus.CLEANING,
           assignedTo = "Amina Rahman",
           updatedAt = nowMillis - 18 * minute,
-          isDemo = true,
         ),
         RoomEntity(
           name = "103",
@@ -106,7 +110,6 @@ object DemoSeeder {
           status = RoomStatus.CLEANED,
           assignedTo = "Tariq Hasan",
           updatedAt = nowMillis - 12 * minute,
-          isDemo = true,
         ),
         RoomEntity(
           name = "104",
@@ -116,7 +119,6 @@ object DemoSeeder {
           status = RoomStatus.READY,
           assignedTo = "Amina Rahman",
           updatedAt = nowMillis - 65 * minute,
-          isDemo = true,
         ),
         // Floor 2 — Family Suite (4 rooms)
         RoomEntity(
@@ -127,7 +129,6 @@ object DemoSeeder {
           status = RoomStatus.DIRTY,
           assignedTo = null,
           updatedAt = nowMillis - 55 * minute,
-          isDemo = true,
           isOccupied = true,
         ),
         RoomEntity(
@@ -138,7 +139,6 @@ object DemoSeeder {
           status = RoomStatus.CLEANING,
           assignedTo = "Maya Devi",
           updatedAt = nowMillis - 9 * minute,
-          isDemo = true,
         ),
         RoomEntity(
           name = "203",
@@ -148,7 +148,6 @@ object DemoSeeder {
           status = RoomStatus.READY,
           assignedTo = "Maya Devi",
           updatedAt = nowMillis - 90 * minute,
-          isDemo = true,
         ),
         RoomEntity(
           name = "204",
@@ -158,7 +157,6 @@ object DemoSeeder {
           status = RoomStatus.OUT_OF_SERVICE,
           assignedTo = "Rafiq Islam",
           updatedAt = nowMillis - 140 * minute,
-          isDemo = true,
         ),
         // Ground Wing (floor = 0) — Garden Cottage (4 rooms)
         RoomEntity(
@@ -169,7 +167,6 @@ object DemoSeeder {
           status = RoomStatus.CLEANING,
           assignedTo = "Nadia Chowdhury",
           updatedAt = nowMillis - 15 * minute,
-          isDemo = true,
         ),
         RoomEntity(
           name = "G02",
@@ -179,7 +176,6 @@ object DemoSeeder {
           status = RoomStatus.CLEANED,
           assignedTo = "Sajib Mia",
           updatedAt = nowMillis - 24 * minute,
-          isDemo = true,
         ),
         RoomEntity(
           name = "G03",
@@ -189,7 +185,6 @@ object DemoSeeder {
           status = RoomStatus.READY,
           assignedTo = "Nadia Chowdhury",
           updatedAt = nowMillis - 110 * minute,
-          isDemo = true,
         ),
         RoomEntity(
           name = "G04",
@@ -199,7 +194,6 @@ object DemoSeeder {
           status = RoomStatus.DIRTY,
           assignedTo = null,
           updatedAt = nowMillis - 33 * minute,
-          isDemo = true,
         ),
       )
 
@@ -259,7 +253,7 @@ object DemoSeeder {
       )
     )
 
-    // Seed Demo Tickets
+    // Seed Fixture Tickets
     db.ticketDao()
       .insertAll(
         listOf(
@@ -272,7 +266,6 @@ object DemoSeeder {
             status = TicketStatus.OPEN,
             createdBy = "Rafiq Islam",
             createdAt = nowMillis - 140 * minute,
-            isDemo = true,
           ),
           TicketEntity(
             roomId = roomIdByName.getValue("102"),
@@ -283,7 +276,6 @@ object DemoSeeder {
             status = TicketStatus.OPEN,
             createdBy = "Amina Rahman",
             createdAt = nowMillis - 16 * minute,
-            isDemo = true,
           ),
         )
       )

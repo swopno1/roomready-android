@@ -3,7 +3,6 @@ package com.vivescriptsolutions.roomready.data.repository
 import androidx.room.withTransaction
 import com.vivescriptsolutions.roomready.data.local.AppDatabase
 import com.vivescriptsolutions.roomready.data.local.ChecklistRunEntity
-import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.local.RoomEntity
 import com.vivescriptsolutions.roomready.data.local.RoomTypeEntity
 import com.vivescriptsolutions.roomready.data.local.RunReturnFlag
@@ -21,7 +20,6 @@ import com.vivescriptsolutions.roomready.data.notifications.findStuckRunIds
 import com.vivescriptsolutions.roomready.domain.AppLanguage
 import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
 import com.vivescriptsolutions.roomready.domain.ChecklistTemplates
-import com.vivescriptsolutions.roomready.domain.ConnectionMode
 import com.vivescriptsolutions.roomready.domain.ReturnReason
 import com.vivescriptsolutions.roomready.domain.failedStepKeysForReason
 import com.vivescriptsolutions.roomready.domain.formatReturnReason
@@ -44,24 +42,18 @@ class HousekeepingRepository(
   private val onNotify: (NotificationEvent) -> Unit = {},
 ) {
   /**
-   * Session with the staff roster overridden by the synced PMS roster in
-   * Live mode (Demo mode keeps the local list). Also reports Live mode as
-   * non-demo so demo-only UI gives way to synced content.
+   * Session with the staff roster filled from the synced PMS roster plus
+   * any free-text names entered on this device. Before the first sync
+   * the roster is empty and the UI offers free-text entry.
    */
   val sessionFlow: Flow<UserSession> =
     combine(
       prefs.sessionFlow,
       db.staffDao().observeAll(),
-      prefs.observeConnection(),
-    ) { session, staff, connection ->
-      if (connection.mode == ConnectionMode.LIVE) {
-        session.copy(
-          staffRoster = staff.map { it.name }.distinct().sorted(),
-          isDemoMode = false,
-        )
-      } else {
-        session
-      }
+    ) { session, staff ->
+      session.copy(
+        staffRoster = (staff.map { it.name } + session.staffRoster).distinct().sorted()
+      )
     }
 
   fun observeAllRooms(): Flow<List<RoomEntity>> = db.roomDao().observeAllRooms()
@@ -107,12 +99,12 @@ class HousekeepingRepository(
   fun observeOutboxCount(): Flow<Int> = db.outboxDao().observeCount()
 
   /**
-   * Start-of-"today" for dashboard cleans. In Live mode with a synced
+   * Start-of-"today" for dashboard cleans. When connected with a synced
    * business date this is midnight of that date in the property timezone;
    * otherwise the device-local day start.
    */
   suspend fun todayStartMillis(nowMillis: Long = System.currentTimeMillis()): Long {
-    if (prefs.connection().mode == ConnectionMode.LIVE) {
+    if (prefs.connection().isConfigured) {
       val sync = db.syncStateDao().get()
       val businessDate = sync?.businessDate
       val timezone = sync?.propertyTimezone
@@ -129,17 +121,27 @@ class HousekeepingRepository(
     return startOfDayMillis(nowMillis)
   }
 
-  suspend fun ensureDemoDataSeeded() {
-    if (prefs.connection().mode != ConnectionMode.DEMO) return
-    val seededNow = DemoSeeder.seedIfEmpty(db)
-    if (seededNow) {
-      prefs.markDemoSeeded()
+  /**
+   * Upgrade purge + unconfigured invariant. Installed builds that never
+   * connected can only hold demo rows in the operational tables, so when
+   * no PMS connection is configured those tables are emptied (rooms,
+   * types, runs, tickets, logs, roster, outbox, sync header). A
+   * configured install is never touched: snapshot and outbox survive.
+   * Photos and settings are never touched on either path. Idempotent.
+   */
+  suspend fun ensureProductionBaseline() {
+    if (prefs.connection().isConfigured) return
+    db.withTransaction {
+      db.statusLogDao().deleteAll()
+      db.ticketDao().deleteAll()
+      db.checklistRunDao().deleteAll()
+      db.roomDao().deleteAll()
+      db.roomTypeDao().deleteAll()
+      db.staffDao().deleteAll()
+      db.outboxDao().deleteAll()
+      db.syncStateDao().deleteAll()
     }
-  }
-
-  suspend fun resetDemoData() {
-    DemoSeeder.resetAndSeed(db)
-    prefs.markDemoSeeded()
+    prefs.setStuckNotifiedRunIds(emptySet())
   }
 
   suspend fun saveRoleAndStaff(role: StaffRole, staffName: String) {
@@ -169,12 +171,10 @@ class HousekeepingRepository(
     nowMillis: Long = System.currentTimeMillis(),
   ): Result<Unit> {
     return runCatching {
-      // OUT_OF_SERVICE is PMS-driven and read-only in Live mode (the VM
+      // OUT_OF_SERVICE is PMS-driven and read-only in the app (the VM
       // hides the buttons too; this guard is the enforcement point).
-      if (prefs.connection().mode == ConnectionMode.LIVE &&
-        (toStatus == RoomStatus.OUT_OF_SERVICE)
-      ) {
-        error("Out-of-service is managed by the PMS in Live mode")
+      if (toStatus == RoomStatus.OUT_OF_SERVICE) {
+        error("Out-of-service is managed by the PMS")
       }
       db.withTransaction {
         val room =
@@ -183,10 +183,8 @@ class HousekeepingRepository(
         require(RoomTransitionEngine.isLegalTransition(room.status, toStatus, role)) {
           "Illegal status transition from ${room.status} to $toStatus for role $role"
         }
-        if (prefs.connection().mode == ConnectionMode.LIVE &&
-          room.status == RoomStatus.OUT_OF_SERVICE
-        ) {
-          error("Out-of-service is managed by the PMS in Live mode")
+        if (room.status == RoomStatus.OUT_OF_SERVICE) {
+          error("Out-of-service is managed by the PMS")
         }
 
         // Run lifecycle transitions delegate to the gated Tx bodies (which
@@ -232,7 +230,7 @@ class HousekeepingRepository(
               else -> null
             }
           if (expected != null) {
-            enqueueStatusIfLive(room, action = "MARK_DIRTY", expectedPms = expected, staffName, note = null, nowMillis)
+            enqueueStatusIfConfigured(room, action = "MARK_DIRTY", expectedPms = expected, staffName, note = null, nowMillis)
           }
         }
       }
@@ -429,7 +427,7 @@ class HousekeepingRepository(
     db.roomDao()
       .update(room.copy(status = RoomStatus.CLEANED, assignedTo = staffName, updatedAt = nowMillis))
     insertStatusLog(room, RoomStatus.CLEANED, staffName, role, nowMillis)
-    enqueueStatusIfLive(room, action = "MARK_CLEAN", expectedPms = "DIRTY", staffName, note = null, nowMillis)
+    enqueueStatusIfConfigured(room, action = "MARK_CLEAN", expectedPms = "DIRTY", staffName, note = null, nowMillis)
   }
 
   private suspend fun insertStatusLog(
@@ -468,7 +466,7 @@ class HousekeepingRepository(
     db.roomDao()
       .update(room.copy(status = RoomStatus.READY, assignedTo = staffName, updatedAt = nowMillis))
     insertStatusLog(room, RoomStatus.READY, staffName, role, nowMillis)
-    enqueueStatusIfLive(room, action = "INSPECT_PASS", expectedPms = "CLEAN", staffName, note = null, nowMillis)
+    enqueueStatusIfConfigured(room, action = "INSPECT_PASS", expectedPms = "CLEAN", staffName, note = null, nowMillis)
   }
 
   private suspend fun inspectReturnTx(
@@ -504,7 +502,7 @@ class HousekeepingRepository(
       room, RoomStatus.CLEANING, staffName, role, nowMillis,
       reason = displayReason,
     )
-    enqueueStatusIfLive(room, action = "INSPECT_FAIL", expectedPms = "CLEAN", staffName, note = displayReason, nowMillis)
+    enqueueStatusIfConfigured(room, action = "INSPECT_FAIL", expectedPms = "CLEAN", staffName, note = displayReason, nowMillis)
   }
 
   /**
@@ -512,7 +510,7 @@ class HousekeepingRepository(
    * mode with a PMS-mapped room. Called inside the mutation transaction so
    * the mirror can never be lost.
    */
-  private suspend fun enqueueStatusIfLive(
+  private suspend fun enqueueStatusIfConfigured(
     room: RoomEntity,
     action: String,
     expectedPms: String,
@@ -520,7 +518,7 @@ class HousekeepingRepository(
     note: String?,
     nowMillis: Long,
   ) {
-    if (prefs.connection().mode != ConnectionMode.LIVE) return
+    if (!prefs.connection().isConfigured) return
     val unitPmsId = room.pmsUnitId ?: return
     val payload = JSONObject().put("expected", expectedPms).put("action", action).put("staffName", staffName)
     if (!note.isNullOrBlank()) payload.put("note", note)
@@ -582,7 +580,7 @@ class HousekeepingRepository(
         val room = db.roomDao().getRoomById(roomId) ?: return@withTransaction
         val roomType = db.roomTypeDao().getById(room.roomTypeId)
         val initialSteps =
-          DemoSeeder.buildTemplateSteps(roomType?.checklistTemplateSteps.orEmpty()).map { step ->
+          ChecklistTemplates.buildSteps(roomType?.checklistTemplateSteps.orEmpty()).map { step ->
             if (step.stepIndex == stepIndex) step.copy(isDone = true) else step
           }
         db.checklistRunDao()
@@ -620,7 +618,7 @@ class HousekeepingRepository(
         val room = db.roomDao().getRoomById(roomId) ?: return@withTransaction
         val roomType = db.roomTypeDao().getById(room.roomTypeId)
         val initialSteps =
-          DemoSeeder.buildTemplateSteps(roomType?.checklistTemplateSteps.orEmpty()).map { step ->
+          ChecklistTemplates.buildSteps(roomType?.checklistTemplateSteps.orEmpty()).map { step ->
             if (step.stepIndex == stepIndex) step.copy(note = note.trim()) else step
           }
         db.checklistRunDao()
@@ -666,10 +664,9 @@ class HousekeepingRepository(
               status = TicketStatus.OPEN,
               createdBy = createdBy,
               createdAt = nowMillis,
-              isDemo = false,
             )
           )
-      if (prefs.connection().mode == ConnectionMode.LIVE) {
+      if (prefs.connection().isConfigured) {
         db.roomDao().getRoomById(roomId)?.pmsUnitId?.let { unitPmsId ->
           val payload =
             JSONObject()
@@ -707,7 +704,7 @@ class HousekeepingRepository(
     db.withTransaction {
       db.ticketDao()
         .update(ticket.copy(status = TicketStatus.DONE, resolvedBy = resolvedBy, resolvedAt = nowMillis))
-      enqueueTicketPatchIfLive(ticketId, TicketStatus.DONE, resolvedBy, nowMillis)
+      enqueueTicketPatchIfConfigured(ticketId, TicketStatus.DONE, resolvedBy, nowMillis)
     }
   }
 
@@ -718,19 +715,19 @@ class HousekeepingRepository(
     // falls back to the stored creator.
     db.withTransaction {
       db.ticketDao().update(ticket.copy(status = TicketStatus.OPEN, resolvedBy = null, resolvedAt = null))
-      enqueueTicketPatchIfLive(
+      enqueueTicketPatchIfConfigured(
         ticketId, TicketStatus.OPEN, ticket.createdBy, System.currentTimeMillis(),
       )
     }
   }
 
-  private suspend fun enqueueTicketPatchIfLive(
+  private suspend fun enqueueTicketPatchIfConfigured(
     ticketId: Long,
     status: TicketStatus,
     staffName: String,
     nowMillis: Long,
   ) {
-    if (prefs.connection().mode != ConnectionMode.LIVE) return
+    if (!prefs.connection().isConfigured) return
     val payload = JSONObject().put("status", status.name).put("staffName", staffName)
     db.outboxDao().insert(
       OutboxEntry(

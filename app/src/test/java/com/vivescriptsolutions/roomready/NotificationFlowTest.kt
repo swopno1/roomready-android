@@ -9,7 +9,6 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.vivescriptsolutions.roomready.data.local.AppDatabase
 import com.vivescriptsolutions.roomready.data.local.ChecklistRunEntity
-import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import androidx.work.NetworkType
 import com.vivescriptsolutions.roomready.data.notifications.NotificationEvent
 import com.vivescriptsolutions.roomready.data.notifications.RoomReadyNotifier
@@ -104,7 +103,7 @@ class NotificationFlowTest {
   @Test
   fun `urgent ticket creation emits an event, normal does not`() {
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val room = db.roomDao().observeAllRooms().first().first()
       val urgentId =
         repository.createTicket(
@@ -144,7 +143,7 @@ class NotificationFlowTest {
   fun `stuck check notifies once per episode`() {
     runBlocking {
       val now = 1_800_000_000_000L
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val room = db.roomDao().observeAllRooms().first().first { it.status == RoomStatus.DIRTY }
       repository.startChecklistRun(
         roomId = room.id, kind = ChecklistRunKind.FULL,
@@ -235,7 +234,7 @@ class NotificationFlowTest {
   }
 
   private suspend fun cleanedRoomWithFinishedRun(): Long {
-    DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+    TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
     val dirtyRoom = db.roomDao().observeAllRooms().first().first { it.status == RoomStatus.DIRTY }
     repository.startChecklistRun(
       roomId = dirtyRoom.id, kind = ChecklistRunKind.FULL,

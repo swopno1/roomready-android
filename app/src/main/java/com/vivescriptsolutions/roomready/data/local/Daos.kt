@@ -30,8 +30,8 @@ interface RoomTypeDao {
   @Query("DELETE FROM room_types WHERE pmsTypeId IS NOT NULL AND pmsTypeId NOT IN (:keepIds) AND id NOT IN (SELECT roomTypeId FROM rooms)")
   suspend fun deletePmsTypesNotIn(keepIds: List<String>)
 
-  @Query("DELETE FROM room_types WHERE isDemo = 1 AND id NOT IN (SELECT roomTypeId FROM rooms)")
-  suspend fun deleteUnreferencedDemoTypes()
+  @Query("DELETE FROM room_types WHERE id NOT IN (SELECT roomTypeId FROM rooms)")
+  suspend fun deleteUnreferencedTypes()
 
   @Query("SELECT COUNT(*) FROM room_types")
   suspend fun count(): Int

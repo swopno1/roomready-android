@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.vivescriptsolutions.roomready.data.local.ChecklistRunEntity
-import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.local.RoomEntity
 import com.vivescriptsolutions.roomready.data.local.RoomTypeEntity
 import com.vivescriptsolutions.roomready.data.local.RunReturnFlag
@@ -17,7 +16,7 @@ import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
 import com.vivescriptsolutions.roomready.domain.AppLanguage
 import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
-import com.vivescriptsolutions.roomready.domain.ConnectionMode
+import com.vivescriptsolutions.roomready.domain.ChecklistTemplates
 import com.vivescriptsolutions.roomready.data.connectivity.ConnectivityMonitor
 import com.vivescriptsolutions.roomready.data.repository.PersonCount
 import com.vivescriptsolutions.roomready.data.repository.cleansPerPerson
@@ -43,6 +42,7 @@ import com.vivescriptsolutions.roomready.domain.TicketStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -104,7 +104,7 @@ sealed interface ConnectionMessage {
 }
 
 data class ConnectionUiState(
-  val mode: ConnectionMode = ConnectionMode.DEMO,
+  val isConfigured: Boolean = false,
   val baseUrl: String? = null,
   val propertyName: String? = null,
   val businessDate: String? = null,
@@ -157,7 +157,7 @@ class MainAppViewModel(
 
   init {
     viewModelScope.launch {
-      repository.ensureDemoDataSeeded()
+      repository.ensureProductionBaseline()
       isReady.value = true
     }
   }
@@ -175,6 +175,15 @@ class MainAppViewModel(
       started = SharingStarted.WhileSubscribed(5000),
       initialValue = false,
     )
+
+  val isPmsConfigured: StateFlow<Boolean> =
+    repository.observeConnection()
+      .map { it.isConfigured }
+      .stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false,
+      )
 
   val roomsBoardState: StateFlow<RoomsBoardUiState> =
     combine(
@@ -384,13 +393,6 @@ class MainAppViewModel(
     viewModelScope.launch { repository.toggleTicketStatus(ticket, staffName) }
   }
 
-  fun resetDemoData(onComplete: () -> Unit = {}) {
-    viewModelScope.launch {
-      repository.resetDemoData()
-      onComplete()
-    }
-  }
-
   class Factory(
     private val repository: HousekeepingRepository,
     private val connectivityMonitor: ConnectivityMonitor,
@@ -420,7 +422,6 @@ class RoomDetailViewModel(
         repository.observeRoom(roomId),
         repository.observeRoomTypes(),
         repository.observeLatestChecklistRun(roomId),
-        repository.observeConnection(),
         combine(
           repository.observeTicketsForRoom(roomId),
           repository.observeLogsForRoom(roomId),
@@ -428,26 +429,23 @@ class RoomDetailViewModel(
         ) { tickets, logs, session ->
           Triple(tickets, logs, session)
         },
-      ) { room, roomTypes, checklistRun, connection, extras ->
+      ) { room, roomTypes, checklistRun, extras ->
         val (tickets, logs, session) = extras
-        val mode = connection.mode
         val roomType = roomTypes.firstOrNull { it.id == room?.roomTypeId }
         val activeRole = session.role ?: StaffRole.HOUSEKEEPER
-        // OUT_OF_SERVICE is PMS-driven and read-only in Live mode. Demo keeps it.
-        val liveMode = mode == ConnectionMode.LIVE
+        // OUT_OF_SERVICE is PMS-driven and read-only in the app.
         val legalActions =
           if (room != null) {
             RoomTransitionEngine.legalActionsFor(room.status, activeRole)
               .filter { action ->
-                !liveMode ||
-                  (action.toStatus != RoomStatus.OUT_OF_SERVICE &&
-                    room.status != RoomStatus.OUT_OF_SERVICE)
+                action.toStatus != RoomStatus.OUT_OF_SERVICE &&
+                  room.status != RoomStatus.OUT_OF_SERVICE
               }
           } else {
             emptyList()
           }
         val previewSteps =
-          DemoSeeder.buildTemplateSteps(roomType?.checklistTemplateSteps.orEmpty())
+          ChecklistTemplates.buildSteps(roomType?.checklistTemplateSteps.orEmpty())
 
         RoomDetailUiState(
           isLoading = false,
@@ -702,7 +700,7 @@ class ConnectionViewModel(
       message,
     ) { connection, syncState, pending, syncingNow, msg ->
       ConnectionUiState(
-        mode = connection.mode,
+        isConfigured = connection.isConfigured,
         baseUrl = connection.baseUrl,
         propertyName = syncState?.propertyName,
         businessDate = syncState?.businessDate,
@@ -720,11 +718,6 @@ class ConnectionViewModel(
 
   init {
     sync.clearAuthRevoked()
-  }
-
-  fun setMode(mode: ConnectionMode) {
-    message.value = null
-    viewModelScope.launch { sync.setMode(mode) }
   }
 
   fun saveConnection(baseUrl: String, rawKey: String) {

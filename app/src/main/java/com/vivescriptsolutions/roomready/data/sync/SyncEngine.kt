@@ -11,7 +11,6 @@ import com.vivescriptsolutions.roomready.data.local.StatusLogEntity
 import com.vivescriptsolutions.roomready.data.local.SyncStateEntity
 import com.vivescriptsolutions.roomready.data.local.TicketEntity
 import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesRepository
-import com.vivescriptsolutions.roomready.domain.ConnectionMode
 import com.vivescriptsolutions.roomready.domain.RoomStatus
 import com.vivescriptsolutions.roomready.domain.StaffRole
 import com.vivescriptsolutions.roomready.domain.TicketPriority
@@ -101,10 +100,9 @@ class SyncEngine(
     }
     return try {
       db.withTransaction {
-        // In-progress cleans are never touched by a snapshot — but only on
-        // PMS-mapped rooms. Demo seed rows (no PMS id) are replaced wholesale
-        // even when they carry unfinished demo runs; otherwise a first Live
-        // bootstrap would leave demo zombies behind forever.
+        // In-progress cleans on PMS-mapped rooms are never touched by a
+        // snapshot. Rows without a PMS id are always replaced wholesale —
+        // a snapshot is the complete unit list.
         val unfinishedIds = db.checklistRunDao().unfinishedRoomIds().toSet()
         val inProgress =
           db.roomDao().getAllRooms()
@@ -120,7 +118,6 @@ class SyncEngine(
                 RoomTypeEntity(
                   name = type.title,
                   checklistTemplateSteps = type.checklistSteps,
-                  isDemo = false,
                   pmsTypeId = type.id,
                 )
               )
@@ -157,7 +154,6 @@ class SyncEngine(
                   status = mapped,
                   assignedTo = null,
                   updatedAt = unit.housekeepingAtMillis,
-                  isDemo = false,
                   pmsUnitId = unit.id,
                   block = unit.block,
                   departsToday = unit.departsToday,
@@ -174,7 +170,6 @@ class SyncEngine(
                 roomTypeName = payload.roomTypes.first { it.id == unit.roomTypeId }.title,
                 floor = unit.floor ?: UNKNOWN_FLOOR,
                 status = mapped,
-                isDemo = false,
                 block = unit.block,
                 departsToday = unit.departsToday,
                 pmsUnitStatus = unit.unitStatus,
@@ -191,7 +186,7 @@ class SyncEngine(
           .filter { it.pmsUnitId == null && it.id !in inProgress }
           .forEach { db.roomDao().deleteById(it.id) }
         db.roomTypeDao().deletePmsTypesNotIn(payload.roomTypes.map { it.id })
-        db.roomTypeDao().deleteUnreferencedDemoTypes()
+        db.roomTypeDao().deleteUnreferencedTypes()
         // Roster wholesale (no FK references staff).
         db.staffDao().deleteAll()
         db.staffDao().insertAll(
@@ -217,7 +212,7 @@ class SyncEngine(
 
   suspend fun syncOnce(): SyncOutcome {
     val connection = prefs.connection()
-    if (connection.mode != ConnectionMode.LIVE || !keys.hasKey() || connection.baseUrl == null) {
+    if (!connection.isConfigured || !keys.hasKey() || connection.baseUrl == null) {
       return SyncOutcome.NotConfigured
     }
     var pushed = 0
@@ -508,7 +503,6 @@ class SyncEngine(
                 status = mapped,
                 assignedTo = null,
                 updatedAt = unit.housekeepingAtMillis,
-                isDemo = false,
                 pmsUnitId = unit.id,
                 block = unit.block,
                 departsToday = unit.departsToday,
@@ -609,8 +603,7 @@ class SyncEngine(
                     createdBy = ticket.createdBy.ifBlank { "PMS" },
                     createdAt = parseLenientInstant(ticket.createdAt),
                     pmsTicketId = ticket.id,
-                    isDemo = false,
-                  )
+                    )
                 )
               )
             } else {

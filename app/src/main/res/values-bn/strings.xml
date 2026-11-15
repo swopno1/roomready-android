@@ -2,11 +2,7 @@
 <resources>
     <string name="app_name">RoomReady</string>
 
-    <!-- Branding & Demo Notice -->
-    <string name="demo_resort_name">সুন্দরবন পামস</string>
-    <string name="demo_mode_badge">ডেমো</string>
-    <string name="demo_mode_banner_title">ডেমো রিসোর্ট মোড</string>
-    <string name="demo_mode_banner_subtitle">চেষ্টা করার জন্য ১২টি নমুনা রুম। ইন্টারনেট ছাড়াই চলে।</string>
+    <!-- Branding -->
     <string name="offline_badge">অফলাইন</string>
     <string name="app_tagline">ছোট রিসোর্টের জন্য শান্ত, অফলাইন-ফার্স্ট হাউসকিপিং</string>
 
@@ -34,9 +30,6 @@
     <string name="filter_count_format">%1$s (%2$d)</string>
 
     <!-- Room Types & Floors -->
-    <string name="room_type_deluxe_king">ডিলাক্স কিং</string>
-    <string name="room_type_family_suite">ফ্যামিলি স্যুট</string>
-    <string name="room_type_garden_cottage">গার্ডেন কটেজ</string>
     <string name="floor_ground">নিচতলা উইং</string>
     <string name="floor_block_format">ব্লক %1$s</string>
     <string name="floor_unknown">—</string>
@@ -51,7 +44,7 @@
 
     <!-- Onboarding / Who Are You -->
     <string name="onboarding_title">RoomReady-তে স্বাগতম</string>
-    <string name="onboarding_subtitle">লগইন বা ইন্টারনেট দরকার নেই। এই শিফটের জন্য ভূমিকা ও নাম বেছে নিন।</string>
+    <string name="onboarding_subtitle">লগইন দরকার নেই। এই শিফটের জন্য ভূমিকা ও নাম বেছে নিন।</string>
     <string name="onboarding_step_role">১. ভূমিকা বেছে নিন</string>
     <string name="onboarding_step_staff">২. আপনি কে?</string>
     <string name="staff_custom_hint">অথবা অন্য কর্মীর নাম লিখুন</string>
@@ -213,16 +206,16 @@
     <string name="status_log_transition_format">%1$s → %2$s</string>
     <string name="status_log_by_format">%1$s (%2$s) · %3$s</string>
 
-    <!-- Tickets Tab (Placeholder + Live Local Tickets) -->
+    <!-- Tickets Tab -->
     <string name="tickets_header_title">রক্ষণাবেক্ষণ ও টিকিট</string>
     <string name="tickets_placeholder_note">এই ফোনে সংরক্ষণ করা টিকিট নিচে দেখা যাবে।</string>
     <string name="tickets_empty_state">এখনো কোনো টিকিট নেই। সমস্যা জানাতে যেকোনো রুম খুলুন।</string>
     <string name="tickets_room_badge_format">রুম %1$s</string>
 
-    <!-- Dashboard Tab (Placeholder + Live Local Counts) -->
+    <!-- Dashboard Tab -->
     <string name="dashboard_header_title">রিসোর্টের চিত্র</string>
     <string name="dashboard_placeholder_note">নিচের সব তথ্য এই ফোন থেকে সরাসরি আসে।</string>
-    <string name="dashboard_total_rooms_label">মোট ডেমো রুম</string>
+    <string name="dashboard_total_rooms_label">মোট রুম</string>
     <string name="dashboard_recent_activity">সাম্প্রতিক অবস্থার কার্যক্রম</string>
     <string name="dashboard_no_activity">কোনো সাম্প্রতিক অবস্থার পরিবর্তন নেই।</string>
     <string name="offline_banner_offline">অফলাইন — সব কাজ তবুও চলবে</string>
@@ -248,22 +241,16 @@
     <string name="me_who_are_you_title">আপনি কে?</string>
     <string name="me_offline_card_title">এই ফোনে সংরক্ষিত</string>
     <string name="me_offline_card_body">সব রুম, চেকলিস্ট, টিকিট ও লগ এই ফোনেই থাকে। বিমান মোডে চলে। PMS সিঙ্ক ঐচ্ছিক — PMS সংযোগ থেকে চালু করুন।</string>
-    <string name="me_demo_section_title">ডেমো রিসোর্ট ডাটা</string>
-    <string name="me_demo_section_body">%1$s-এর ডেমো মোড · ১২টি নমুনা রুম।</string>
-    <string name="me_reset_demo_button">ডেমো ডাটা রিসেট করুন</string>
-    <string name="me_reset_dialog_title">ডেমো ডাটা রিসেট করবেন?</string>
-    <string name="me_reset_dialog_body">এতে ১২টি ডেমো রুম, চেকলিস্ট, টিকিট ও অবস্থার লগ শুরুর অবস্থায় ফিরে যাবে।</string>
-    <string name="me_reset_confirm">রিসেট</string>
-    <string name="me_reset_done_snackbar">ডেমো রিসোর্ট ডাটা পুনরুদ্ধার হয়েছে</string>
 
     <!-- PMS Connection -->
     <string name="connection_title">PMS সংযোগ</string>
+    <string name="connection_setup_title">আপনার রিসোর্টে সংযোগ করুন</string>
+    <string name="connection_setup_body">রুম, চেকলিস্ট ও কর্মী ডাউনলোড করতে আপনার রিসোর্টের PMS ঠিকানা ও প্রপার্টি API কি দিন।</string>
+    <string name="connection_disconnect_confirm_title">অসিঙ্কড কাজসহ সংযোগ বিচ্ছিন্ন করবেন?</string>
+    <string name="connection_disconnect_confirm_body">%1$dটি অসিঙ্কড পরিবর্তন আছে। এগুলো মুছে যাবে, পাঠানো যাবে না।</string>
+    <string name="connection_disconnect_confirm_button">মুছে ফেলে বিচ্ছিন্ন করুন</string>
     <string name="connection_row_title">PMS সংযোগ</string>
-    <string name="connection_mode_demo">ডেমো</string>
-    <string name="connection_mode_live">লাইভ</string>
-    <string name="connection_demo_body">এই ফোনে ডেমো রুম। ইন্টারনেট লাগে না।</string>
-    <string name="connection_url_label">PMS অরিজিন (https://…)</string>
-    <string name="connection_url_hint">https://demo13.vivereply.com</string>
+    <string name="connection_url_label">PMS ঠিকানা</string>
     <string name="connection_key_label">প্রপার্টি API কি</string>
     <string name="connection_key_hint">rk.…</string>
     <string name="connection_save_connect">সংরক্ষণ ও সংযোগ</string>

@@ -16,7 +16,6 @@ data class RoomTypeEntity(
   @PrimaryKey(autoGenerate = true) val id: Long = 0,
   val name: String,
   val checklistTemplateSteps: List<String>,
-  val isDemo: Boolean = true,
   val pmsTypeId: String? = null,
 )
 
@@ -42,11 +41,10 @@ data class RoomEntity(
   val status: RoomStatus,
   val assignedTo: String?,
   val updatedAt: Long,
-  val isDemo: Boolean = true,
   val notes: String = "",
   val isOccupied: Boolean = false,
-  // PMS snapshot columns (null/absent in Demo mode). floor uses 0 as the
-  // "unknown" sentinel because the column predates sync and stays non-null.
+  // PMS snapshot columns. A null PMS floor maps to UNKNOWN_FLOOR (-1);
+  // floor stays non-null because the column predates sync.
   val pmsUnitId: String? = null,
   val block: String? = null,
   val departsToday: Boolean = false,
@@ -109,7 +107,6 @@ data class TicketEntity(
   val resolvedAt: Long? = null,
   val photoPath: String? = null,
   val pmsTicketId: String? = null,
-  val isDemo: Boolean = true,
 )
 
 @Entity(

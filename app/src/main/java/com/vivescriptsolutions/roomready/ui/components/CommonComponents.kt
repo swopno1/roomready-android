@@ -56,7 +56,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vivescriptsolutions.roomready.R
-import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.photos.PhotoStore
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
 import com.vivescriptsolutions.roomready.domain.ChecklistTemplates
@@ -121,23 +120,6 @@ fun RoomStatusChip(
 }
 
 @Composable
-fun DemoModePill(modifier: Modifier = Modifier) {
-  Surface(
-    modifier = modifier.testTag("demo_mode_badge"),
-    shape = RoundedCornerShape(8.dp),
-    color = MaterialTheme.colorScheme.secondaryContainer,
-    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-  ) {
-    Text(
-      text = stringResource(R.string.demo_mode_badge),
-      style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-      modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-    )
-  }
-}
-
-@Composable
 fun OfflineReadyPill(modifier: Modifier = Modifier) {
   Surface(
     modifier = modifier,
@@ -178,15 +160,6 @@ fun localizedFloorLabel(floor: Int, block: String? = null): String {
     digitString(R.string.floor_number, floor)
   }
 }
-
-@Composable
-fun localizedRoomTypeName(rawName: String): String =
-  when (rawName) {
-    DemoSeeder.TYPE_DELUXE_KING -> stringResource(R.string.room_type_deluxe_king)
-    DemoSeeder.TYPE_FAMILY_SUITE -> stringResource(R.string.room_type_family_suite)
-    DemoSeeder.TYPE_GARDEN_COTTAGE -> stringResource(R.string.room_type_garden_cottage)
-    else -> rawName
-  }
 
 @Composable
 fun localizedChecklistStepTitle(step: ChecklistStepState): String {

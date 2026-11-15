@@ -20,7 +20,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
       OutboxEntry::class,
       SyncStateEntity::class,
     ],
-  version = 8,
+  version = 9,
   exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -131,9 +131,75 @@ abstract class AppDatabase : RoomDatabase() {
         }
       }
 
+    val MIGRATION_8_9: Migration =
+      object : Migration(8, 9) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+          // Demo Mode is gone: drop the isDemo columns. Table rebuilds
+          // (not DROP COLUMN) so legacy SQLite on API 24+ works. DROP
+          // TABLE does not fire FK actions, so Live rows survive with
+          // ids intact; indices are recreated below.
+          db.execSQL(
+            "CREATE TABLE IF NOT EXISTS tickets_new " +
+              "(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, roomId INTEGER NOT NULL, " +
+              "roomName TEXT NOT NULL, title TEXT NOT NULL, description TEXT NOT NULL, " +
+              "priority TEXT NOT NULL, status TEXT NOT NULL, createdBy TEXT NOT NULL, " +
+              "createdAt INTEGER NOT NULL, resolvedBy TEXT, resolvedAt INTEGER, " +
+              "photoPath TEXT, pmsTicketId TEXT, " +
+              "FOREIGN KEY(roomId) REFERENCES rooms(id) ON UPDATE NO ACTION ON DELETE CASCADE)"
+          )
+          db.execSQL(
+            "INSERT INTO tickets_new (id, roomId, roomName, title, description, priority, " +
+              "status, createdBy, createdAt, resolvedBy, resolvedAt, photoPath, pmsTicketId) " +
+              "SELECT id, roomId, roomName, title, description, priority, " +
+              "status, createdBy, createdAt, resolvedBy, resolvedAt, photoPath, pmsTicketId " +
+              "FROM tickets"
+          )
+          db.execSQL("DROP TABLE tickets")
+          db.execSQL("ALTER TABLE tickets_new RENAME TO tickets")
+          db.execSQL("CREATE INDEX IF NOT EXISTS index_tickets_roomId ON tickets(roomId)")
+
+          db.execSQL(
+            "CREATE TABLE IF NOT EXISTS rooms_new " +
+              "(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, " +
+              "roomTypeId INTEGER NOT NULL, roomTypeName TEXT NOT NULL, floor INTEGER NOT NULL, " +
+              "status TEXT NOT NULL, assignedTo TEXT, updatedAt INTEGER NOT NULL, " +
+              "notes TEXT NOT NULL, isOccupied INTEGER NOT NULL, pmsUnitId TEXT, block TEXT, " +
+              "departsToday INTEGER NOT NULL, pmsUnitStatus TEXT, pmsHousekeepingAt INTEGER, " +
+              "FOREIGN KEY(roomTypeId) REFERENCES room_types(id) ON UPDATE NO ACTION ON DELETE RESTRICT)"
+          )
+          db.execSQL(
+            "INSERT INTO rooms_new (id, name, roomTypeId, roomTypeName, floor, status, " +
+              "assignedTo, updatedAt, notes, isOccupied, pmsUnitId, block, departsToday, " +
+              "pmsUnitStatus, pmsHousekeepingAt) " +
+              "SELECT id, name, roomTypeId, roomTypeName, floor, status, " +
+              "assignedTo, updatedAt, notes, isOccupied, pmsUnitId, block, departsToday, " +
+              "pmsUnitStatus, pmsHousekeepingAt FROM rooms"
+          )
+          db.execSQL("DROP TABLE rooms")
+          db.execSQL("ALTER TABLE rooms_new RENAME TO rooms")
+          db.execSQL("CREATE INDEX IF NOT EXISTS index_rooms_roomTypeId ON rooms(roomTypeId)")
+          db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_rooms_name ON rooms(name)")
+
+          db.execSQL(
+            "CREATE TABLE IF NOT EXISTS room_types_new " +
+              "(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, " +
+              "checklistTemplateSteps TEXT NOT NULL, pmsTypeId TEXT)"
+          )
+          db.execSQL(
+            "INSERT INTO room_types_new (id, name, checklistTemplateSteps, pmsTypeId) " +
+              "SELECT id, name, checklistTemplateSteps, pmsTypeId FROM room_types"
+          )
+          db.execSQL("DROP TABLE room_types")
+          db.execSQL("ALTER TABLE room_types_new RENAME TO room_types")
+        }
+      }
+
     fun build(context: Context): AppDatabase =
       Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, DATABASE_NAME)
-        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+        .addMigrations(
+          MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
+          MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
+        )
         .build()
   }
 }

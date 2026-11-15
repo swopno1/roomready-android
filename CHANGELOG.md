@@ -4,6 +4,26 @@ All notable changes to the RoomReady Android application.
 
 ## [Unreleased]
 
+### Production shape — Demo Mode removed (founder directive 2026-11-15)
+
+- Deleted Demo Mode entirely: seeder + 12-room dataset, bundled staff
+  roster, demo welcome card, demo section/reset, and every Demo/Live
+  branch. Test fixtures moved to test sources only; nothing fake
+  ships in the app.
+- First run is now honest setup: connect PMS URL + key → bootstrap →
+  role + roster/free-text name. Unconfigured screens stay truthfully
+  empty; offline after sync runs on the last real snapshot.
+- Disconnect wipes key + snapshot and returns to setup, with explicit
+  confirmation when the outbox holds unsynced work (never silent).
+- Upgrade purge: unconfigured installs empty operational tables on
+  first launch of this build; configured installs untouched; photos
+  and settings never touched.
+- Schema v9 + migration 8→9 drops the `isDemo` columns (table
+  rebuilds, legacy-SQLite-safe). Out-of-service is unconditionally
+  PMS-driven and read-only in-app.
+- Connection URL field ships empty (demo13 placeholder removed).
+- Docs + listing rewritten with zero demo/sample claims.
+
 ### P9 — Local notifications (stretch)
 
 - Local-only alerts, no FCM or server push: inspection return

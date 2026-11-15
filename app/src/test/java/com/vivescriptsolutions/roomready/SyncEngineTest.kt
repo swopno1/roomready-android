@@ -7,13 +7,11 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import com.vivescriptsolutions.roomready.data.local.AppDatabase
-import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesRepository
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
 import com.vivescriptsolutions.roomready.data.sync.ApiKeyStore
 import com.vivescriptsolutions.roomready.data.sync.BootstrapOutcome
 import com.vivescriptsolutions.roomready.data.sync.PmsApi
-import com.vivescriptsolutions.roomready.domain.ConnectionMode
 import com.vivescriptsolutions.roomready.data.sync.SyncEngine
 import com.vivescriptsolutions.roomready.data.sync.SyncOutcome
 import com.vivescriptsolutions.roomready.data.sync.SyncRepository
@@ -165,7 +163,7 @@ class SyncEngineTest {
 
   private fun liveMode() {
     runBlocking {
-      prefs.setConnectionMode(ConnectionMode.LIVE)
+      prefs.setConfigured(true)
       prefs.setBaseUrl(server.url("/").toString().trimEnd('/'))
     }
   }
@@ -173,7 +171,7 @@ class SyncEngineTest {
   @Test
   fun `bootstrap replaces snapshot wholesale and ignores unknown fields`() {
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       assertEquals(12, db.roomDao().observeAllRooms().first().size)
       server.enqueue(MockResponse().setBody(bootstrapJson(listOf(unitJson(unitA, "01", "DIRTY")))))
 
@@ -275,7 +273,7 @@ class SyncEngineTest {
   @Test
   fun `contract version mismatch changes nothing`() {
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val before = db.roomDao().observeAllRooms().first().map { it.name to it.status }
       server.enqueue(
         MockResponse().setBody(bootstrapJson(listOf(unitJson(unitA, "01", "DIRTY")), contractVersion = 2))
@@ -290,7 +288,7 @@ class SyncEngineTest {
   @Test
   fun `malformed bootstrap leaves state untouched`() {
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val beforeCount = db.roomDao().observeAllRooms().first().size
       listOf(
         "{ not json",
@@ -626,14 +624,9 @@ class SyncEngineTest {
 
       val session = repository.sessionFlow.first()
       assertEquals(listOf("Karim", "Rahim"), session.staffRoster)
-      assertEquals(false, session.isDemoMode)
 
       // Asia/Dhaka (UTC+6) midnight 2026-11-18 = 2026-11-17T18:00:00Z.
       assertEquals(1_794_938_400_000L, repository.todayStartMillis(1_795_015_800_000L))
-
-      prefs.setConnectionMode(ConnectionMode.DEMO)
-      val demoSession = repository.sessionFlow.first()
-      assertTrue(demoSession.staffRoster.contains("Amina Rahman"))
     }
   }
 
@@ -659,7 +652,7 @@ class SyncEngineTest {
   }
 
   @Test
-  fun `disconnect wipes key, reseeds demo, and clears sync tables`() {
+  fun `disconnect wipes key and clears the whole snapshot`() {
     runBlocking {
       liveMode()
       server.enqueue(MockResponse().setBody(bootstrapJson(listOf(unitJson(unitA, "01", "DIRTY")))))
@@ -672,11 +665,9 @@ class SyncEngineTest {
 
       SyncRepository(context, db, prefs, keys, api).disconnect()
 
-      assertEquals(ConnectionMode.DEMO, prefs.connection().mode)
+      assertEquals(false, prefs.connection().isConfigured)
       assertFalse(keys.hasKey())
-      val rooms = db.roomDao().observeAllRooms().first()
-      assertTrue(rooms.isNotEmpty())
-      assertTrue(rooms.all { it.isDemo && it.pmsUnitId == null })
+      assertTrue(db.roomDao().observeAllRooms().first().isEmpty())
       assertEquals(0, db.outboxDao().count())
       assertEquals(0, db.staffDao().getAll().size)
       assertNull(db.syncStateDao().get())

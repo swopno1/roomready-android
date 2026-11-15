@@ -16,7 +16,8 @@ human decision or Console-only action.
 - **Evidence:** No login, onboarding gate is a local role/name pick
   (`OnboardingScreen.kt`); full functionality available immediately.
 - **Recommended answer:** "All functionality is available without special
-  access." No demo credentials needed.
+  access." Reviewers reach the honest setup screen; no credentials needed
+  to verify it.
 - **Human confirmation:** No.
 
 ## 2. Advertising
@@ -24,7 +25,7 @@ human decision or Console-only action.
 - **Status:** App contains **no ads**.
 - **Evidence:** No `play-services-ads` dependency, no AdMob App ID
   (`app/build.gradle.kts`, merged release manifest). The `INTERNET`
-  permission exists solely for opt-in Live-mode PMS sync to a
+  permission exists solely for PMS sync to a
   user-configured HTTPS origin — no ad traffic.
 - **Recommended answer:** "No, my app does not contain ads."
 - **UMPSDK compatibility:** N/A — no ads (per standing rule, this
@@ -54,7 +55,7 @@ human decision or Console-only action.
   permission declaration required for any of them.
 - **Evidence:** App manifest declares `ACCESS_NETWORK_STATE` (normal,
   connectivity indicator only), `INTERNET` (normal, used only for
-  opt-in Live-mode PMS sync to a user-configured `https://` origin;
+  PMS sync to a user-configured `https://` origin;
   refused otherwise), `CAMERA` (dangerous, requested at first
   photo use with an in-app plain-language rationale; declining
   degrades to skip-with-reason, and camera hardware is
@@ -79,7 +80,7 @@ human decision or Console-only action.
 - **Evidence:** No `Service` subclasses, no `FOREGROUND_SERVICE*`
   permissions, no exact alarms, no push. Outbox sync runs on a
   network-constrained one-shot WorkManager worker with exponential
-  backoff (`PmsSyncWorker`), enqueued only after Live-mode mutations.
+  backoff (`PmsSyncWorker`), enqueued only after mutations while connected. Stuck-clean reminders run on a half-hourly unconstrained periodic worker (`StuckReminderWorker`); both are local-only.
 - **Recommended answer:** No declarations.
 - **Human confirmation:** No.
 
@@ -103,9 +104,9 @@ human decision or Console-only action.
 
 - **Status:** Not applicable (no accounts).
 - **Evidence:** No sign-in/registration anywhere (`UserSession` is a
-  local shift label). Complete data removal = in-app Disconnect /
-  Reset Demo Data + uninstall; no ViveScript server-side data exists
-  (a Live-mode property PMS holds its own copy, managed by the
+  local shift label). Complete data removal = in-app Disconnect +
+  uninstall; no ViveScript server-side data exists
+  (a connected property PMS holds its own copy, managed by the
   property).
 - **Recommended answer:** Declare no account creation; no deletion URL
   required.
@@ -115,10 +116,11 @@ human decision or Console-only action.
 ## 10. Data Safety
 
 - **Status:** Drafted in `PLAY_STORE_DATA_SAFETY.md`, not yet filed.
-- **Evidence:** Demo mode transmits nothing; Live mode transmits staff
-  names + housekeeping activity to the user-configured property PMS
-  over HTTPS; no SDKs that collect; OS-level backup disclosed.
-- **Recommended answer:** Data collected/shared in Live mode only, per
+- **Evidence:** Before configuration the app transmits nothing; once
+  connected it transmits staff names + housekeeping activity to the
+  user-configured property PMS over HTTPS; no SDKs that collect;
+  OS-level backup disclosed.
+- **Recommended answer:** Data collected/shared once connected, per
   the drafted form mapping (names + app activity, encrypted in
   transit).
 - **Human confirmation:** **[Human]** — founder files the form.
@@ -137,7 +139,7 @@ human decision or Console-only action.
 - **Evidence:** Release build fails fast without `KEYSTORE_PATH` /
   `STORE_PASSWORD` / `KEY_PASSWORD` ("Keystore file not set for signing
   config release"); R8 release AAB verified with a throwaway local key
-  (4.3 MB, mapping emitted, then key deleted). No keystore is committed
+  (6.9 MB, then key shredded). No keystore is committed
   or stored in-repo.
 - **Recommended answer:** Founder signs the upload AAB with the
   production upload key enrolled in Play App Signing.

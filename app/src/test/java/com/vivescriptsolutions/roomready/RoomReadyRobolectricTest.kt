@@ -14,7 +14,6 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import com.vivescriptsolutions.roomready.data.local.AppDatabase
-import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesRepository
 import com.vivescriptsolutions.roomready.data.preferences.UserSession
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
@@ -88,41 +87,9 @@ class RoomReadyRobolectricTest {
   }
 
   @Test
-  fun `demo seed creates 3 room types with 8 steps and 12 rooms across all 5 statuses`() {
-    runBlocking {
-      val seeded = DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
-      assertTrue(seeded)
-
-      val roomTypes = db.roomTypeDao().observeAll().first()
-      assertEquals(3, roomTypes.size)
-      assertEquals(
-        listOf("Deluxe King", "Family Suite", "Garden Cottage"),
-        roomTypes.map { it.name },
-      )
-      roomTypes.forEach { type ->
-        assertEquals(8, type.checklistTemplateSteps.size)
-      }
-
-      val rooms = db.roomDao().observeAllRooms().first()
-      assertEquals(12, rooms.size)
-
-      val countsByStatus =
-        RoomStatus.entries.associateWith { status -> rooms.count { it.status == status } }
-      assertEquals(3, countsByStatus[RoomStatus.DIRTY])
-      assertEquals(3, countsByStatus[RoomStatus.CLEANING])
-      assertEquals(2, countsByStatus[RoomStatus.CLEANED])
-      assertEquals(3, countsByStatus[RoomStatus.READY])
-      assertEquals(1, countsByStatus[RoomStatus.OUT_OF_SERVICE])
-
-      val tickets = db.ticketDao().observeAllTickets().first()
-      assertEquals(2, tickets.size)
-    }
-  }
-
-  @Test
   fun `status transition writes StatusLog and manages ChecklistRun`() {
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val dirtyRoom = db.roomDao().observeAllRooms().first().first { it.status == RoomStatus.DIRTY }
 
       val illegalResult =
@@ -258,7 +225,7 @@ class RoomReadyRobolectricTest {
   fun `rooms board renders filter chips and seeded rooms`() {
     val rooms =
       runBlocking {
-        DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+        TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
         db.roomDao().observeAllRooms().first()
       }
     val counts = RoomStatus.entries.associateWith { status -> rooms.count { it.status == status } }
@@ -273,8 +240,6 @@ class RoomReadyRobolectricTest {
                 UserSession(
                   role = StaffRole.HOUSEKEEPER,
                   staffName = "Amina Rahman",
-                  isDemoMode = true,
-                  hasSeededDemo = true,
                 ),
               allRooms = rooms,
               filteredRooms = rooms,
@@ -306,7 +271,7 @@ class RoomReadyRobolectricTest {
   fun `room detail shows only legal next actions for dirty room`() {
     val dirtyRoom =
       runBlocking {
-        DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+        TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
         db.roomDao().observeAllRooms().first().first { it.status == RoomStatus.DIRTY }
       }
     val actions = RoomTransitionEngine.legalActionsFor(dirtyRoom.status, StaffRole.HOUSEKEEPER)
@@ -323,8 +288,6 @@ class RoomReadyRobolectricTest {
                 UserSession(
                   role = StaffRole.HOUSEKEEPER,
                   staffName = "Amina Rahman",
-                  isDemoMode = true,
-                  hasSeededDemo = true,
                 ),
             ),
           onBack = {},

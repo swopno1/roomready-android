@@ -45,13 +45,11 @@ import com.vivescriptsolutions.roomready.data.local.RunReturnFlag
 import com.vivescriptsolutions.roomready.domain.ReturnReason
 import com.vivescriptsolutions.roomready.domain.RoomStatus
 import com.vivescriptsolutions.roomready.domain.formatReturnReason
-import com.vivescriptsolutions.roomready.ui.components.DemoModePill
 import com.vivescriptsolutions.roomready.ui.components.OfflineReadyPill
 import com.vivescriptsolutions.roomready.ui.components.RoomStatusChip
 import com.vivescriptsolutions.roomready.ui.components.formatTimeShort
 import com.vivescriptsolutions.roomready.ui.locale.digitString
 import com.vivescriptsolutions.roomready.ui.components.localizedFloorLabel
-import com.vivescriptsolutions.roomready.ui.components.localizedRoomTypeName
 import com.vivescriptsolutions.roomready.ui.theme.colorSpec
 import com.vivescriptsolutions.roomready.ui.viewmodel.RoomsBoardUiState
 
@@ -84,19 +82,11 @@ fun RoomsBoardScreen(
           verticalAlignment = Alignment.CenterVertically,
           horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-          ) {
-            Text(
-              text = stringResource(R.string.demo_resort_name),
-              style = MaterialTheme.typography.headlineMedium,
-              color = MaterialTheme.colorScheme.onBackground,
-            )
-            if (uiState.session.isDemoMode) {
-              DemoModePill()
-            }
-          }
+          Text(
+            text = stringResource(R.string.nav_rooms),
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+          )
           OfflineReadyPill()
         }
 
@@ -350,7 +340,7 @@ private fun RoomCard(
             text =
               stringResource(
                 R.string.room_meta_format,
-                localizedRoomTypeName(room.roomTypeName),
+                room.roomTypeName,
                 localizedFloorLabel(room.floor, room.block),
               ),
             style = MaterialTheme.typography.bodyLarge,

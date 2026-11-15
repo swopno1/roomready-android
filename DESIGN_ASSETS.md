@@ -66,5 +66,5 @@ Required before submission (Play needs ≥2 phone screenshots):
 3. Recommended extras: ticket detail, room detail, Bengali locale board.
 
 Capture on a mid-range phone at 1080×2400 (9:16), English + Bengali,
-with the demo resort seeded. File them under `brand/export/screenshots/`
+against the connected property. File them under `brand/export/screenshots/`
 and record them here when done.

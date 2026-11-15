@@ -8,7 +8,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.vivescriptsolutions.roomready.data.local.AppDatabase
-import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.local.StatusLogEntity
 import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesRepository
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
@@ -59,7 +58,7 @@ class DashboardFlowTest {
   @Test
   fun `status counts match seeded fixture`() {
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val counts =
         db.roomDao().observeStatusCounts().first().associate { it.status to it.count }
       assertEquals(3, counts[RoomStatus.DIRTY])
@@ -73,7 +72,7 @@ class DashboardFlowTest {
   @Test
   fun `cleans today counts transitions since midnight with per-person list`() {
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val now = System.currentTimeMillis()
       val since = com.vivescriptsolutions.roomready.data.repository.startOfDayMillis(now)
       val hour = 60 * 60 * 1000L
@@ -104,7 +103,7 @@ class DashboardFlowTest {
   @Test
   fun `open tickets group by priority and stuck rooms surface`() {
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val byPriority =
         db.ticketDao().observeCountByPriority(TicketStatus.OPEN).first()
           .associate { it.priority to it.count }

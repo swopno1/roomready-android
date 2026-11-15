@@ -7,7 +7,6 @@ import androidx.core.content.getSystemService
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.vivescriptsolutions.roomready.data.local.AppDatabase
-import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesRepository
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
 import com.vivescriptsolutions.roomready.data.sync.ApiOutcome
@@ -37,7 +36,7 @@ import org.robolectric.shadows.ShadowSettings
  * really has no network (airplane flag on, no active network), and
  * (2) every core flow still succeeds end to end while the sync
  * transport stays silent (NotConfigured on all six endpoints without
- * opening a socket — Demo mode has no URL or key).
+ * opening a socket — an unconfigured install has no URL or key).
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -65,7 +64,7 @@ class AirplaneModeTest {
   fun `airplane mode still runs every core flow`() {
     enableAirplaneMode()
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
 
       // Full turnover: start, 8 steps, skip photo with reason, finish.
       val room = db.roomDao().observeAllRooms().first().first { it.status == RoomStatus.DIRTY }
@@ -103,21 +102,26 @@ class AirplaneModeTest {
       assertEquals(TicketStatus.DONE, db.ticketDao().getTicketById(ticketId)!!.status)
       val readyRoom =
         db.roomDao().observeAllRooms().first().first { it.status == RoomStatus.READY }
-      repository.transitionRoomStatus(
-        roomId = readyRoom.id, toStatus = RoomStatus.OUT_OF_SERVICE,
-        staffName = "Karim", role = StaffRole.SUPERVISOR,
-      ).getOrThrow()
+      val oosResult =
+        repository.transitionRoomStatus(
+          roomId = readyRoom.id, toStatus = RoomStatus.OUT_OF_SERVICE,
+          staffName = "Karim", role = StaffRole.SUPERVISOR,
+        )
+      assertTrue(oosResult.isFailure)
+      assertTrue(
+        db.roomDao().observeAllRooms().first().any { it.status == RoomStatus.OUT_OF_SERVICE }
+      )
       assertTrue(db.roomDao().observeAllRooms().first().size == 12)
       assertTrue(db.statusLogDao().observeLogsForRoom(room.id).first().isNotEmpty())
     }
   }
 
   @Test
-  fun `demo transport stays silent on all six endpoints`() {
+  fun `unconfigured transport stays silent on all six endpoints`() {
     enableAirplaneMode()
     runBlocking {
-      // Demo-mode providers: no URL, no key — exactly what the app
-      // holds when the user never configured Live mode.
+      // Unconfigured providers: no URL, no key — exactly what the app
+      // holds before the user connects a property.
       val api = PmsApi(baseUrlProvider = { null }, keyProvider = { null })
       assertTrue(api.bootstrap() is ApiOutcome.NotConfigured)
       assertTrue(api.refreshRooms() is ApiOutcome.NotConfigured)

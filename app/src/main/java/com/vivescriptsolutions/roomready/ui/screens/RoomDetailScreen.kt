@@ -73,7 +73,6 @@ import com.vivescriptsolutions.roomready.ui.components.formatTimeShort
 import com.vivescriptsolutions.roomready.ui.locale.digitString
 import com.vivescriptsolutions.roomready.ui.components.localizedChecklistStepTitle
 import com.vivescriptsolutions.roomready.ui.components.localizedFloorLabel
-import com.vivescriptsolutions.roomready.ui.components.localizedRoomTypeName
 import com.vivescriptsolutions.roomready.ui.theme.badgeColors
 import com.vivescriptsolutions.roomready.ui.theme.colorSpec
 import com.vivescriptsolutions.roomready.ui.viewmodel.RoomDetailUiState
@@ -123,7 +122,7 @@ fun RoomDetailScreen(
                 text =
                   stringResource(
                     R.string.room_meta_format,
-                    localizedRoomTypeName(room.roomTypeName),
+                    room.roomTypeName,
                     localizedFloorLabel(room.floor, room.block),
                   ),
                 style = MaterialTheme.typography.bodyMedium,

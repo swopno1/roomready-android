@@ -149,6 +149,7 @@ fun RoomReadyApp(
   val session by mainViewModel.sessionState.collectAsStateWithLifecycle()
   val isInitialized by mainViewModel.isAppInitialized.collectAsStateWithLifecycle()
   val appLanguage by mainViewModel.appLanguage.collectAsStateWithLifecycle()
+  val isConfigured by mainViewModel.isPmsConfigured.collectAsStateWithLifecycle()
 
   CompositionLocalProvider(LocalBanglaDigits provides isBanglaUi(appLanguage)) {
     RoomReadyContent(
@@ -158,6 +159,7 @@ fun RoomReadyApp(
       mainViewModel = mainViewModel,
       session = session,
       isInitialized = isInitialized,
+      isConfigured = isConfigured,
       appLanguage = appLanguage,
       deepLinkChannel = deepLinkChannel,
     )
@@ -172,6 +174,7 @@ private fun RoomReadyContent(
   mainViewModel: MainAppViewModel,
   session: UserSession,
   isInitialized: Boolean,
+  isConfigured: Boolean,
   appLanguage: AppLanguage,
   deepLinkChannel: Channel<RoomDeepLink>,
 ) {
@@ -179,6 +182,23 @@ private fun RoomReadyContent(
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
       CircularProgressIndicator()
     }
+    return
+  }
+
+  // Production shape: no connection → setup only. Onboarding (role +
+  // roster/free-text name) follows the first successful sync.
+  if (!isConfigured) {
+    val connectionViewModel: ConnectionViewModel =
+      viewModel(factory = ConnectionViewModel.Factory(syncRepository))
+    val connectionState by connectionViewModel.uiState.collectAsStateWithLifecycle()
+    ConnectionScreen(
+      uiState = connectionState,
+      onBack = {},
+      onSaveConnection = connectionViewModel::saveConnection,
+      onSyncNow = connectionViewModel::syncNow,
+      onDisconnect = connectionViewModel::disconnect,
+      isSetup = true,
+    )
     return
   }
 
@@ -208,7 +228,6 @@ private fun RoomReadyContent(
   fun sharePhoto(name: String) = PhotoShare.sharePhoto(context, photoStore, name)
   // Resolved via stringResource (not context.getString) so configuration
   // changes such as locale switches recompose with fresh values.
-  val resetDoneMessage = stringResource(R.string.me_reset_done_snackbar)
   val runFinishedMessage = stringResource(R.string.run_finished_snackbar)
   val unauthorizedMessage = stringResource(R.string.connection_unauthorized)
 
@@ -389,13 +408,6 @@ private fun RoomReadyContent(
           session = session,
           onSwitchRole = mainViewModel::switchRole,
           onSwitchStaffName = mainViewModel::switchStaffName,
-          onResetDemoData = {
-            mainViewModel.resetDemoData {
-              coroutineScope.launch {
-                snackbarHostState.showSnackbar(resetDoneMessage)
-              }
-            }
-          },
           onOpenConnection = { navController.navigate(Routes.CONNECTION) },
           appLanguage = appLanguage,
           onLanguageChange = { language ->
@@ -414,7 +426,6 @@ private fun RoomReadyContent(
         ConnectionScreen(
           uiState = connectionState,
           onBack = { navController.popBackStack() },
-          onSetMode = connectionViewModel::setMode,
           onSaveConnection = connectionViewModel::saveConnection,
           onSyncNow = connectionViewModel::syncNow,
           onDisconnect = connectionViewModel::disconnect,

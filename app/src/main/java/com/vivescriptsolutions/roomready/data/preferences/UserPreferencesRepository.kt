@@ -1,6 +1,7 @@
 package com.vivescriptsolutions.roomready.data.preferences
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -9,7 +10,6 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.vivescriptsolutions.roomready.domain.AppLanguage
-import com.vivescriptsolutions.roomready.domain.ConnectionMode
 import com.vivescriptsolutions.roomready.domain.StaffRole
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -21,26 +21,14 @@ private val Context.roomReadyDataStore: DataStore<Preferences> by
 data class UserSession(
   val role: StaffRole? = null,
   val staffName: String? = null,
-  val isDemoMode: Boolean = true,
-  val hasSeededDemo: Boolean = false,
-  val staffRoster: List<String> = DEFAULT_STAFF_ROSTER,
+  val staffRoster: List<String> = emptyList(),
 ) {
   val isOnboarded: Boolean
     get() = role != null && !staffName.isNullOrBlank()
 }
 
-val DEFAULT_STAFF_ROSTER: List<String> =
-  listOf(
-    "Amina Rahman",
-    "Tariq Hasan",
-    "Maya Devi",
-    "Rafiq Islam",
-    "Nadia Chowdhury",
-    "Sajib Mia",
-  )
-
 data class PmsConnection(
-  val mode: ConnectionMode = ConnectionMode.DEMO,
+  val isConfigured: Boolean = false,
   val baseUrl: String? = null,
 )
 
@@ -48,14 +36,17 @@ class UserPreferencesRepository(private val context: Context) {
   private object Keys {
     val SELECTED_ROLE = stringPreferencesKey("selected_role")
     val SELECTED_STAFF_NAME = stringPreferencesKey("selected_staff_name")
-    val IS_DEMO_MODE = booleanPreferencesKey("is_demo_mode")
-    val HAS_SEEDED_DEMO = booleanPreferencesKey("has_seeded_demo")
     val CUSTOM_STAFF_NAMES = stringSetPreferencesKey("custom_staff_names")
-    val CONNECTION_MODE = stringPreferencesKey("connection_mode")
+    val PMS_CONFIGURED = booleanPreferencesKey("pms_configured")
     val PMS_BASE_URL = stringPreferencesKey("pms_base_url")
     val APP_LANGUAGE = stringPreferencesKey("app_language")
     val NOTIFICATIONS_ASKED = booleanPreferencesKey("notifications_asked")
     val STUCK_NOTIFIED_RUN_IDS = stringSetPreferencesKey("stuck_notified_run_ids")
+    // Legacy pre-production key. Old installs stored a Demo/Live mode
+    // string here; it is read once as a configured-state fallback so a
+    // previously connected install keeps its snapshot on upgrade. Never
+    // written by this build.
+    val LEGACY_CONNECTION_MODE = stringPreferencesKey("connection_mode")
   }
 
   val sessionFlow: Flow<UserSession> =
@@ -64,14 +55,10 @@ class UserPreferencesRepository(private val context: Context) {
         prefs[Keys.SELECTED_ROLE]?.let { raw ->
           runCatching { StaffRole.valueOf(raw) }.getOrNull()
         }
-      val customNames = prefs[Keys.CUSTOM_STAFF_NAMES].orEmpty().sorted()
-      val mergedRoster = (DEFAULT_STAFF_ROSTER + customNames).distinct()
       UserSession(
         role = role,
         staffName = prefs[Keys.SELECTED_STAFF_NAME],
-        isDemoMode = prefs[Keys.IS_DEMO_MODE] ?: true,
-        hasSeededDemo = prefs[Keys.HAS_SEEDED_DEMO] ?: false,
-        staffRoster = mergedRoster,
+        staffRoster = prefs[Keys.CUSTOM_STAFF_NAMES].orEmpty().sorted(),
       )
     }
 
@@ -80,7 +67,7 @@ class UserPreferencesRepository(private val context: Context) {
     context.roomReadyDataStore.edit { prefs ->
       prefs[Keys.SELECTED_ROLE] = role.name
       prefs[Keys.SELECTED_STAFF_NAME] = trimmed
-      if (trimmed.isNotEmpty() && trimmed !in DEFAULT_STAFF_ROSTER) {
+      if (trimmed.isNotEmpty()) {
         val current = prefs[Keys.CUSTOM_STAFF_NAMES].orEmpty()
         prefs[Keys.CUSTOM_STAFF_NAMES] = current + trimmed
       }
@@ -96,40 +83,38 @@ class UserPreferencesRepository(private val context: Context) {
     if (trimmed.isEmpty()) return
     context.roomReadyDataStore.edit { prefs ->
       prefs[Keys.SELECTED_STAFF_NAME] = trimmed
-      if (trimmed !in DEFAULT_STAFF_ROSTER) {
-        val current = prefs[Keys.CUSTOM_STAFF_NAMES].orEmpty()
-        prefs[Keys.CUSTOM_STAFF_NAMES] = current + trimmed
-      }
-    }
-  }
-
-  suspend fun markDemoSeeded() {
-    context.roomReadyDataStore.edit { prefs ->
-      prefs[Keys.HAS_SEEDED_DEMO] = true
-      prefs[Keys.IS_DEMO_MODE] = true
+      val current = prefs[Keys.CUSTOM_STAFF_NAMES].orEmpty()
+      prefs[Keys.CUSTOM_STAFF_NAMES] = current + trimmed
     }
   }
 
   fun observeConnection(): Flow<PmsConnection> =
     context.roomReadyDataStore.data.map { prefs ->
+      val configured =
+        prefs[Keys.PMS_CONFIGURED]
+          ?: (prefs[Keys.LEGACY_CONNECTION_MODE] == "LIVE")
       PmsConnection(
-        mode =
-          prefs[Keys.CONNECTION_MODE]?.let { raw ->
-            runCatching { ConnectionMode.valueOf(raw) }.getOrNull()
-          } ?: ConnectionMode.DEMO,
+        isConfigured = configured,
         baseUrl = prefs[Keys.PMS_BASE_URL]?.takeIf { it.isNotBlank() },
       )
     }
 
   suspend fun connection(): PmsConnection = observeConnection().first()
 
-  suspend fun setConnectionMode(mode: ConnectionMode) {
-    context.roomReadyDataStore.edit { prefs -> prefs[Keys.CONNECTION_MODE] = mode.name }
+  suspend fun setConfigured(configured: Boolean) {
+    context.roomReadyDataStore.edit { prefs -> prefs[Keys.PMS_CONFIGURED] = configured }
   }
 
   suspend fun setBaseUrl(baseUrl: String) {
     context.roomReadyDataStore.edit { prefs ->
       prefs[Keys.PMS_BASE_URL] = baseUrl.trim().trimEnd('/')
+    }
+  }
+
+  suspend fun clearConnection() {
+    context.roomReadyDataStore.edit { prefs ->
+      prefs.remove(Keys.PMS_BASE_URL)
+      prefs[Keys.PMS_CONFIGURED] = false
     }
   }
 
@@ -161,5 +146,11 @@ class UserPreferencesRepository(private val context: Context) {
     context.roomReadyDataStore.edit { prefs ->
       prefs[Keys.STUCK_NOTIFIED_RUN_IDS] = ids.map { it.toString() }.toSet()
     }
+  }
+
+  /** Testing only: clears every stored preference for isolation. */
+  @VisibleForTesting
+  suspend fun clearForTesting() {
+    context.roomReadyDataStore.edit { it.clear() }
   }
 }

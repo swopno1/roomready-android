@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,10 +25,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -43,7 +42,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.vivescriptsolutions.roomready.R
-import com.vivescriptsolutions.roomready.domain.ConnectionMode
 import com.vivescriptsolutions.roomready.ui.components.CalmSectionCard
 import com.vivescriptsolutions.roomready.ui.components.formatTimeShort
 import com.vivescriptsolutions.roomready.ui.locale.digitString
@@ -55,14 +53,15 @@ import com.vivescriptsolutions.roomready.ui.viewmodel.ConnectionUiState
 fun ConnectionScreen(
   uiState: ConnectionUiState,
   onBack: () -> Unit,
-  onSetMode: (ConnectionMode) -> Unit,
   onSaveConnection: (String, String) -> Unit,
   onSyncNow: () -> Unit,
   onDisconnect: () -> Unit,
   modifier: Modifier = Modifier,
+  isSetup: Boolean = false,
 ) {
   var urlDraft by remember(uiState.baseUrl) { mutableStateOf(uiState.baseUrl.orEmpty()) }
   var keyDraft by remember { mutableStateOf("") }
+  var showDisconnectConfirm by remember { mutableStateOf(false) }
 
   Scaffold(
     modifier = modifier.fillMaxSize().testTag("connection_screen"),
@@ -72,19 +71,24 @@ fun ConnectionScreen(
       TopAppBar(
         title = {
           Text(
-            text = stringResource(R.string.connection_title),
+            text =
+              stringResource(
+                if (isSetup) R.string.connection_setup_title else R.string.connection_title
+              ),
             style = MaterialTheme.typography.titleLarge,
           )
         },
         navigationIcon = {
-          IconButton(
-            onClick = onBack,
-            modifier = Modifier.size(48.dp).testTag("connection_back_button"),
-          ) {
-            Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = stringResource(R.string.cd_back),
-            )
+          if (!isSetup) {
+            IconButton(
+              onClick = onBack,
+              modifier = Modifier.size(48.dp).testTag("connection_back_button"),
+            ) {
+              Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.cd_back),
+              )
+            }
           }
         },
         colors =
@@ -100,117 +104,91 @@ fun ConnectionScreen(
       contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
       verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+      if (isSetup) {
+        item {
+          Text(
+            text = stringResource(R.string.connection_setup_body),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
+        }
+      }
+
       item {
         CalmSectionCard {
           Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-              ConnectionMode.entries.forEachIndexed { index, mode ->
-                SegmentedButton(
-                  selected = uiState.mode == mode,
-                  onClick = { onSetMode(mode) },
-                  shape = SegmentedButtonDefaults.itemShape(index, ConnectionMode.entries.size),
-                  modifier =
-                    Modifier.heightIn(min = 52.dp)
-                      .testTag("connection_mode_${mode.name.lowercase()}"),
-                ) {
-                  Text(
-                    text =
-                      stringResource(
-                        if (mode == ConnectionMode.DEMO) R.string.connection_mode_demo
-                        else R.string.connection_mode_live
-                      ),
-                    style = MaterialTheme.typography.titleSmall,
-                  )
-                }
-              }
-            }
-            if (uiState.mode == ConnectionMode.DEMO) {
+            OutlinedTextField(
+              value = urlDraft,
+              onValueChange = { urlDraft = it },
+              label = { Text(text = stringResource(R.string.connection_url_label)) },
+              textStyle = MaterialTheme.typography.bodyLarge,
+              singleLine = true,
+              modifier = Modifier.fillMaxWidth().testTag("connection_url_input"),
+            )
+            OutlinedTextField(
+              value = keyDraft,
+              onValueChange = { keyDraft = it },
+              label = { Text(text = stringResource(R.string.connection_key_label)) },
+              placeholder = { Text(text = stringResource(R.string.connection_key_hint)) },
+              textStyle = MaterialTheme.typography.bodyLarge,
+              singleLine = true,
+              visualTransformation = PasswordVisualTransformation(),
+              modifier = Modifier.fillMaxWidth().testTag("connection_key_input"),
+            )
+            Button(
+              onClick = { onSaveConnection(urlDraft, keyDraft) },
+              enabled = !uiState.syncing && urlDraft.isNotBlank() && keyDraft.isNotBlank(),
+              modifier =
+                Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("connection_save_button"),
+              shape = RoundedCornerShape(12.dp),
+            ) {
               Text(
-                text = stringResource(R.string.connection_demo_body),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = stringResource(R.string.connection_save_connect),
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
               )
             }
           }
         }
       }
 
-      if (uiState.mode == ConnectionMode.LIVE) {
-        item {
-          CalmSectionCard {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-              OutlinedTextField(
-                value = urlDraft,
-                onValueChange = { urlDraft = it },
-                label = { Text(text = stringResource(R.string.connection_url_label)) },
-                placeholder = { Text(text = stringResource(R.string.connection_url_hint)) },
-                textStyle = MaterialTheme.typography.bodyLarge,
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().testTag("connection_url_input"),
+      item {
+        CalmSectionCard {
+          Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val property = uiState.propertyName
+            val businessDate = uiState.businessDate
+            if (property != null && businessDate != null) {
+              Text(
+                text = stringResource(R.string.connection_property_format, property, businessDate),
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
               )
-              OutlinedTextField(
-                value = keyDraft,
-                onValueChange = { keyDraft = it },
-                label = { Text(text = stringResource(R.string.connection_key_label)) },
-                placeholder = { Text(text = stringResource(R.string.connection_key_hint)) },
-                textStyle = MaterialTheme.typography.bodyLarge,
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth().testTag("connection_key_input"),
-              )
-              Button(
-                onClick = { onSaveConnection(urlDraft, keyDraft) },
-                enabled = !uiState.syncing && urlDraft.isNotBlank() && keyDraft.isNotBlank(),
-                modifier =
-                  Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("connection_save_button"),
-                shape = RoundedCornerShape(12.dp),
-              ) {
-                Text(
-                  text = stringResource(R.string.connection_save_connect),
-                  style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                )
-              }
             }
-          }
-        }
-
-        item {
-          CalmSectionCard {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-              val property = uiState.propertyName
-              val businessDate = uiState.businessDate
-              if (property != null && businessDate != null) {
-                Text(
-                  text = stringResource(R.string.connection_property_format, property, businessDate),
-                  style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              if (uiState.syncing) {
+                CircularProgressIndicator(
+                  modifier = Modifier.size(20.dp).testTag("connection_syncing_indicator"),
                 )
               }
-              Row(verticalAlignment = Alignment.CenterVertically) {
-                if (uiState.syncing) {
-                  CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp).testTag("connection_syncing_indicator"),
-                  )
-                }
-                Text(
-                  text =
-                    when {
-                      uiState.syncing -> stringResource(R.string.connection_status_syncing)
-                      uiState.lastError != null ->
-                        stringResource(R.string.connection_status_error_format, uiState.lastError)
-                      uiState.lastSyncAt != null ->
-                        digitString(
-                          R.string.connection_status_synced_format,
-                          formatTimeShort(uiState.lastSyncAt),
-                          uiState.pendingCount,
-                        )
-                      else -> stringResource(R.string.connection_status_idle)
-                    },
-                  style = MaterialTheme.typography.bodyLarge,
-                  color = MaterialTheme.colorScheme.onSurfaceVariant,
-                  modifier = Modifier.padding(start = if (uiState.syncing) 8.dp else 0.dp),
-                )
-              }
-              ConnectionMessageText(message = uiState.message)
+              Text(
+                text =
+                  when {
+                    uiState.syncing -> stringResource(R.string.connection_status_syncing)
+                    uiState.lastError != null ->
+                      stringResource(R.string.connection_status_error_format, uiState.lastError)
+                    uiState.lastSyncAt != null ->
+                      digitString(
+                        R.string.connection_status_synced_format,
+                        formatTimeShort(uiState.lastSyncAt),
+                        uiState.pendingCount,
+                      )
+                    else -> stringResource(R.string.connection_status_idle)
+                  },
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = if (uiState.syncing) 8.dp else 0.dp),
+              )
+            }
+            ConnectionMessageText(message = uiState.message)
+            if (uiState.isConfigured) {
               Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(
                   onClick = onSyncNow,
@@ -221,7 +199,10 @@ fun ConnectionScreen(
                   Text(text = stringResource(R.string.connection_sync_now))
                 }
                 OutlinedButton(
-                  onClick = onDisconnect,
+                  onClick = {
+                    if (uiState.pendingCount > 0) showDisconnectConfirm = true
+                    else onDisconnect()
+                  },
                   enabled = !uiState.syncing,
                   modifier =
                     Modifier.weight(1f).heightIn(min = 52.dp).testTag("connection_disconnect_button"),
@@ -235,6 +216,42 @@ fun ConnectionScreen(
         }
       }
     }
+  }
+
+  if (showDisconnectConfirm) {
+    AlertDialog(
+      onDismissRequest = { showDisconnectConfirm = false },
+      title = { Text(text = stringResource(R.string.connection_disconnect_confirm_title)) },
+      text = {
+        Text(
+          text =
+            digitString(
+              R.string.connection_disconnect_confirm_body,
+              uiState.pendingCount,
+            )
+        )
+      },
+      confirmButton = {
+        TextButton(
+          onClick = {
+            showDisconnectConfirm = false
+            onDisconnect()
+          },
+          modifier = Modifier.testTag("disconnect_confirm_button"),
+        ) {
+          Text(text = stringResource(R.string.connection_disconnect_confirm_button))
+        }
+      },
+      dismissButton = {
+        TextButton(
+          onClick = { showDisconnectConfirm = false },
+          modifier = Modifier.testTag("disconnect_cancel_button"),
+        ) {
+          Text(text = stringResource(R.string.dialog_cancel))
+        }
+      },
+      modifier = Modifier.testTag("disconnect_confirm_dialog"),
+    )
   }
 }
 

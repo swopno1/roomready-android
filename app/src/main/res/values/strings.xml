@@ -2,11 +2,7 @@
 <resources>
     <string name="app_name">RoomReady</string>
 
-    <!-- Branding & Demo Notice -->
-    <string name="demo_resort_name">Sundarban Palms</string>
-    <string name="demo_mode_badge">DEMO</string>
-    <string name="demo_mode_banner_title">Demo Resort Mode</string>
-    <string name="demo_mode_banner_subtitle">12 sample rooms to try. Works with no internet.</string>
+    <!-- Branding -->
     <string name="offline_badge">Offline-ready</string>
     <string name="app_tagline">Calm, offline-first housekeeping for small resorts</string>
 
@@ -34,9 +30,6 @@
     <string name="filter_count_format">%1$s (%2$d)</string>
 
     <!-- Room Types & Floors -->
-    <string name="room_type_deluxe_king">Deluxe King</string>
-    <string name="room_type_family_suite">Family Suite</string>
-    <string name="room_type_garden_cottage">Garden Cottage</string>
     <string name="floor_ground">Ground Wing</string>
     <string name="floor_block_format">Block %1$s</string>
     <string name="floor_unknown">—</string>
@@ -51,7 +44,7 @@
 
     <!-- Onboarding / Who Are You -->
     <string name="onboarding_title">Welcome to RoomReady</string>
-    <string name="onboarding_subtitle">No login or internet needed. Pick your role and name for this shift.</string>
+    <string name="onboarding_subtitle">No login needed. Pick your role and name for this shift.</string>
     <string name="onboarding_step_role">1. Choose your role</string>
     <string name="onboarding_step_staff">2. Who are you?</string>
     <string name="staff_custom_hint">Or type another staff name</string>
@@ -213,16 +206,16 @@
     <string name="status_log_transition_format">%1$s → %2$s</string>
     <string name="status_log_by_format">%1$s (%2$s) · %3$s</string>
 
-    <!-- Tickets Tab (Placeholder + Live Local Tickets) -->
+    <!-- Tickets Tab -->
     <string name="tickets_header_title">Maintenance &amp; Tickets</string>
     <string name="tickets_placeholder_note">Tickets you save on this phone appear below.</string>
     <string name="tickets_empty_state">No tickets logged yet. Open any room to report an issue.</string>
     <string name="tickets_room_badge_format">Room %1$s</string>
 
-    <!-- Dashboard Tab (Placeholder + Live Local Counts) -->
+    <!-- Dashboard Tab -->
     <string name="dashboard_header_title">Resort Snapshot</string>
     <string name="dashboard_placeholder_note">Everything below is live from this phone.</string>
-    <string name="dashboard_total_rooms_label">Total Demo Rooms</string>
+    <string name="dashboard_total_rooms_label">Total rooms</string>
     <string name="dashboard_recent_activity">Recent Status Activity</string>
     <string name="dashboard_no_activity">No recent status changes recorded.</string>
     <string name="offline_banner_offline">Offline — everything still works</string>
@@ -248,22 +241,16 @@
     <string name="me_who_are_you_title">Who are you?</string>
     <string name="me_offline_card_title">Saved on this phone</string>
     <string name="me_offline_card_body">All rooms, checklists, tickets, and logs stay on this phone. Airplane mode works. PMS sync is optional — turn it on in PMS Connection.</string>
-    <string name="me_demo_section_title">Demo Resort Data</string>
-    <string name="me_demo_section_body">Demo Mode for %1$s · 12 sample rooms.</string>
-    <string name="me_reset_demo_button">Reset Demo Data</string>
-    <string name="me_reset_dialog_title">Reset Demo Data?</string>
-    <string name="me_reset_dialog_body">This will restore the 12 demo rooms, checklists, tickets, and status logs back to their starting state.</string>
-    <string name="me_reset_confirm">Reset</string>
-    <string name="me_reset_done_snackbar">Demo resort data restored</string>
 
     <!-- PMS Connection -->
     <string name="connection_title">PMS Connection</string>
+    <string name="connection_setup_title">Connect to your resort</string>
+    <string name="connection_setup_body">Enter your resort PMS address and property API key to download rooms, checklists, and staff.</string>
+    <string name="connection_disconnect_confirm_title">Disconnect with unsynced work?</string>
+    <string name="connection_disconnect_confirm_body">There are %1$d unsynced changes. They will be deleted and cannot be sent.</string>
+    <string name="connection_disconnect_confirm_button">Delete and disconnect</string>
     <string name="connection_row_title">PMS Connection</string>
-    <string name="connection_mode_demo">Demo</string>
-    <string name="connection_mode_live">Live</string>
-    <string name="connection_demo_body">Demo rooms on this phone. No internet needed.</string>
-    <string name="connection_url_label">PMS origin (https://…)</string>
-    <string name="connection_url_hint">https://demo13.vivereply.com</string>
+    <string name="connection_url_label">PMS address</string>
     <string name="connection_key_label">Property API key</string>
     <string name="connection_key_hint">rk.…</string>
     <string name="connection_save_connect">Save &amp; connect</string>

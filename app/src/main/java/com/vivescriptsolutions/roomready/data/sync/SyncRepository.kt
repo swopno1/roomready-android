@@ -8,12 +8,11 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.room.withTransaction
 import com.vivescriptsolutions.roomready.data.local.AppDatabase
-import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.local.SyncStateEntity
 import com.vivescriptsolutions.roomready.data.preferences.PmsConnection
 import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesRepository
-import com.vivescriptsolutions.roomready.domain.ConnectionMode
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,15 +43,13 @@ class SyncRepository(
 
   fun observeOutboxCount(): Flow<Int> = db.outboxDao().observeCount()
 
-  suspend fun setMode(mode: ConnectionMode) = prefs.setConnectionMode(mode)
-
   suspend fun saveConnection(baseUrl: String, rawKey: String): BootstrapOutcome {
     val url = baseUrl.trim().trimEnd('/')
     if (!url.startsWith("https://")) return BootstrapOutcome.Failed("Enter an https:// PMS origin")
     if (rawKey.isBlank()) return BootstrapOutcome.Failed("Paste the property API key")
     prefs.setBaseUrl(url)
     keys.saveKey(rawKey)
-    prefs.setConnectionMode(ConnectionMode.LIVE)
+    prefs.setConfigured(true)
     return when (val outcome = engine.bootstrap()) {
       is BootstrapOutcome.Applied -> {
         _authRevoked.value = false
@@ -76,7 +73,7 @@ class SyncRepository(
     }
 
   suspend fun syncNow(): SyncOutcome {
-    if (prefs.connection().mode != ConnectionMode.LIVE) return SyncOutcome.NotConfigured
+    if (!prefs.connection().isConfigured) return SyncOutcome.NotConfigured
     return when (val outcome = engine.syncOnce()) {
       is SyncOutcome.AuthRevoked -> {
         _authRevoked.value = true
@@ -86,12 +83,25 @@ class SyncRepository(
     }
   }
 
+  /**
+   * Disconnect: wipe the stored key and the entire local snapshot and
+   * return to setup. Callers must confirm with the user first when the
+   * outbox holds unsynced work — this function drops it.
+   */
   suspend fun disconnect() {
     keys.clear()
-    // Demo mode IS the bundled snapshot: reseed it so no stale Live
-    // data (or queued PMS writes) lingers after disconnect.
-    DemoSeeder.resetAndSeed(db)
-    prefs.setConnectionMode(ConnectionMode.DEMO)
+    db.withTransaction {
+      db.statusLogDao().deleteAll()
+      db.ticketDao().deleteAll()
+      db.checklistRunDao().deleteAll()
+      db.roomDao().deleteAll()
+      db.roomTypeDao().deleteAll()
+      db.staffDao().deleteAll()
+      db.outboxDao().deleteAll()
+      db.syncStateDao().deleteAll()
+    }
+    prefs.clearConnection()
+    prefs.setStuckNotifiedRunIds(emptySet())
     _authRevoked.value = false
   }
 

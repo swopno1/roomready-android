@@ -41,7 +41,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vivescriptsolutions.roomready.R
 import com.vivescriptsolutions.roomready.domain.StaffRole
-import com.vivescriptsolutions.roomready.ui.components.DemoModePill
 import com.vivescriptsolutions.roomready.ui.components.OfflineReadyPill
 import com.vivescriptsolutions.roomready.ui.components.StaffPickerSection
 
@@ -74,7 +73,6 @@ fun OnboardingScreen(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
       ) {
-        DemoModePill()
         OfflineReadyPill()
       }
 
@@ -89,28 +87,6 @@ fun OnboardingScreen(
           style = MaterialTheme.typography.bodyLarge,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-      }
-
-      Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-      ) {
-        Column(
-          modifier = Modifier.padding(16.dp),
-          verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-          Text(
-            text = stringResource(R.string.demo_mode_banner_title),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurface,
-          )
-          Text(
-            text = stringResource(R.string.demo_mode_banner_subtitle),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-          )
-        }
       }
 
       Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.Density
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.vivescriptsolutions.roomready.data.local.AppDatabase
-import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesRepository
 import com.vivescriptsolutions.roomready.data.preferences.UserSession
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
@@ -77,7 +76,7 @@ class LowLiteracyUiTest {
   fun `font scale 1_3 keeps board nodes displayed`() {
     val rooms =
       runBlocking {
-        DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+        TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
         db.roomDao().observeAllRooms().first()
       }
     val counts = RoomStatus.entries.associateWith { status -> rooms.count { it.status == status } }
@@ -188,7 +187,7 @@ class LowLiteracyUiTest {
   fun `bengali UI renders bengali digits for room numbers`() {
     val rooms =
       runBlocking {
-        DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+        TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
         db.roomDao().observeAllRooms().first()
       }
     val counts = RoomStatus.entries.associateWith { status -> rooms.count { it.status == status } }
@@ -284,7 +283,7 @@ class LowLiteracyUiTest {
   fun `every clickable on the run screen carries text or a label`() {
     val rooms =
       runBlocking {
-        DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+        TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
         db.roomDao().observeAllRooms().first()
       }
     val cleaningRoom = rooms.first { it.status == RoomStatus.CLEANING }
@@ -311,7 +310,7 @@ class LowLiteracyUiTest {
 
   private fun seededRoomsWithCounts() =
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val rooms = db.roomDao().observeAllRooms().first()
       val counts = RoomStatus.entries.associateWith { status -> rooms.count { it.status == status } }
       rooms to counts
@@ -344,13 +343,11 @@ class LowLiteracyUiTest {
     UserSession(
       role = StaffRole.HOUSEKEEPER,
       staffName = "Amina Rahman",
-      isDemoMode = true,
-      hasSeededDemo = true,
     )
 
   private fun seededDirtyRoom() =
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       db.roomDao().observeAllRooms().first().first { it.status == RoomStatus.DIRTY }
     }
 }

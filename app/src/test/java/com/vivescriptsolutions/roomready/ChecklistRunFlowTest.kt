@@ -14,7 +14,6 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import com.vivescriptsolutions.roomready.data.local.AppDatabase
-import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesRepository
 import com.vivescriptsolutions.roomready.data.preferences.UserSession
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
@@ -66,7 +65,7 @@ class ChecklistRunFlowTest {
   @Test
   fun `start full clean on dirty room creates 8-step run and moves to cleaning`() {
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val dirtyRoom =
         db.roomDao().observeAllRooms().first().first {
           it.status == RoomStatus.DIRTY && !it.isOccupied
@@ -101,7 +100,7 @@ class ChecklistRunFlowTest {
   @Test
   fun `stayover selectable on occupied room creates 4-step run`() {
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val occupiedDirty =
         db.roomDao().observeAllRooms().first().first {
           it.status == RoomStatus.DIRTY && it.isOccupied
@@ -126,7 +125,7 @@ class ChecklistRunFlowTest {
   @Test
   fun `stayover rejected on vacant room`() {
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val vacantDirty =
         db.roomDao().observeAllRooms().first().first {
           it.status == RoomStatus.DIRTY && !it.isOccupied
@@ -148,7 +147,7 @@ class ChecklistRunFlowTest {
   @Test
   fun `finish blocked at 7 of 8`() {
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val dirtyRoom = db.roomDao().observeAllRooms().first().first { it.status == RoomStatus.DIRTY }
       repository.startChecklistRun(
         roomId = dirtyRoom.id,
@@ -183,7 +182,7 @@ class ChecklistRunFlowTest {
   @Test
   fun `finish at 8 of 8 stamps run moves to cleaned and logs`() {
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val dirtyRoom = db.roomDao().observeAllRooms().first().first { it.status == RoomStatus.DIRTY }
       repository.startChecklistRun(
         roomId = dirtyRoom.id,
@@ -231,7 +230,7 @@ class ChecklistRunFlowTest {
             .allowMainThreadQueries()
             .build()
         val fileRepo = HousekeepingRepository(fileDb, UserPreferencesRepository(context))
-        DemoSeeder.seedIfEmpty(fileDb, nowMillis = 1_700_000_000_000L)
+        TestFixtures.seedIfEmpty(fileDb, nowMillis = 1_700_000_000_000L)
         val dirtyRoom =
           fileDb.roomDao().observeAllRooms().first().first { it.status == RoomStatus.DIRTY }
         val runId =
@@ -467,7 +466,7 @@ class ChecklistRunFlowTest {
   private fun runScreenState(doneCount: Int): RoomDetailUiState {
     val baseRoom =
       runBlocking {
-        DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+        TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
         db.roomDao().observeAllRooms().first().first { it.name == "101" }
       }
     val steps =
@@ -491,8 +490,6 @@ class ChecklistRunFlowTest {
         UserSession(
           role = StaffRole.HOUSEKEEPER,
           staffName = "Amina Rahman",
-          isDemoMode = true,
-          hasSeededDemo = true,
         ),
     )
   }

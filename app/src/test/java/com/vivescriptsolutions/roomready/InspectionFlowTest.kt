@@ -12,7 +12,6 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import com.vivescriptsolutions.roomready.data.local.AppDatabase
-import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesRepository
 import com.vivescriptsolutions.roomready.data.preferences.UserSession
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
@@ -62,7 +61,7 @@ class InspectionFlowTest {
   }
 
   private suspend fun cleanedRoomWithFinishedRun(): Long {
-    DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+    TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
     val dirtyRoom = db.roomDao().observeAllRooms().first().first { it.status == RoomStatus.DIRTY }
     repository.startChecklistRun(
       roomId = dirtyRoom.id, kind = ChecklistRunKind.FULL,
@@ -214,7 +213,7 @@ class InspectionFlowTest {
   fun `inspection screen shows read-only steps with pass and return`() {
     val (room, run) =
       runBlocking {
-        DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+        TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
         val seeded = db.roomDao().observeAllRooms().first().first { it.name == "103" }
         seeded to db.checklistRunDao().getLatestForRoom(seeded.id)!!
       }
@@ -230,8 +229,6 @@ class InspectionFlowTest {
                 UserSession(
                   role = StaffRole.SUPERVISOR,
                   staffName = "Karim",
-                  isDemoMode = true,
-                  hasSeededDemo = true,
                 ),
             ),
           onBack = {},

@@ -58,7 +58,6 @@ import com.vivescriptsolutions.roomready.domain.StaffRole
 import com.vivescriptsolutions.roomready.domain.TicketPriority
 import com.vivescriptsolutions.roomready.domain.TicketStatus
 import com.vivescriptsolutions.roomready.ui.components.CalmSectionCard
-import com.vivescriptsolutions.roomready.ui.components.DemoModePill
 import com.vivescriptsolutions.roomready.ui.components.OfflineReadyPill
 import com.vivescriptsolutions.roomready.ui.components.RoomStatusChip
 import com.vivescriptsolutions.roomready.ui.components.SectionHeading
@@ -97,20 +96,11 @@ fun TicketsScreen(
       verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
       item {
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-          Text(
-            text = stringResource(R.string.tickets_header_title),
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-          )
-          if (uiState.session.isDemoMode) {
-            DemoModePill()
-          }
-        }
+        Text(
+          text = stringResource(R.string.tickets_header_title),
+          style = MaterialTheme.typography.headlineMedium,
+          color = MaterialTheme.colorScheme.onBackground,
+        )
       }
 
       item {
@@ -356,20 +346,11 @@ fun DashboardScreen(
       }
 
       item {
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-          Text(
-            text = stringResource(R.string.dashboard_header_title),
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-          )
-          if (uiState.session.isDemoMode) {
-            DemoModePill()
-          }
-        }
+        Text(
+          text = stringResource(R.string.dashboard_header_title),
+          style = MaterialTheme.typography.headlineMedium,
+          color = MaterialTheme.colorScheme.onBackground,
+        )
       }
 
       item {
@@ -702,14 +683,11 @@ fun MeScreen(
   session: UserSession,
   onSwitchRole: (StaffRole) -> Unit,
   onSwitchStaffName: (String) -> Unit,
-  onResetDemoData: () -> Unit,
   onOpenConnection: () -> Unit = {},
   appLanguage: AppLanguage = AppLanguage.SYSTEM,
   onLanguageChange: (AppLanguage) -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
-  var showResetDialog by remember { mutableStateOf(false) }
-
   Column(
     modifier =
       modifier
@@ -733,12 +711,7 @@ fun MeScreen(
           style = MaterialTheme.typography.headlineMedium,
           color = MaterialTheme.colorScheme.onBackground,
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-          if (session.isDemoMode) {
-            DemoModePill()
-          }
-          OfflineReadyPill()
-        }
+        OfflineReadyPill()
       }
 
       CalmSectionCard {
@@ -832,71 +805,7 @@ fun MeScreen(
         }
       }
 
-      if (session.isDemoMode) {
-        CalmSectionCard {
-          Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            SectionHeading(text = stringResource(R.string.me_demo_section_title))
-            Text(
-              text =
-                stringResource(
-                  R.string.me_demo_section_body,
-                  stringResource(R.string.demo_resort_name),
-                ),
-              style = MaterialTheme.typography.bodyLarge,
-              color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-          OutlinedButton(
-            onClick = { showResetDialog = true },
-            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("reset_demo_button"),
-            colors =
-              ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.error,
-              ),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
-          ) {
-            Text(
-              text = stringResource(R.string.me_reset_demo_button),
-              style = MaterialTheme.typography.titleSmall,
-            )
-          }
-          }
-        }
-      }
-
       Spacer(modifier = Modifier.height(16.dp))
     }
-  }
-
-  if (showResetDialog) {
-    AlertDialog(
-      onDismissRequest = { showResetDialog = false },
-      title = { Text(text = stringResource(R.string.me_reset_dialog_title)) },
-      text = {
-        Text(
-          text = stringResource(R.string.me_reset_dialog_body),
-          style = MaterialTheme.typography.bodyLarge,
-        )
-      },
-      confirmButton = {
-        Button(
-          onClick = {
-            onResetDemoData()
-            showResetDialog = false
-          },
-          colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-          modifier = Modifier.heightIn(min = 48.dp),
-        ) {
-          Text(text = stringResource(R.string.me_reset_confirm))
-        }
-      },
-      dismissButton = {
-        TextButton(
-          onClick = { showResetDialog = false },
-          modifier = Modifier.heightIn(min = 48.dp),
-        ) {
-          Text(text = stringResource(R.string.dialog_cancel))
-        }
-      },
-    )
   }
 }

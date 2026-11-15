@@ -13,7 +13,6 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import com.vivescriptsolutions.roomready.data.local.AppDatabase
-import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.photos.PhotoStore
 import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesRepository
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
@@ -61,7 +60,7 @@ class PhotoFlowTest {
   }
 
   private suspend fun roomWithCompleteRun(): Long {
-    DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+    TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
     val dirtyRoom = db.roomDao().observeAllRooms().first().first { it.status == RoomStatus.DIRTY }
     repository.startChecklistRun(
       roomId = dirtyRoom.id, kind = ChecklistRunKind.FULL,
@@ -112,7 +111,7 @@ class PhotoFlowTest {
   @Test
   fun `photo refs persist on runs and tickets`() {
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val room = db.roomDao().observeAllRooms().first().first { it.name == "101" }
       repository.startChecklistRun(
         roomId = room.id, kind = ChecklistRunKind.FULL,

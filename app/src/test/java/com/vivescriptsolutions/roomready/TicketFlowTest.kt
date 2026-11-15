@@ -10,7 +10,6 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import com.vivescriptsolutions.roomready.data.local.AppDatabase
-import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.local.TicketEntity
 import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesRepository
 import com.vivescriptsolutions.roomready.data.preferences.UserSession
@@ -65,7 +64,7 @@ class TicketFlowTest {
   @Test
   fun `create done reopen cycle records who and when`() {
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val room = db.roomDao().observeAllRooms().first().first { it.name == "101" }
 
       repository.createTicket(
@@ -101,7 +100,7 @@ class TicketFlowTest {
   @Test
   fun `urgent badge count tracks open urgent tickets`() {
     runBlocking {
-      DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+      TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       // Seeded: one URGENT open ticket (room 204).
       assertEquals(1, urgentOpenCount(db.ticketDao().observeAllTickets().first()))
 
@@ -193,7 +192,7 @@ class TicketFlowTest {
       )
     val room =
       runBlocking {
-        DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
+        TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
         db.roomDao().observeAllRooms().first().first { it.name == "102" }
       }
     composeTestRule.setContent {
@@ -210,8 +209,6 @@ class TicketFlowTest {
                 UserSession(
                   role = StaffRole.HOUSEKEEPER,
                   staffName = "Amina Rahman",
-                  isDemoMode = true,
-                  hasSeededDemo = true,
                 ),
             ),
           onBack = {},

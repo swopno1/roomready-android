@@ -21,12 +21,10 @@ Resort Housekeeping** ("RoomReady" or the "Application"), an offline-first
 utility for hotel and resort housekeeping teams to track room readiness,
 turnover checklists, and maintenance tickets.
 
-RoomReady is designed to work **entirely on your device**. You can install
-it and start a shift immediately without registering an account, providing
-an email, logging into any service, or connecting to the internet.
-An optional Live mode (§3) can sync with your property's own management
-system if you configure it; Demo mode (the default) never transmits
-anything.
+On first launch RoomReady asks you to connect your property's
+management system (§3), then works fully offline from the synced
+snapshot. You never register an account, provide an email, or log
+into any service. Nothing is ever sent to ViveScript Solutions LLC.
 
 ---
 
@@ -36,8 +34,7 @@ We practice strict data minimization:
 
 - **No Personal Identifiers transmitted to us:** We do not receive names,
   email addresses, phone numbers, postal addresses, or government
-  identification. Staff names you enter stay on your device in Demo
-  mode (see §4); in Live mode they travel with your actions to your
+  identification. Staff names travel only with your actions to your
   own property system (see §3).
 - **No Account System:** The Application has no sign-in or registration.
 - **Minimal Permissions:** We request no Microphone, Location,
@@ -46,8 +43,8 @@ We practice strict data minimization:
   `ACCESS_NETWORK_STATE` (dashboard connectivity indicator only),
   `CAMERA`, requested at first photo use with a plain-language
   explanation, solely for optional in-app evidence photos,
-  `INTERNET`, used only for opt-in Live-mode PMS sync (§3) to the
-  server address you configure, over HTTPS only, and
+  `INTERNET`, used only for PMS sync (§3) with the server address
+  you configure, over HTTPS only, and
   `POST_NOTIFICATIONS` (runtime on Android 13+, asked once after
   your first finished clean), used only for on-device cleaning
   alerts — no push service, no data leaves the phone for alerts.
@@ -62,17 +59,16 @@ We practice strict data minimization:
 
 ---
 
-## 3. Optional Live PMS Sync (Opt-In)
+## 3. Property PMS Sync
 
-Live mode is off by default and does nothing until you open Me → PMS
-Connection, choose Live, and enter your property system's server
-address plus its property API key. The key is stored only in
-Android Keystore-backed encrypted storage, is never logged, and is
-wiped if the server rejects it or when you disconnect.
+On first launch you enter your property system's server address plus
+its property API key. The key is stored only in Android
+Keystore-backed encrypted storage, is never logged, and is wiped if
+the server rejects it or when you disconnect.
 
-When Live mode is active, the Application exchanges operational data
-with that server address — and only that address — over HTTPS (plain
-`http://` addresses are refused):
+The Application exchanges operational data with that server address —
+and only that address — over HTTPS (plain `http://` addresses are
+refused):
 
 - **Sent:** room status actions with the acting staff name, inspection
   return reasons, and ticket titles, descriptions, and status changes
@@ -83,8 +79,9 @@ with that server address — and only that address — over HTTPS (plain
 Nothing is ever sent to ViveScript Solutions LLC or any third party;
 the destination is your own property's system. Photos are never
 transmitted, and checklist step notes stay on-device. Disconnecting
-wipes the key, clears the synced snapshot and any queued writes, and
-restores the on-device demo dataset.
+wipes the key and clears the synced snapshot and any queued writes
+(the app asks you to confirm first when unsynced work is queued),
+returning to the setup screen.
 
 ---
 
@@ -95,11 +92,8 @@ statuses and assignments, checklist steps and step notes, ticket titles
 and descriptions, and status-change logs — is stored **100% on your
 device** in a local Room database and DataStore preferences. This data is
 never transmitted to ViveScript Solutions LLC or any third-party server
-by the Application (in Live mode, the §3 operational subset is
-additionally synced with your own property system).
-
-Demo content shipped with the app (sample rooms, staff roster names, and
-example tickets) is fictional seed data, also stored only on-device.
+by the Application (the §3 operational subset is additionally synced
+with your own property system).
 
 Evidence photos you take (room after-photos, ticket photos) are stored
 in the app's private files directory, referenced from the local
@@ -108,6 +102,11 @@ if you explicitly tap a photo's share button, which opens the system
 share sheet. Skipping a run photo records only your one-line reason
 (no photo is taken). Deleting data (§6) removes photo references;
 photo files live and die with the app's private storage.
+
+Cleaning alerts (returned rooms, urgent tickets, long-clean reminders)
+are generated and shown entirely on-device from the data above. There
+is no push service: turning alerts off in system Settings stops them
+completely, with nothing transmitted at any point.
 
 ---
 
@@ -126,9 +125,9 @@ the device.
 ## 6. Data Retention and Deletion
 
 - **In-app controls:** Me → PMS Connection → Disconnect wipes the API
-  key, clears the synced snapshot and queued writes, and restores the
-  demo dataset; Me → Reset Demo Data restores the demo dataset;
-  uninstalling the app deletes all locally stored data from the device.
+  key and clears the synced snapshot and queued writes (with explicit
+  confirmation when unsynced work is queued); uninstalling the app
+  deletes all locally stored data from the device.
 - **No ViveScript server-side data exists**, so there is nothing for us
   to delete on request. If you contact us about data, we will confirm
   this in writing. Data synced to your own property system under §3 is
@@ -143,8 +142,8 @@ the device.
 
 RoomReady is a workplace utility intended for adult hospitality staff. It
 is not directed at children, and we do not knowingly process children's
-data. Demo mode transmits nothing off-device; Live mode syncs only
-workplace operational data with the property's own system (§3).
+data. The app syncs only workplace operational data with the
+property's own system (§3).
 
 ---
 
