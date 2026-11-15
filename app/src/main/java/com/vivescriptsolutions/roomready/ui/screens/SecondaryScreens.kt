@@ -442,6 +442,70 @@ fun DashboardScreen(
       }
 
       item {
+        CalmSectionCard(modifier = Modifier.testTag("dash_to_inspect")) {
+          Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+              Text(
+                text = stringResource(R.string.dash_to_inspect_title),
+                style = MaterialTheme.typography.titleMedium,
+              )
+              Text(
+                text = uiState.toInspectRooms.size.toString(),
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary,
+              )
+            }
+            if (uiState.toInspectRooms.isEmpty()) {
+              Text(
+                text = stringResource(R.string.dash_to_inspect_empty),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+              )
+            } else {
+              uiState.toInspectRooms.take(3).forEach { room ->
+                Surface(
+                  onClick = { onOpenRoom(room.id) },
+                  shape = MaterialTheme.shapes.small,
+                  color = MaterialTheme.colorScheme.surfaceVariant,
+                  border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                  modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                ) {
+                  Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                  ) {
+                    Text(
+                      text = stringResource(R.string.room_title_format, room.name),
+                      style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                    )
+                    Text(
+                      text = stringResource(R.string.updated_at_format, formatTimeShort(room.updatedAt)),
+                      style = MaterialTheme.typography.bodyMedium,
+                      color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                  }
+                }
+              }
+              TextButton(
+                onClick = {
+                  onSelectStatus(RoomStatus.CLEANED)
+                  onOpenRooms()
+                },
+                modifier = Modifier.heightIn(min = 48.dp).testTag("dash_to_inspect_view_all"),
+              ) {
+                Text(text = stringResource(R.string.dash_to_inspect_view_all))
+              }
+            }
+          }
+        }
+      }
+
+      item {
         CalmSectionCard {
           Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(

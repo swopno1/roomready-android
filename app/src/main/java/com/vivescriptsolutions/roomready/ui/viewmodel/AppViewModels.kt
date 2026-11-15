@@ -7,6 +7,7 @@ import com.vivescriptsolutions.roomready.data.local.ChecklistRunEntity
 import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.local.RoomEntity
 import com.vivescriptsolutions.roomready.data.local.RoomTypeEntity
+import com.vivescriptsolutions.roomready.data.local.RunReturnFlag
 import com.vivescriptsolutions.roomready.data.local.StatusCount
 import com.vivescriptsolutions.roomready.data.local.TicketPriorityCount
 import com.vivescriptsolutions.roomready.data.local.StatusLogEntity
@@ -27,6 +28,7 @@ import com.vivescriptsolutions.roomready.data.repository.urgentOpenCount
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import com.vivescriptsolutions.roomready.domain.ReturnReason
 import com.vivescriptsolutions.roomready.domain.RoomStatus
 import com.vivescriptsolutions.roomready.domain.RoomTransitionAction
 import com.vivescriptsolutions.roomready.domain.RoomTransitionEngine
@@ -51,6 +53,7 @@ data class RoomsBoardUiState(
   val statusCounts: Map<RoomStatus, Int> = emptyMap(),
   val openTicketsByRoomId: Map<Long, Int> = emptyMap(),
   val urgentOpenByRoomId: Map<Long, Int> = emptyMap(),
+  val returnedFlagsByRoomId: Map<Long, RunReturnFlag> = emptyMap(),
 )
 
 data class RoomDetailUiState(
@@ -85,6 +88,7 @@ private data class DashboardNumbers(
   val cleaningRooms: List<RoomEntity>,
   val cleansToday: List<StatusLogEntity>,
   val ticketRows: List<TicketPriorityCount>,
+  val toInspectRooms: List<RoomEntity>,
 )
 
 private data class DashboardContext(
@@ -102,6 +106,7 @@ data class DashboardTabUiState(
   val cleansTodayByPerson: List<PersonCount> = emptyList(),
   val openTicketsByPriority: Map<TicketPriority, Int> = emptyMap(),
   val stuckCleaningRooms: List<RoomEntity> = emptyList(),
+  val toInspectRooms: List<RoomEntity> = emptyList(),
   val isOnline: Boolean = true,
   val recentLogs: List<StatusLogEntity> = emptyList(),
   val session: UserSession = UserSession(),
@@ -143,8 +148,12 @@ class MainAppViewModel(
         repository.sessionFlow,
         repository.observeAllRooms(),
         repository.observeAllTickets(),
-        combine(selectedFilter, searchQuery) { filter, query -> filter to query },
-      ) { ready, session, rooms, tickets, filterAndQuery ->
+        combine(
+          repository.observeReturnedRunFlags(),
+          combine(selectedFilter, searchQuery) { filter, query -> filter to query },
+        ) { flags, filterAndQuery -> flags to filterAndQuery },
+      ) { ready, session, rooms, tickets, flagsAndFilter ->
+        val (returnFlags, filterAndQuery) = flagsAndFilter
         val (filter, query) = filterAndQuery
         val counts = RoomStatus.entries.associateWith { status -> rooms.count { it.status == status } }
         val openTicketsByRoom =
@@ -173,6 +182,7 @@ class MainAppViewModel(
           statusCounts = counts,
           openTicketsByRoomId = openTicketsByRoom,
           urgentOpenByRoomId = urgentOpenByRoom(tickets),
+          returnedFlagsByRoomId = returnFlags.associateBy { it.roomId },
         )
       }
       .stateIn(
@@ -235,8 +245,9 @@ class MainAppViewModel(
           repository.observeRoomsByStatus(RoomStatus.CLEANING),
           cleansTodayFlow,
           repository.observeCountByPriority(TicketStatus.OPEN),
-        ) { statusRows, cleaningRooms, cleansToday, ticketRows ->
-          DashboardNumbers(statusRows, cleaningRooms, cleansToday, ticketRows)
+          repository.observeRoomsByStatus(RoomStatus.CLEANED),
+        ) { statusRows, cleaningRooms, cleansToday, ticketRows, toInspectRooms ->
+          DashboardNumbers(statusRows, cleaningRooms, cleansToday, ticketRows, toInspectRooms)
         },
         combine(
           repository.observeRecentLogs(15),
@@ -260,6 +271,7 @@ class MainAppViewModel(
           cleansTodayByPerson = cleansPerPerson(numbers.cleansToday),
           openTicketsByPriority = numbers.ticketRows.associate { it.priority to it.count },
           stuckCleaningRooms = stuckCleaningRooms(numbers.cleaningRooms, context.now),
+          toInspectRooms = numbers.toInspectRooms,
           isOnline = context.online,
           recentLogs = context.recentLogs,
           session = context.session,
@@ -425,6 +437,31 @@ class RoomDetailViewModel(
           role = role,
         )
         .onSuccess { onFinished() }
+        .onFailure { error -> actionError.value = error.message }
+    }
+  }
+
+  fun inspectPass(onDone: () -> Unit = {}) {
+    val session = uiState.value.session
+    val staffName = session.staffName ?: return
+    val role = session.role ?: return
+    viewModelScope.launch {
+      repository.inspectPass(roomId = roomId, staffName = staffName, role = role)
+        .onSuccess { onDone() }
+        .onFailure { error -> actionError.value = error.message }
+    }
+  }
+
+  fun inspectReturn(reason: ReturnReason?, note: String, onDone: () -> Unit = {}) {
+    val session = uiState.value.session
+    val staffName = session.staffName ?: return
+    val role = session.role ?: return
+    viewModelScope.launch {
+      repository.inspectReturn(
+          roomId = roomId, reason = reason, note = note,
+          staffName = staffName, role = role,
+        )
+        .onSuccess { onDone() }
         .onFailure { error -> actionError.value = error.message }
     }
   }

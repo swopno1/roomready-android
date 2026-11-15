@@ -71,10 +71,31 @@
     <string name="cd_add_note">ধাপের নোট যোগ বা সম্পাদনা করুন</string>
 
     <string name="detail_next_actions">পরবর্তী পদক্ষেপ</string>
-    <string name="detail_supervisor_wait_note">প্রস্তুত অবস্থা অনুমোদনের জন্য সুপারভাইজারের পরিদর্শনের অপেক্ষায়। Me ট্যাব থেকে ভূমিকা বদলাতে পারেন।</string>
     <string name="action_start_cleaning">পরিষ্কার শুরু করুন</string>
     <string name="action_finish_to_inspection">সমাপ্ত — পরিদর্শনে পাঠান</string>
     <string name="action_mark_ready">প্রস্তুত চিহ্নিত করুন</string>
+    <string name="action_return_to_cleaning">পরিষ্কারে ফেরত পাঠান</string>
+    <string name="action_inspect_room">পরিদর্শন করুন</string>
+
+    <!-- Supervisor Inspection -->
+    <string name="inspection_title_format">পরিদর্শন — রুম %1$s</string>
+    <string name="inspection_elapsed_format">পরিষ্কারে সময় লেগেছে %1$s</string>
+    <string name="inspection_pass">পাস — প্রস্তুত চিহ্নিত করুন</string>
+    <string name="inspection_return">পরিষ্কারে ফেরত পাঠান</string>
+    <string name="return_sheet_title">পরিষ্কারে ফেরত পাঠান</string>
+    <string name="return_sheet_body">কী ত্রুটিপূর্ণ তা বেছে নিন। সেই ধাপগুলো অনচেক হয়ে আবার খুলবে।</string>
+    <string name="return_reason_bathroom">বাথরুম</string>
+    <string name="return_reason_beds">বিছানা</string>
+    <string name="return_reason_dusting">ধুলো মোছা</string>
+    <string name="return_reason_amenities">সরঞ্জাম</string>
+    <string name="return_reason_other">অন্যান্য</string>
+    <string name="return_note_hint">ঐচ্ছিক নোট (যেমন: আয়নায় দাগ)</string>
+    <string name="return_confirm">রুম ফেরত পাঠান</string>
+    <string name="run_returned_banner_format">ফেরত পাঠানো হয়েছে: %1$s</string>
+    <string name="room_returned_badge_format">ফেরত: %1$s</string>
+    <string name="dash_to_inspect_title">পরিদর্শনের অপেক্ষায়</string>
+    <string name="dash_to_inspect_empty">পরিদর্শনের অপেক্ষায় কিছু নেই।</string>
+    <string name="dash_to_inspect_view_all">সব দেখুন</string>
     <string name="action_return_to_dirty">নোংরায় ফেরত পাঠান</string>
     <string name="action_mark_dirty_turnover">নোংরা চিহ্নিত করুন (নতুন টার্নওভার)</string>
     <string name="action_mark_out_of_service">সার্ভিসের বাইরে রাখুন</string>

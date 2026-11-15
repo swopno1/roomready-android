@@ -14,6 +14,8 @@ data class StatusCount(val status: RoomStatus, val count: Int)
 
 data class TicketPriorityCount(val priority: TicketPriority, val count: Int)
 
+data class RunReturnFlag(val roomId: Long, val returnReasonKey: String, val returnNote: String)
+
 @Dao
 interface RoomTypeDao {
   @Query("SELECT * FROM room_types ORDER BY id ASC")
@@ -72,6 +74,9 @@ interface ChecklistRunDao {
 
   @Query("SELECT * FROM checklist_runs ORDER BY startedAt DESC")
   suspend fun getAll(): List<ChecklistRunEntity>
+
+  @Query("SELECT roomId, returnReasonKey, returnNote FROM checklist_runs WHERE finishedAt IS NULL AND returnReasonKey IS NOT NULL")
+  fun observeReturnedRunFlags(): Flow<List<RunReturnFlag>>
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   suspend fun insert(run: ChecklistRunEntity): Long

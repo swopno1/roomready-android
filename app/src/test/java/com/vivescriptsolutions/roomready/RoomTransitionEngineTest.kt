@@ -23,11 +23,16 @@ class RoomTransitionEngineTest {
         .map { it.toStatus }
         .toSet(),
     )
-    assertTrue(
-      RoomTransitionEngine.legalActionsFor(RoomStatus.CLEANED, StaffRole.HOUSEKEEPER).isEmpty()
+    // Soft gating (P5): both roles can act on cleaned rooms; the UI leads
+    // each role to its own queue instead of hiding actions.
+    assertEquals(
+      setOf(RoomStatus.READY, RoomStatus.CLEANING, RoomStatus.DIRTY, RoomStatus.OUT_OF_SERVICE),
+      RoomTransitionEngine.legalActionsFor(RoomStatus.CLEANED, StaffRole.HOUSEKEEPER)
+        .map { it.toStatus }
+        .toSet(),
     )
     assertEquals(
-      setOf(RoomStatus.DIRTY),
+      setOf(RoomStatus.DIRTY, RoomStatus.OUT_OF_SERVICE),
       RoomTransitionEngine.legalActionsFor(RoomStatus.READY, StaffRole.HOUSEKEEPER)
         .map { it.toStatus }
         .toSet(),
@@ -43,7 +48,7 @@ class RoomTransitionEngineTest {
   @Test
   fun `supervisor legal transitions include inspection approval`() {
     assertEquals(
-      setOf(RoomStatus.READY, RoomStatus.DIRTY, RoomStatus.OUT_OF_SERVICE),
+      setOf(RoomStatus.READY, RoomStatus.CLEANING, RoomStatus.DIRTY, RoomStatus.OUT_OF_SERVICE),
       RoomTransitionEngine.legalActionsFor(RoomStatus.CLEANED, StaffRole.SUPERVISOR)
         .map { it.toStatus }
         .toSet(),
@@ -75,8 +80,8 @@ class RoomTransitionEngineTest {
     )
     assertFalse(
       RoomTransitionEngine.isLegalTransition(
-        RoomStatus.CLEANED,
         RoomStatus.READY,
+        RoomStatus.CLEANING,
         StaffRole.HOUSEKEEPER,
       )
     )

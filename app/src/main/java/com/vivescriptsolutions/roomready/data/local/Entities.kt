@@ -68,6 +68,8 @@ data class ChecklistRunEntity(
   val finishedAt: Long?,
   val steps: List<ChecklistStepState>,
   val runKind: ChecklistRunKind = ChecklistRunKind.FULL,
+  val returnReasonKey: String? = null,
+  val returnNote: String = "",
 )
 
 @Entity(
@@ -120,4 +122,5 @@ data class StatusLogEntity(
   val changedBy: String,
   val changedByRole: StaffRole,
   val changedAt: Long,
+  val reason: String? = null,
 )

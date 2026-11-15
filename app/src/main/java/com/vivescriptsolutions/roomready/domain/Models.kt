@@ -73,8 +73,11 @@ data class RoomTransitionAction(
 )
 
 object RoomTransitionEngine {
+  // Soft gating: this is a trust-based staff tool, so every legal status
+  // transition is allowed for both roles. The UI leads each role to its
+  // own queue instead (supervisors to inspection, housekeepers to their
+  // flagged returns), and every transition logs the acting name.
   private val allRoles = setOf(StaffRole.HOUSEKEEPER, StaffRole.SUPERVISOR)
-  private val supervisorOnly = setOf(StaffRole.SUPERVISOR)
 
   val transitionTable: List<RoomTransitionAction> =
     listOf(
@@ -111,21 +114,28 @@ object RoomTransitionEngine {
         toStatus = RoomStatus.READY,
         labelRes = R.string.action_mark_ready,
         isPrimary = true,
-        allowedRoles = supervisorOnly,
+        allowedRoles = allRoles,
+      ),
+      RoomTransitionAction(
+        fromStatus = RoomStatus.CLEANED,
+        toStatus = RoomStatus.CLEANING,
+        labelRes = R.string.action_return_to_cleaning,
+        isPrimary = false,
+        allowedRoles = allRoles,
       ),
       RoomTransitionAction(
         fromStatus = RoomStatus.CLEANED,
         toStatus = RoomStatus.DIRTY,
         labelRes = R.string.action_return_to_dirty,
         isPrimary = false,
-        allowedRoles = supervisorOnly,
+        allowedRoles = allRoles,
       ),
       RoomTransitionAction(
         fromStatus = RoomStatus.CLEANED,
         toStatus = RoomStatus.OUT_OF_SERVICE,
         labelRes = R.string.action_mark_out_of_service,
         isPrimary = false,
-        allowedRoles = supervisorOnly,
+        allowedRoles = allRoles,
       ),
       RoomTransitionAction(
         fromStatus = RoomStatus.READY,
@@ -139,7 +149,7 @@ object RoomTransitionEngine {
         toStatus = RoomStatus.OUT_OF_SERVICE,
         labelRes = R.string.action_mark_out_of_service,
         isPrimary = false,
-        allowedRoles = supervisorOnly,
+        allowedRoles = allRoles,
       ),
       RoomTransitionAction(
         fromStatus = RoomStatus.OUT_OF_SERVICE,

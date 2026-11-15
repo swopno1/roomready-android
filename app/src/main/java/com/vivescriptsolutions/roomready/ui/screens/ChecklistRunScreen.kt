@@ -1,6 +1,7 @@
 package com.vivescriptsolutions.roomready.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -56,8 +57,10 @@ import com.vivescriptsolutions.roomready.R
 import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
 import com.vivescriptsolutions.roomready.domain.ChecklistTemplates
+import com.vivescriptsolutions.roomready.domain.ReturnReason
 import com.vivescriptsolutions.roomready.domain.TicketPriority
 import com.vivescriptsolutions.roomready.domain.TicketStatus
+import com.vivescriptsolutions.roomready.domain.formatReturnReason
 import com.vivescriptsolutions.roomready.ui.components.CalmSectionCard
 import com.vivescriptsolutions.roomready.ui.components.localizedChecklistStepTitle
 import com.vivescriptsolutions.roomready.ui.viewmodel.RoomDetailUiState
@@ -171,6 +174,33 @@ fun ChecklistRunScreen(
       contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
       verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+      val returnReasonKey = run.returnReasonKey
+      if (run.finishedAt == null && returnReasonKey != null) {
+        item(key = "returned_banner") {
+          val chipLabel =
+            runCatching { ReturnReason.valueOf(returnReasonKey) }
+              .map { stringResource(it.labelRes) }
+              .getOrDefault(returnReasonKey)
+          androidx.compose.material3.Surface(
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.errorContainer,
+            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+            modifier = Modifier.fillMaxWidth().testTag("run_returned_banner"),
+          ) {
+            Text(
+              text =
+                stringResource(
+                  R.string.run_returned_banner_format,
+                  formatReturnReason(chipLabel, run.returnNote),
+                ),
+              style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+              modifier = Modifier.padding(14.dp),
+            )
+          }
+        }
+      }
+
       val urgentTickets =
         uiState.tickets.filter {
           it.status == TicketStatus.OPEN && it.priority == TicketPriority.URGENT

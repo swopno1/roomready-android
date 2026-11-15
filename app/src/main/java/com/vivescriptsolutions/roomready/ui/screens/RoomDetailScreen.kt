@@ -63,7 +63,6 @@ import com.vivescriptsolutions.roomready.data.local.TicketEntity
 import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
 import com.vivescriptsolutions.roomready.domain.RoomStatus
-import com.vivescriptsolutions.roomready.domain.StaffRole
 import com.vivescriptsolutions.roomready.domain.TicketPriority
 import com.vivescriptsolutions.roomready.domain.TicketStatus
 import com.vivescriptsolutions.roomready.ui.components.CalmSectionCard
@@ -89,6 +88,7 @@ fun RoomDetailScreen(
   onToggleTicketStatus: (TicketEntity) -> Unit,
   onOpenTicket: (Long) -> Unit = {},
   onOpenRun: () -> Unit = {},
+  onOpenInspection: () -> Unit = {},
   onStartCleaning: (ChecklistRunKind) -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
@@ -185,31 +185,6 @@ fun RoomDetailScreen(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
               SectionHeading(text = stringResource(R.string.detail_next_actions))
 
-              if (room.status == RoomStatus.CLEANED && uiState.session.role == StaffRole.HOUSEKEEPER) {
-                Surface(
-                  shape = MaterialTheme.shapes.small,
-                  color = MaterialTheme.colorScheme.surfaceVariant,
-                  border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                ) {
-                  Row(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                  ) {
-                    Icon(
-                      imageVector = Icons.Filled.Info,
-                      contentDescription = null,
-                      tint = MaterialTheme.colorScheme.primary,
-                    )
-                    Text(
-                      text = stringResource(R.string.detail_supervisor_wait_note),
-                      style = MaterialTheme.typography.bodyLarge,
-                      color = MaterialTheme.colorScheme.onSurface,
-                    )
-                  }
-                }
-              }
-
               if (room.isOccupied && room.status == RoomStatus.DIRTY) {
                 Surface(
                   shape = RoundedCornerShape(8.dp),
@@ -242,11 +217,50 @@ fun RoomDetailScreen(
                   }
                   return@forEach
                 }
+                val finishedRun = activeRun?.finishedAt != null
+                // On a cleaned room with a finished run, Pass/Return live on the
+                // inspection screen (Return needs its reason chips there).
+                if (room.status == RoomStatus.CLEANED && finishedRun &&
+                  (action.toStatus == RoomStatus.READY || action.toStatus == RoomStatus.CLEANING)
+                ) {
+                  if (action.isPrimary) {
+                    Button(
+                      onClick = onOpenInspection,
+                      modifier =
+                        Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("inspect_room_button"),
+                      shape = MaterialTheme.shapes.medium,
+                    ) {
+                      Text(
+                        text = stringResource(R.string.action_inspect_room),
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                      )
+                    }
+                  } else {
+                    OutlinedButton(
+                      onClick = onOpenInspection,
+                      modifier =
+                        Modifier.fillMaxWidth().heightIn(min = 52.dp)
+                          .testTag("action_button_${action.toStatus.name.lowercase()}"),
+                      shape = MaterialTheme.shapes.medium,
+                      border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                      colors =
+                        ButtonDefaults.outlinedButtonColors(
+                          contentColor = MaterialTheme.colorScheme.onSurface,
+                        ),
+                    ) {
+                      Text(
+                        text = stringResource(action.labelRes),
+                        style = MaterialTheme.typography.titleSmall,
+                      )
+                    }
+                  }
+                  return@forEach
+                }
                 val targetColors = action.toStatus.colorSpec()
                 val tag = "action_button_${action.toStatus.name.lowercase()}"
                 // Start cleaning opens the run screen; occupied rooms pick a template first.
                 val startCleaningClick: (() -> Unit)? =
-                  if (action.toStatus == RoomStatus.CLEANING) {
+                  if (action.toStatus == RoomStatus.CLEANING && room.status == RoomStatus.DIRTY) {
                     {
                       if (room.isOccupied) {
                         showTemplatePicker = true
@@ -691,6 +705,14 @@ private fun StatusLogRow(log: StatusLogEntity) {
       style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
       color = MaterialTheme.colorScheme.onSurface,
     )
+    val reason = log.reason
+    if (!reason.isNullOrBlank()) {
+      Text(
+        text = reason,
+        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+        color = MaterialTheme.colorScheme.error,
+      )
+    }
     Text(
       text =
         stringResource(

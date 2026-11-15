@@ -6,6 +6,7 @@ import com.vivescriptsolutions.roomready.data.local.ChecklistRunEntity
 import com.vivescriptsolutions.roomready.data.local.DemoSeeder
 import com.vivescriptsolutions.roomready.data.local.RoomEntity
 import com.vivescriptsolutions.roomready.data.local.RoomTypeEntity
+import com.vivescriptsolutions.roomready.data.local.RunReturnFlag
 import com.vivescriptsolutions.roomready.data.local.StatusCount
 import com.vivescriptsolutions.roomready.data.local.StatusLogEntity
 import com.vivescriptsolutions.roomready.data.local.TicketEntity
@@ -14,6 +15,9 @@ import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesReposit
 import com.vivescriptsolutions.roomready.data.preferences.UserSession
 import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
 import com.vivescriptsolutions.roomready.domain.ChecklistTemplates
+import com.vivescriptsolutions.roomready.domain.ReturnReason
+import com.vivescriptsolutions.roomready.domain.failedStepKeysForReason
+import com.vivescriptsolutions.roomready.domain.formatReturnReason
 import com.vivescriptsolutions.roomready.domain.RoomStatus
 import com.vivescriptsolutions.roomready.domain.RoomTransitionEngine
 import com.vivescriptsolutions.roomready.domain.StaffRole
@@ -58,6 +62,9 @@ class HousekeepingRepository(
   fun observeLogsSince(toStatus: RoomStatus, sinceMillis: Long): Flow<List<StatusLogEntity>> =
     db.statusLogDao().observeLogsSince(toStatus, sinceMillis)
 
+  fun observeReturnedRunFlags(): Flow<List<RunReturnFlag>> =
+    db.checklistRunDao().observeReturnedRunFlags()
+
   suspend fun ensureDemoDataSeeded() {
     val seededNow = DemoSeeder.seedIfEmpty(db)
     if (seededNow) {
@@ -82,11 +89,18 @@ class HousekeepingRepository(
     prefs.setStaffName(staffName)
   }
 
+  /**
+   * Generic transition entry point. Every local transition is shaped as
+   * (room, from, to, actorName, reason?) so P7 can mirror Pass to the PMS
+   * INSPECT_PASS action and Return to INSPECT_FAIL (reason as the API note)
+   * without refactoring this code.
+   */
   suspend fun transitionRoomStatus(
     roomId: Long,
     toStatus: RoomStatus,
     staffName: String,
     role: StaffRole,
+    reason: String? = null,
     nowMillis: Long = System.currentTimeMillis(),
   ): Result<Unit> {
     return runCatching {
@@ -101,7 +115,7 @@ class HousekeepingRepository(
         // Run lifecycle transitions delegate to the gated Tx bodies (which
         // update the room and write the log); all other targets use the
         // generic update + log below.
-        if (toStatus == RoomStatus.CLEANING) {
+        if (toStatus == RoomStatus.CLEANING && room.status == RoomStatus.DIRTY) {
           // The generic transition always starts a full turnover. Stayover runs
           // go through startChecklistRun(STAYOVER), which enforces occupancy.
           startChecklistRunTx(room, ChecklistRunKind.FULL, staffName, role, nowMillis)
@@ -111,6 +125,15 @@ class HousekeepingRepository(
           // Gated: the generic transition cannot bypass the finish checklist.
           finishChecklistRunTx(room, staffName, role, nowMillis)
           return@withTransaction
+        }
+        if (room.status == RoomStatus.CLEANED && toStatus == RoomStatus.READY) {
+          inspectPassTx(room, staffName, role, nowMillis)
+          return@withTransaction
+        }
+        if (room.status == RoomStatus.CLEANED && toStatus == RoomStatus.CLEANING) {
+          // Returns must carry a reason chip (it unchecks the failed steps),
+          // so the generic entry point refuses them: callers use inspectReturn.
+          error("Use inspectReturn with a reason to return a cleaned room to cleaning")
         }
 
         val updatedAssignedTo = if (toStatus == RoomStatus.DIRTY) null else staffName
@@ -122,7 +145,54 @@ class HousekeepingRepository(
               updatedAt = nowMillis,
             )
           )
-        insertStatusLog(room, toStatus, staffName, role, nowMillis)
+        insertStatusLog(room, toStatus, staffName, role, nowMillis, reason)
+      }
+    }
+  }
+
+  /**
+   * Inspection pass: CLEANED room with a finished run moves to READY.
+   * Mirrors to PMS INSPECT_PASS in P7.
+   */
+  suspend fun inspectPass(
+    roomId: Long,
+    staffName: String,
+    role: StaffRole,
+    nowMillis: Long = System.currentTimeMillis(),
+  ): Result<Unit> {
+    return runCatching {
+      db.withTransaction {
+        val room = db.roomDao().getRoomById(roomId) ?: error("Room $roomId not found")
+        require(RoomTransitionEngine.isLegalTransition(room.status, RoomStatus.READY, role)) {
+          "Cannot pass inspection from ${room.status} for role $role"
+        }
+        inspectPassTx(room, staffName, role, nowMillis)
+      }
+    }
+  }
+
+  /**
+   * Inspection return: CLEANED room goes back to CLEANING with a required
+   * reason. The run reopens (finishedAt cleared) with the failed steps
+   * unchecked, and the reason travels on the run, the log, and (in P7)
+   * the PMS INSPECT_FAIL API note.
+   */
+  suspend fun inspectReturn(
+    roomId: Long,
+    reason: ReturnReason?,
+    note: String,
+    staffName: String,
+    role: StaffRole,
+    nowMillis: Long = System.currentTimeMillis(),
+  ): Result<Unit> {
+    return runCatching {
+      db.withTransaction {
+        val room = db.roomDao().getRoomById(roomId) ?: error("Room $roomId not found")
+        require(RoomTransitionEngine.isLegalTransition(room.status, RoomStatus.CLEANING, role)) {
+          "Cannot return room from ${room.status} for role $role"
+        }
+        require(reason != null) { "A return reason is required" }
+        inspectReturnTx(room, reason, note, staffName, role, nowMillis)
       }
     }
   }
@@ -237,6 +307,7 @@ class HousekeepingRepository(
     staffName: String,
     role: StaffRole,
     nowMillis: Long,
+    reason: String? = null,
   ) {
     db.statusLogDao()
       .insert(
@@ -248,8 +319,58 @@ class HousekeepingRepository(
           changedBy = staffName,
           changedByRole = role,
           changedAt = nowMillis,
+          reason = reason,
         )
       )
+  }
+
+  private suspend fun inspectPassTx(
+    room: RoomEntity,
+    staffName: String,
+    role: StaffRole,
+    nowMillis: Long,
+  ) {
+    val latest = db.checklistRunDao().getLatestForRoom(room.id)
+    require(latest != null && latest.finishedAt != null) {
+      "Only a room with a completed checklist can pass inspection"
+    }
+    db.roomDao()
+      .update(room.copy(status = RoomStatus.READY, assignedTo = staffName, updatedAt = nowMillis))
+    insertStatusLog(room, RoomStatus.READY, staffName, role, nowMillis)
+  }
+
+  private suspend fun inspectReturnTx(
+    room: RoomEntity,
+    reason: ReturnReason,
+    note: String,
+    staffName: String,
+    role: StaffRole,
+    nowMillis: Long,
+  ) {
+    val latest = db.checklistRunDao().getLatestForRoom(room.id)
+    require(latest != null && latest.finishedAt != null) {
+      "Only a room with a completed checklist can be returned"
+    }
+    val failedKeys = failedStepKeysForReason(reason)
+    val reopenedSteps =
+      latest.steps.map { step ->
+        if (step.key in failedKeys) step.copy(isDone = false) else step
+      }
+    db.checklistRunDao()
+      .update(
+        latest.copy(
+          finishedAt = null,
+          steps = reopenedSteps,
+          returnReasonKey = reason.name,
+          returnNote = note.trim(),
+        )
+      )
+    db.roomDao()
+      .update(room.copy(status = RoomStatus.CLEANING, assignedTo = staffName, updatedAt = nowMillis))
+    insertStatusLog(
+      room, RoomStatus.CLEANING, staffName, role, nowMillis,
+      reason = formatReturnReason(reason.defaultLabel, note),
+    )
   }
 
   suspend fun toggleChecklistStep(

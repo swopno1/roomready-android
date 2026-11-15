@@ -41,7 +41,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vivescriptsolutions.roomready.R
 import com.vivescriptsolutions.roomready.data.local.RoomEntity
+import com.vivescriptsolutions.roomready.data.local.RunReturnFlag
+import com.vivescriptsolutions.roomready.domain.ReturnReason
 import com.vivescriptsolutions.roomready.domain.RoomStatus
+import com.vivescriptsolutions.roomready.domain.formatReturnReason
 import com.vivescriptsolutions.roomready.ui.components.DemoModePill
 import com.vivescriptsolutions.roomready.ui.components.OfflineReadyPill
 import com.vivescriptsolutions.roomready.ui.components.RoomStatusChip
@@ -298,6 +301,7 @@ fun RoomsBoardScreen(
               room = room,
               openTicketCount = uiState.openTicketsByRoomId[room.id] ?: 0,
               urgentOpenCount = uiState.urgentOpenByRoomId[room.id] ?: 0,
+              returnedFlag = uiState.returnedFlagsByRoomId[room.id],
               onClick = { onRoomClick(room.id) },
             )
           }
@@ -312,6 +316,7 @@ private fun RoomCard(
   room: RoomEntity,
   openTicketCount: Int,
   urgentOpenCount: Int,
+  returnedFlag: RunReturnFlag?,
   onClick: () -> Unit,
 ) {
   Surface(
@@ -352,6 +357,30 @@ private fun RoomCard(
           )
         }
         RoomStatusChip(status = room.status, large = true)
+      }
+
+      if (returnedFlag != null) {
+        val chipLabel =
+          runCatching { ReturnReason.valueOf(returnedFlag.returnReasonKey) }
+            .map { stringResource(it.labelRes) }
+            .getOrDefault(returnedFlag.returnReasonKey)
+        Surface(
+          shape = RoundedCornerShapePill,
+          color = MaterialTheme.colorScheme.errorContainer,
+          contentColor = MaterialTheme.colorScheme.onErrorContainer,
+          border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+          modifier = Modifier.testTag("room_returned_badge_${room.name}"),
+        ) {
+          Text(
+            text =
+              stringResource(
+                R.string.room_returned_badge_format,
+                formatReturnReason(chipLabel, returnedFlag.returnNote),
+              ),
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+          )
+        }
       }
 
       Row(

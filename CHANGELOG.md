@@ -2,7 +2,28 @@
 
 All notable changes to the RoomReady Android application.
 
-## [Unreleased] — P4 dashboard + offline-proof
+## [Unreleased]
+
+### P5 — Supervisor inspection loop
+
+- Inspection screen for CLEANED rooms: read-only completed checklist
+  with per-step notes + elapsed clean time, big Pass (→ READY, logged)
+  and Return actions.
+- Return requires a reason chip (Bathroom/Beds/Dusting/Amenities/Other)
+  + optional note; the run reopens with exactly the failed steps
+  unchecked and the reason bannered atop the resumed checklist.
+- Supervisor "To inspect" queue: dashboard card (count + first rooms +
+  view-all into filtered board); existing Rooms CLEANED filter covers
+  the board side.
+- Returned rooms flagged in the housekeeper's room list; return reason
+  also shown on status-log rows.
+- Soft role gating: both roles can act everywhere (trust-based tool);
+  supervisor-wait gate removed, acting name logged on every transition.
+- Local transitions shaped as (room, from, to, actorName, reason?) with
+  reason persisted on runs + logs, ready for P7 PMS mirroring
+  (INSPECT_PASS / INSPECT_FAIL + note). Schema v6 + migration 5→6.
+
+### P4 — Dashboard + offline-proof (unreleased)
 
 - Dashboard: per-status tappable tiles (deep-link into filtered Rooms
   board), "% rooms Ready" headline, cleans-completed-today count with

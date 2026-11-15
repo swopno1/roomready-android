@@ -71,10 +71,31 @@
     <string name="cd_add_note">Add or edit step note</string>
 
     <string name="detail_next_actions">Next Actions</string>
-    <string name="detail_supervisor_wait_note">Waiting for a Supervisor to inspect and approve Ready status. You can switch roles in the Me tab.</string>
     <string name="action_start_cleaning">Start cleaning</string>
     <string name="action_finish_to_inspection">Finish — send to inspection</string>
     <string name="action_mark_ready">Mark Ready</string>
+    <string name="action_return_to_cleaning">Return to cleaning</string>
+    <string name="action_inspect_room">Inspect room</string>
+
+    <!-- Supervisor Inspection -->
+    <string name="inspection_title_format">Inspection — Room %1$s</string>
+    <string name="inspection_elapsed_format">Cleaning took %1$s</string>
+    <string name="inspection_pass">Pass — mark Ready</string>
+    <string name="inspection_return">Return to cleaning</string>
+    <string name="return_sheet_title">Return to cleaning</string>
+    <string name="return_sheet_body">Pick what failed. Those steps reopen unchecked.</string>
+    <string name="return_reason_bathroom">Bathroom</string>
+    <string name="return_reason_beds">Beds</string>
+    <string name="return_reason_dusting">Dusting</string>
+    <string name="return_reason_amenities">Amenities</string>
+    <string name="return_reason_other">Other</string>
+    <string name="return_note_hint">Optional note (e.g., streaky mirror)</string>
+    <string name="return_confirm">Return room</string>
+    <string name="run_returned_banner_format">Returned: %1$s</string>
+    <string name="room_returned_badge_format">Returned: %1$s</string>
+    <string name="dash_to_inspect_title">To inspect</string>
+    <string name="dash_to_inspect_empty">Nothing waiting for inspection.</string>
+    <string name="dash_to_inspect_view_all">View all</string>
     <string name="action_return_to_dirty">Return to Dirty</string>
     <string name="action_mark_dirty_turnover">Mark Dirty (new turnover)</string>
     <string name="action_mark_out_of_service">Mark out of service</string>

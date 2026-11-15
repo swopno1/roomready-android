@@ -54,6 +54,7 @@ import com.vivescriptsolutions.roomready.R
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
 import com.vivescriptsolutions.roomready.ui.screens.ChecklistRunScreen
 import com.vivescriptsolutions.roomready.ui.screens.DashboardScreen
+import com.vivescriptsolutions.roomready.ui.screens.InspectionScreen
 import com.vivescriptsolutions.roomready.ui.screens.MeScreen
 import com.vivescriptsolutions.roomready.ui.screens.OnboardingScreen
 import com.vivescriptsolutions.roomready.ui.screens.RoomDetailScreen
@@ -74,8 +75,11 @@ object Routes {
   const val ROOM_DETAIL = "room_detail/{roomId}"
   const val CHECKLIST_RUN = "checklist_run/{roomId}"
   const val TICKET_DETAIL = "ticket_detail/{ticketId}"
+  const val INSPECTION = "inspection/{roomId}"
 
   fun roomDetail(roomId: Long): String = "room_detail/$roomId"
+
+  fun inspection(roomId: Long): String = "inspection/$roomId"
 
   fun checklistRun(roomId: Long): String = "checklist_run/$roomId"
 
@@ -334,6 +338,7 @@ fun RoomReadyApp(
           onCreateTicket = detailViewModel::createTicket,
           onToggleTicketStatus = detailViewModel::toggleTicketStatus,
           onOpenTicket = { ticketId -> navController.navigate(Routes.ticketDetail(ticketId)) },
+          onOpenInspection = { navController.navigate(Routes.inspection(roomId)) },
           onOpenRun = { navController.navigate(Routes.checklistRun(roomId)) },
           onStartCleaning = { kind ->
             detailViewModel.startCleaning(kind) {
@@ -374,6 +379,34 @@ fun RoomReadyApp(
                 snackbarHostState.showSnackbar(runFinishedMessage)
               }
             }
+          },
+        )
+      }
+
+      composable(
+        route = Routes.INSPECTION,
+        arguments = listOf(navArgument("roomId") { type = NavType.LongType }),
+      ) { backStackEntry ->
+        val roomId = backStackEntry.arguments?.getLong("roomId") ?: return@composable
+        val detailViewModel: RoomDetailViewModel =
+          viewModel(
+            key = "room_detail_$roomId",
+            factory = RoomDetailViewModel.Factory(roomId, repository),
+          )
+        val detailState by detailViewModel.uiState.collectAsStateWithLifecycle()
+        LaunchedEffect(detailState.actionError) {
+          val error = detailState.actionError
+          if (error != null) {
+            snackbarHostState.showSnackbar(error)
+            detailViewModel.clearActionError()
+          }
+        }
+        InspectionScreen(
+          uiState = detailState,
+          onBack = { navController.popBackStack() },
+          onPass = { detailViewModel.inspectPass { navController.popBackStack() } },
+          onReturn = { reason, note ->
+            detailViewModel.inspectReturn(reason, note) { navController.popBackStack() }
           },
         )
       }
