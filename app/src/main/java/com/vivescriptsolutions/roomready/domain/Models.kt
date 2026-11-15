@@ -6,7 +6,7 @@ import com.vivescriptsolutions.roomready.R
 enum class RoomStatus(@StringRes val labelRes: Int) {
   DIRTY(R.string.status_dirty),
   CLEANING(R.string.status_cleaning),
-  INSPECTED(R.string.status_inspected),
+  CLEANED(R.string.status_cleaned),
   READY(R.string.status_ready),
   OUT_OF_SERVICE(R.string.status_out_of_service),
 }
@@ -94,7 +94,7 @@ object RoomTransitionEngine {
       ),
       RoomTransitionAction(
         fromStatus = RoomStatus.CLEANING,
-        toStatus = RoomStatus.INSPECTED,
+        toStatus = RoomStatus.CLEANED,
         labelRes = R.string.action_finish_to_inspection,
         isPrimary = true,
         allowedRoles = allRoles,
@@ -107,21 +107,21 @@ object RoomTransitionEngine {
         allowedRoles = allRoles,
       ),
       RoomTransitionAction(
-        fromStatus = RoomStatus.INSPECTED,
+        fromStatus = RoomStatus.CLEANED,
         toStatus = RoomStatus.READY,
         labelRes = R.string.action_mark_ready,
         isPrimary = true,
         allowedRoles = supervisorOnly,
       ),
       RoomTransitionAction(
-        fromStatus = RoomStatus.INSPECTED,
+        fromStatus = RoomStatus.CLEANED,
         toStatus = RoomStatus.DIRTY,
         labelRes = R.string.action_return_to_dirty,
         isPrimary = false,
         allowedRoles = supervisorOnly,
       ),
       RoomTransitionAction(
-        fromStatus = RoomStatus.INSPECTED,
+        fromStatus = RoomStatus.CLEANED,
         toStatus = RoomStatus.OUT_OF_SERVICE,
         labelRes = R.string.action_mark_out_of_service,
         isPrimary = false,

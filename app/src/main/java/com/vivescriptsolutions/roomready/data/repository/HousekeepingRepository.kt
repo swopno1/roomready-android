@@ -94,7 +94,7 @@ class HousekeepingRepository(
           startChecklistRunTx(room, ChecklistRunKind.FULL, staffName, role, nowMillis)
           return@withTransaction
         }
-        if (toStatus == RoomStatus.INSPECTED) {
+        if (toStatus == RoomStatus.CLEANED) {
           // Gated: the generic transition cannot bypass the finish checklist.
           finishChecklistRunTx(room, staffName, role, nowMillis)
           return@withTransaction
@@ -142,7 +142,7 @@ class HousekeepingRepository(
   /**
    * Finishes a cleaning run: requires CLEANING with an unfinished run whose
    * every step is checked (no override), then stamps finishedAt, moves the
-   * room to INSPECTED, and logs it.
+   * room to CLEANED, and logs it.
    */
   suspend fun finishChecklistRun(
     roomId: Long,
@@ -153,7 +153,7 @@ class HousekeepingRepository(
     return runCatching {
       db.withTransaction {
         val room = db.roomDao().getRoomById(roomId) ?: error("Room $roomId not found")
-        require(RoomTransitionEngine.isLegalTransition(room.status, RoomStatus.INSPECTED, role)) {
+        require(RoomTransitionEngine.isLegalTransition(room.status, RoomStatus.CLEANED, role)) {
           "Cannot finish cleaning from ${room.status} for role $role"
         }
         finishChecklistRunTx(room, staffName, role, nowMillis)
@@ -214,8 +214,8 @@ class HousekeepingRepository(
     }
     db.checklistRunDao().update(latest.copy(finishedAt = nowMillis))
     db.roomDao()
-      .update(room.copy(status = RoomStatus.INSPECTED, assignedTo = staffName, updatedAt = nowMillis))
-    insertStatusLog(room, RoomStatus.INSPECTED, staffName, role, nowMillis)
+      .update(room.copy(status = RoomStatus.CLEANED, assignedTo = staffName, updatedAt = nowMillis))
+    insertStatusLog(room, RoomStatus.CLEANED, staffName, role, nowMillis)
   }
 
   private suspend fun insertStatusLog(

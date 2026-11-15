@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- RoomReady monochrome (Android 13 themed icon) silhouette: white doorway
+     outline + check. Mirrors brand/source/icon-mono.svg (108dp viewport). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M42,28H66A10,10 0 0 1 76,38V70A10,10 0 0 1 66,80H42A10,10 0 0 1 32,70V38A10,10 0 0 1 42,28Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="9" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M44,60L54,70L74,46"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="10"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+ splash: ink background, centred icon glyph. The system
+         reads the splash theme from here, then continues with this theme. -->
+    <style name="Theme.RoomReady" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:splashScreenTheme">@style/Theme.RoomReady.Splash</item>
+    </style>
+
+    <style name="Theme.RoomReady.Splash" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+    </style>
+</resources>

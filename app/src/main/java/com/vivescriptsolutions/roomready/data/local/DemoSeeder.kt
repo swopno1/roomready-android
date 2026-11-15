@@ -98,7 +98,7 @@ object DemoSeeder {
           roomTypeId = deluxeId,
           roomTypeName = TYPE_DELUXE_KING,
           floor = 1,
-          status = RoomStatus.INSPECTED,
+          status = RoomStatus.CLEANED,
           assignedTo = "Tariq Hasan",
           updatedAt = nowMillis - 12 * minute,
           isDemo = true,
@@ -171,7 +171,7 @@ object DemoSeeder {
           roomTypeId = cottageId,
           roomTypeName = TYPE_GARDEN_COTTAGE,
           floor = 0,
-          status = RoomStatus.INSPECTED,
+          status = RoomStatus.CLEANED,
           assignedTo = "Sajib Mia",
           updatedAt = nowMillis - 24 * minute,
           isDemo = true,
@@ -201,7 +201,7 @@ object DemoSeeder {
     val roomIds = db.roomDao().insertAll(seedRooms)
     val roomIdByName = seedRooms.mapIndexed { idx, room -> room.name to roomIds[idx] }.toMap()
 
-    // Seed active/recent ChecklistRuns for rooms in CLEANING, INSPECTED, READY
+    // Seed active/recent ChecklistRuns for rooms in CLEANING, CLEANED, READY
     val checklistDao = db.checklistRunDao()
     checklistDao.insert(
       ChecklistRunEntity(
@@ -298,7 +298,7 @@ object DemoSeeder {
             roomId = roomIdByName.getValue("103"),
             roomName = "103",
             fromStatus = RoomStatus.CLEANING,
-            toStatus = RoomStatus.INSPECTED,
+            toStatus = RoomStatus.CLEANED,
             changedBy = "Tariq Hasan",
             changedByRole = StaffRole.HOUSEKEEPER,
             changedAt = nowMillis - 12 * minute,
@@ -306,7 +306,7 @@ object DemoSeeder {
           StatusLogEntity(
             roomId = roomIdByName.getValue("104"),
             roomName = "104",
-            fromStatus = RoomStatus.INSPECTED,
+            fromStatus = RoomStatus.CLEANED,
             toStatus = RoomStatus.READY,
             changedBy = "Rafiq Islam",
             changedByRole = StaffRole.SUPERVISOR,
@@ -325,7 +325,7 @@ object DemoSeeder {
             roomId = roomIdByName.getValue("G02"),
             roomName = "G02",
             fromStatus = RoomStatus.CLEANING,
-            toStatus = RoomStatus.INSPECTED,
+            toStatus = RoomStatus.CLEANED,
             changedBy = "Sajib Mia",
             changedByRole = StaffRole.HOUSEKEEPER,
             changedAt = nowMillis - 24 * minute,

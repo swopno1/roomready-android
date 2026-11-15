@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.RoomReady" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Base (pre-31) placeholder: no splash attributes, behaves exactly
+         like Theme.RoomReady. The values-v31 overlay adds the real splash. -->
+    <style name="Theme.RoomReady.Splash" parent="Theme.RoomReady" />
 </resources>

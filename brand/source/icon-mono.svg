@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+  <!-- RoomReady app icon, Android 13 monochrome (themed icon) layer.
+       Single-color white silhouette: doorway outline + check. -->
+  <rect x="32" y="28" width="44" height="52" rx="10" fill="none" stroke="#FFFFFF" stroke-width="9"/>
+  <path d="M44 60 L54 70 L74 46" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

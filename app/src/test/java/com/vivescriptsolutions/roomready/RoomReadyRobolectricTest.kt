@@ -92,7 +92,7 @@ class RoomReadyRobolectricTest {
         RoomStatus.entries.associateWith { status -> rooms.count { it.status == status } }
       assertEquals(3, countsByStatus[RoomStatus.DIRTY])
       assertEquals(3, countsByStatus[RoomStatus.CLEANING])
-      assertEquals(2, countsByStatus[RoomStatus.INSPECTED])
+      assertEquals(2, countsByStatus[RoomStatus.CLEANED])
       assertEquals(3, countsByStatus[RoomStatus.READY])
       assertEquals(1, countsByStatus[RoomStatus.OUT_OF_SERVICE])
 
@@ -323,6 +323,6 @@ class RoomReadyRobolectricTest {
     composeTestRule.onNodeWithTag("action_button_cleaning").assertIsDisplayed()
     composeTestRule.onNodeWithTag("action_button_out_of_service").assertIsDisplayed()
     composeTestRule.onNodeWithTag("action_button_ready").assertDoesNotExist()
-    composeTestRule.onNodeWithTag("action_button_inspected").assertDoesNotExist()
+    composeTestRule.onNodeWithTag("action_button_cleaned").assertDoesNotExist()
   }
 }

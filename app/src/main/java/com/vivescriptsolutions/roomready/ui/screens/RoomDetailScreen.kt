@@ -177,7 +177,7 @@ fun RoomDetailScreen(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
               SectionHeading(text = stringResource(R.string.detail_next_actions))
 
-              if (room.status == RoomStatus.INSPECTED && uiState.session.role == StaffRole.HOUSEKEEPER) {
+              if (room.status == RoomStatus.CLEANED && uiState.session.role == StaffRole.HOUSEKEEPER) {
                 Surface(
                   shape = MaterialTheme.shapes.small,
                   color = MaterialTheme.colorScheme.surfaceVariant,
@@ -220,7 +220,7 @@ fun RoomDetailScreen(
               uiState.legalActions.forEach { action ->
                 // While a run is unfinished, the run screen owns finishing: offer
                 // Resume instead of a Finish button that the gate would reject.
-                if (action.toStatus == RoomStatus.INSPECTED && hasUnfinishedRun) {
+                if (action.toStatus == RoomStatus.CLEANED && hasUnfinishedRun) {
                   Button(
                     onClick = onOpenRun,
                     modifier =
@@ -293,7 +293,7 @@ fun RoomDetailScreen(
         val steps = activeRun?.steps ?: uiState.templatePreviewSteps
         val doneCount = steps.count { it.isDone }
         val isChecklistInteractive =
-          room.status == RoomStatus.CLEANING || room.status == RoomStatus.INSPECTED
+          room.status == RoomStatus.CLEANING || room.status == RoomStatus.CLEANED
 
         CalmSectionCard {
           Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

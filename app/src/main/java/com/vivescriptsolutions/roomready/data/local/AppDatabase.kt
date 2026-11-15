@@ -17,7 +17,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
       TicketEntity::class,
       StatusLogEntity::class,
     ],
-  version = 3,
+  version = 4,
   exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -53,9 +53,21 @@ abstract class AppDatabase : RoomDatabase() {
         }
       }
 
+    // Data-only: RoomStatus.INSPECTED was renamed to CLEANED and statuses
+    // persist as enum-name TEXT. Rewrite stored values so valueOf() keeps
+    // resolving on existing installs.
+    val MIGRATION_3_4: Migration =
+      object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+          db.execSQL("UPDATE rooms SET status = 'CLEANED' WHERE status = 'INSPECTED'")
+          db.execSQL("UPDATE status_logs SET fromStatus = 'CLEANED' WHERE fromStatus = 'INSPECTED'")
+          db.execSQL("UPDATE status_logs SET toStatus = 'CLEANED' WHERE toStatus = 'INSPECTED'")
+        }
+      }
+
     fun build(context: Context): AppDatabase =
       Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, DATABASE_NAME)
-        .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
         .build()
   }
 }

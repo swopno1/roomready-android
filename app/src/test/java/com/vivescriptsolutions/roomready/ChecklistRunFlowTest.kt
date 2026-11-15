@@ -176,12 +176,12 @@ class ChecklistRunFlowTest {
       assertEquals(RoomStatus.CLEANING, db.roomDao().getRoomById(dirtyRoom.id)!!.status)
       assertNull(db.checklistRunDao().getLatestForRoom(dirtyRoom.id)!!.finishedAt)
       val logs = db.statusLogDao().observeLogsForRoom(dirtyRoom.id).first()
-      assertTrue(logs.none { it.toStatus == RoomStatus.INSPECTED })
+      assertTrue(logs.none { it.toStatus == RoomStatus.CLEANED })
     }
   }
 
   @Test
-  fun `finish at 8 of 8 stamps run moves to inspected and logs`() {
+  fun `finish at 8 of 8 stamps run moves to cleaned and logs`() {
     runBlocking {
       DemoSeeder.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)
       val dirtyRoom = db.roomDao().observeAllRooms().first().first { it.status == RoomStatus.DIRTY }
@@ -210,10 +210,10 @@ class ChecklistRunFlowTest {
 
       val run = db.checklistRunDao().getLatestForRoom(dirtyRoom.id)!!
       assertNotNull(run.finishedAt)
-      assertEquals(RoomStatus.INSPECTED, db.roomDao().getRoomById(dirtyRoom.id)!!.status)
+      assertEquals(RoomStatus.CLEANED, db.roomDao().getRoomById(dirtyRoom.id)!!.status)
 
       val logs = db.statusLogDao().observeLogsForRoom(dirtyRoom.id).first()
-      val finishLog = logs.first { it.toStatus == RoomStatus.INSPECTED }
+      val finishLog = logs.first { it.toStatus == RoomStatus.CLEANED }
       assertEquals(RoomStatus.CLEANING, finishLog.fromStatus)
       assertEquals("Amina Rahman", finishLog.changedBy)
     }
@@ -297,7 +297,7 @@ class ChecklistRunFlowTest {
             role = StaffRole.HOUSEKEEPER,
           )
         assertTrue(finishResult.isSuccess)
-        assertEquals(RoomStatus.INSPECTED, reopenedDb.roomDao().getRoomById(dirtyRoom.id)!!.status)
+        assertEquals(RoomStatus.CLEANED, reopenedDb.roomDao().getRoomById(dirtyRoom.id)!!.status)
         reopenedDb.close()
         dirtyRoom.id
       }
@@ -374,6 +374,89 @@ class ChecklistRunFlowTest {
     assertEquals("Amina Rahman", runCursor.getString(0))
     assertEquals("FULL", runCursor.getString(1))
     runCursor.close()
+
+    sqliteDb.close()
+    context.deleteDatabase(dbName)
+  }
+
+  @Test
+  fun `real room migration 3 to 4 rewrites inspected values to cleaned`() {
+    val dbName = "migration_3_4_test.db"
+    context.deleteDatabase(dbName)
+    val factory = FrameworkSQLiteOpenHelperFactory()
+    val callback =
+      object : SupportSQLiteOpenHelper.Callback(3) {
+        override fun onCreate(db: SupportSQLiteDatabase) {
+          db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS rooms (
+              id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+              name TEXT NOT NULL,
+              roomTypeId INTEGER NOT NULL,
+              roomTypeName TEXT NOT NULL,
+              floor INTEGER NOT NULL,
+              status TEXT NOT NULL,
+              assignedTo TEXT,
+              updatedAt INTEGER NOT NULL,
+              isDemo INTEGER NOT NULL,
+              notes TEXT NOT NULL DEFAULT '',
+              isOccupied INTEGER NOT NULL DEFAULT 0
+            )
+            """.trimIndent()
+          )
+          db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS status_logs (
+              id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+              roomId INTEGER NOT NULL,
+              roomName TEXT NOT NULL,
+              fromStatus TEXT NOT NULL,
+              toStatus TEXT NOT NULL,
+              changedBy TEXT NOT NULL,
+              changedByRole TEXT NOT NULL,
+              changedAt INTEGER NOT NULL
+            )
+            """.trimIndent()
+          )
+          db.execSQL(
+            "INSERT INTO rooms (id, name, roomTypeId, roomTypeName, floor, status, assignedTo, updatedAt, isDemo, notes, isOccupied) VALUES (1, '103', 1, 'Deluxe King', 1, 'INSPECTED', 'Tariq Hasan', 1000, 1, '', 0)"
+          )
+          db.execSQL(
+            "INSERT INTO rooms (id, name, roomTypeId, roomTypeName, floor, status, assignedTo, updatedAt, isDemo, notes, isOccupied) VALUES (2, '101', 1, 'Deluxe King', 1, 'DIRTY', NULL, 1000, 1, '', 1)"
+          )
+          db.execSQL(
+            "INSERT INTO status_logs (id, roomId, roomName, fromStatus, toStatus, changedBy, changedByRole, changedAt) VALUES (1, 1, '103', 'CLEANING', 'INSPECTED', 'Tariq Hasan', 'HOUSEKEEPER', 900)"
+          )
+        }
+
+        override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+      }
+
+    val helper =
+      factory.create(
+        SupportSQLiteOpenHelper.Configuration.builder(context)
+          .name(dbName)
+          .callback(callback)
+          .build()
+      )
+    val sqliteDb = helper.writableDatabase
+    AppDatabase.MIGRATION_3_4.migrate(sqliteDb)
+
+    val roomCursor = sqliteDb.query("SELECT status FROM rooms WHERE id = 1")
+    assertTrue(roomCursor.moveToFirst())
+    assertEquals("CLEANED", roomCursor.getString(0))
+    roomCursor.close()
+
+    val untouchedCursor = sqliteDb.query("SELECT status FROM rooms WHERE id = 2")
+    assertTrue(untouchedCursor.moveToFirst())
+    assertEquals("DIRTY", untouchedCursor.getString(0))
+    untouchedCursor.close()
+
+    val logCursor = sqliteDb.query("SELECT fromStatus, toStatus FROM status_logs WHERE id = 1")
+    assertTrue(logCursor.moveToFirst())
+    assertEquals("CLEANING", logCursor.getString(0))
+    assertEquals("CLEANED", logCursor.getString(1))
+    logCursor.close()
 
     sqliteDb.close()
     context.deleteDatabase(dbName)

@@ -18,13 +18,13 @@ class RoomTransitionEngineTest {
         .toSet(),
     )
     assertEquals(
-      setOf(RoomStatus.INSPECTED, RoomStatus.OUT_OF_SERVICE),
+      setOf(RoomStatus.CLEANED, RoomStatus.OUT_OF_SERVICE),
       RoomTransitionEngine.legalActionsFor(RoomStatus.CLEANING, StaffRole.HOUSEKEEPER)
         .map { it.toStatus }
         .toSet(),
     )
     assertTrue(
-      RoomTransitionEngine.legalActionsFor(RoomStatus.INSPECTED, StaffRole.HOUSEKEEPER).isEmpty()
+      RoomTransitionEngine.legalActionsFor(RoomStatus.CLEANED, StaffRole.HOUSEKEEPER).isEmpty()
     )
     assertEquals(
       setOf(RoomStatus.DIRTY),
@@ -44,7 +44,7 @@ class RoomTransitionEngineTest {
   fun `supervisor legal transitions include inspection approval`() {
     assertEquals(
       setOf(RoomStatus.READY, RoomStatus.DIRTY, RoomStatus.OUT_OF_SERVICE),
-      RoomTransitionEngine.legalActionsFor(RoomStatus.INSPECTED, StaffRole.SUPERVISOR)
+      RoomTransitionEngine.legalActionsFor(RoomStatus.CLEANED, StaffRole.SUPERVISOR)
         .map { it.toStatus }
         .toSet(),
     )
@@ -75,7 +75,7 @@ class RoomTransitionEngineTest {
     )
     assertFalse(
       RoomTransitionEngine.isLegalTransition(
-        RoomStatus.INSPECTED,
+        RoomStatus.CLEANED,
         RoomStatus.READY,
         StaffRole.HOUSEKEEPER,
       )

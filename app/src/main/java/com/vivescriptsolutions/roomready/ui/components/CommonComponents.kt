@@ -60,7 +60,7 @@ fun RoomStatus.icon(): ImageVector =
   when (this) {
     RoomStatus.DIRTY -> Icons.Filled.ReportProblem
     RoomStatus.CLEANING -> Icons.Filled.CleaningServices
-    RoomStatus.INSPECTED -> Icons.Filled.Verified
+    RoomStatus.CLEANED -> Icons.Filled.Verified
     RoomStatus.READY -> Icons.Filled.CheckCircle
     RoomStatus.OUT_OF_SERVICE -> Icons.Filled.Build
   }

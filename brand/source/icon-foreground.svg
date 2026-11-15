@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+  <!-- RoomReady app icon, foreground layer (glyph only, transparent field).
+       "The Ready Door": white door slab + mint check with ink keyline.
+       Flat: ink #0F172A + mint #00F1CE + white. No gradients. -->
+  <rect x="29" y="26" width="38" height="56" rx="8" fill="#FFFFFF"/>
+  <path d="M45 60 L56 71 L80 43" fill="none" stroke="#0F172A" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M45 60 L56 71 L80 43" fill="none" stroke="#00F1CE" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

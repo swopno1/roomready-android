@@ -22,7 +22,7 @@ val OnWarmTeakContainer = Color(0xFF332214)
 val EspressoInk = Color(0xFF221F1B)
 val WarmSlateInk = Color(0xFF635B50)
 
-// Room status colors (Dirty=red-brown, Cleaning=amber, Inspected=blue, Ready=green, Out of Service=grey)
+// Room status colors (Dirty=red-brown, Cleaning=amber, Cleaned=blue, Ready=green, Out of Service=grey)
 val StatusDirtyBg = Color(0xFF8C3B2B)
 val StatusDirtyTint = Color(0xFFF6E5E0)
 val StatusDirtyTintInk = Color(0xFF6E2B1E)
@@ -31,9 +31,9 @@ val StatusCleaningBg = Color(0xFFA65E0A)
 val StatusCleaningTint = Color(0xFFFDF1DB)
 val StatusCleaningTintInk = Color(0xFF7A4404)
 
-val StatusInspectedBg = Color(0xFF24639E)
-val StatusInspectedTint = Color(0xFFE2EEF8)
-val StatusInspectedTintInk = Color(0xFF184774)
+val StatusCleanedBg = Color(0xFF24639E)
+val StatusCleanedTint = Color(0xFFE2EEF8)
+val StatusCleanedTintInk = Color(0xFF184774)
 
 val StatusReadyBg = Color(0xFF276E40)
 val StatusReadyTint = Color(0xFFE2F1E6)
@@ -66,12 +66,12 @@ fun RoomStatus.colorSpec(): StatusColorSpec =
         softTintBackground = StatusCleaningTint,
         softTintContent = StatusCleaningTintInk,
       )
-    RoomStatus.INSPECTED ->
+    RoomStatus.CLEANED ->
       StatusColorSpec(
-        chipBackground = StatusInspectedBg,
+        chipBackground = StatusCleanedBg,
         chipContent = Color.White,
-        softTintBackground = StatusInspectedTint,
-        softTintContent = StatusInspectedTintInk,
+        softTintBackground = StatusCleanedTint,
+        softTintContent = StatusCleanedTintInk,
       )
     RoomStatus.READY ->
       StatusColorSpec(
@@ -92,6 +92,6 @@ fun RoomStatus.colorSpec(): StatusColorSpec =
 fun TicketPriority.badgeColors(): Pair<Color, Color> =
   when (this) {
     TicketPriority.LOW -> StatusOutOfServiceTint to StatusOutOfServiceTintInk
-    TicketPriority.NORMAL -> StatusInspectedTint to StatusInspectedTintInk
+    TicketPriority.NORMAL -> StatusCleanedTint to StatusCleanedTintInk
     TicketPriority.URGENT -> StatusDirtyTint to StatusDirtyTintInk
   }
