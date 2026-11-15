@@ -56,6 +56,56 @@ class RoomTransitionEngineTest {
   }
 
   @Test
+  fun `full matrix every illegal transition rejected for every role`() {
+    // The complete legal set, quoted from the transition table. All 75
+    // (from x to x role) combos are checked: housekeepers and supervisors
+    // share the table (soft gating), SYSTEM can do nothing.
+    val legal: Map<RoomStatus, Set<RoomStatus>> =
+      mapOf(
+        RoomStatus.DIRTY to setOf(RoomStatus.CLEANING, RoomStatus.OUT_OF_SERVICE),
+        RoomStatus.CLEANING to setOf(RoomStatus.CLEANED, RoomStatus.OUT_OF_SERVICE),
+        RoomStatus.CLEANED to
+          setOf(RoomStatus.READY, RoomStatus.CLEANING, RoomStatus.DIRTY, RoomStatus.OUT_OF_SERVICE),
+        RoomStatus.READY to setOf(RoomStatus.DIRTY, RoomStatus.OUT_OF_SERVICE),
+        RoomStatus.OUT_OF_SERVICE to setOf(RoomStatus.DIRTY),
+      )
+    var checked = 0
+    var illegal = 0
+    RoomStatus.entries.forEach { from ->
+      RoomStatus.entries.forEach { to ->
+        StaffRole.entries.forEach { role ->
+          val expected = role != StaffRole.SYSTEM && to in legal.getValue(from)
+          assertEquals(
+            "from=$from to=$to role=$role",
+            expected,
+            RoomTransitionEngine.isLegalTransition(from, to, role),
+          )
+          checked++
+          if (!expected) illegal++
+        }
+      }
+    }
+    assertEquals(75, checked)
+    // 11 legal x 2 roles = 22 legal; the other 53 are rejected.
+    assertEquals(53, illegal)
+  }
+
+  @Test
+  fun `listed actions match legality for every status and role`() {
+    RoomStatus.entries.forEach { from ->
+      StaffRole.entries.forEach { role ->
+        val listed =
+          RoomTransitionEngine.legalActionsFor(from, role).map { it.toStatus }.toSet()
+        val legal =
+          RoomStatus.entries.filter { to ->
+            RoomTransitionEngine.isLegalTransition(from, to, role)
+          }.toSet()
+        assertEquals("from=$from role=$role", legal, listed)
+      }
+    }
+  }
+
+  @Test
   fun `illegal shortcuts are rejected`() {
     assertFalse(
       RoomTransitionEngine.isLegalTransition(
