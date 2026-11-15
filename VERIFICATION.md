@@ -5,8 +5,8 @@
 (seed test deleted, `ProductionShapeTest` added covering empty state,
 first-sync roster, disconnect warning, upgrade purge, and migration
 8→9).
-**Headline:** 125/125 unit tests pass across 19 suites, lint 0 errors
-(34 warnings), `assembleDebug` succeeds.
+**Headline:** 145/145 unit tests pass across 22 suites, lint 0 errors
+(34 warnings per the final check; local reruns may show 35), `assembleDebug` succeeds.
 
 ---
 
@@ -18,8 +18,9 @@ first-sync roster, disconnect warning, upgrade purge, and migration
 | 2 | Checklist rules: finish at 8/8, stayover template | PASS | `ChecklistRunFlowTest.finish at 8 of 8 stamps run moves to cleaned and logs`, `finish blocked at 7 of 8`, `stayover selectable on occupied room creates 4-step run`, `stayover rejected on vacant room`, `run survives process death via room store`; `ChecklistTemplatesTest.full template has 8 steps in canonical order`, `stayover template has exactly the 4 light steps`, `finish allowed only at full completion`; run-screen UI tests at 7/8 (Finish disabled) and 8/8 (enabled) |
 | 3 | Ticket lifecycle | PASS | `TicketFlowTest.create done reopen cycle records who and when`, `urgent badge count tracks open urgent tickets`, `ticket detail shows done action for open ticket`; `TicketStatsTest.urgent open count ignores done and non-urgent`, `urgent open by room groups correctly`, `filter by status` |
 | 4 | Dashboard counts vs fixture | PASS | `DashboardFlowTest.status counts match seeded fixture` (3/3/2/3/1 across the 5 statuses), `cleans today counts transitions since midnight with per-person list`, `open tickets group by priority and stuck rooms surface`; `DashboardStatsTest` (7 pure-count tests incl. `stuck rule is cleaning older than 60 minutes`) |
-| 5 | Sync merge matrix (P7) | PASS | `SyncEngineTest.merge matrix respects in-progress cleans and timestamps`, `local newer cleaning wins over stale server state`, `push order follows outbox and bodies match contract`, `retry after failure keeps entry and drains on success`, `401 wipes the key and signals auth revoked`, `409 drops the entry and logs the conflict`, `bootstrap replaces snapshot wholesale and ignores unknown fields`, `bootstrap applies rename add and archive`, `bootstrap preserves in-progress cleans and outbox`, `contract version mismatch changes nothing`, `malformed bootstrap leaves state untouched`, `disconnect wipes key and clears the whole snapshot` (14 tests, MockWebServer fake server) |
-| 6 | Language completeness | PASS | `LanguageCompletenessTest` 4/4: bn covers every en key (240/240, zero missing/extra), zero blanks, placeholder parity, zero untranslated outside the documented allowlist (brand, formats, native-script language names) |
+| 5 | Sync merge matrix (P7) | PASS | `SyncEngineTest.merge matrix respects in-progress cleans and timestamps`, `local newer cleaning wins over stale server state`, `push order follows outbox and bodies match contract`, `retry after failure keeps entry and drains on success`, `401 wipes the key and signals auth revoked`, `409 drops the entry and logs the conflict`, `bootstrap replaces snapshot wholesale and ignores unknown fields`, `bootstrap applies rename add and archive`, `bootstrap preserves in-progress cleans and outbox`, `contract version mismatch changes nothing`, `malformed bootstrap leaves state untouched`, `disconnect wipes key and clears the whole snapshot`, `single unit bad housekeepingAt degrades to null without failing bootstrap` (15 tests, MockWebServer fake server); `TimestampParserTest` 6/6 (exact founder value, fraction/offset variants, degrade-to-null with keyless debug log, structural rejection) |
+| 6 | Language completeness | PASS | `LanguageCompletenessTest` 4/4: bn covers every en key (251/251, zero missing/extra), zero blanks, placeholder parity, zero untranslated outside the documented allowlist (brand, formats, native-script language names) |
+| 11 | QR pairing flow | PASS | `PairingQrParserTest` 8/8 (valid, wrong version, http/ftp/hostless, missing/short/malformed key, plain URL, random text, extra params, encoded port/path/plus); `QrPairingFlowTest` 5/5 (scan button above fields in setup, denied-permission rationale + type-instead, invalid-code card with rescan/type-instead, valid scan fills fields + bootstraps 1 room, 401 scan wipes key + explains). Bundled ML Kit (`barcode-scanning`, offline, no downloads); CAMERA permission reused, no new permission |
 | 10 | Production shape (no demo) | PASS | `ProductionShapeTest` 7/7: unconfigured empty reads, purge empties tables but keeps photos/settings, configured upgrade untouched, first sync fills roster + name persists, disconnect warning shown/skipped, migration 8→9 drops `isDemo` and keeps rows |
 | 7 | 1.3× font-scale rendering | PASS | `LowLiteracyUiTest.font scale 1_3 keeps board nodes displayed`, `font scale 1_3 keeps detail actions reachable` (Density override + scroll + `assertIsDisplayed`); plus `detail primary action sits in the bottom two thirds` (measured top fraction > ⅓ viewport) |
 | 8 | Airplane-mode pass | PASS | `AirplaneModeTest.airplane mode still runs every core flow` — proves the condition first (`AIRPLANE_MODE_ON=1`, `activeNetworkInfo=null`), then runs fixture start → 8 steps → skip-photo → finish → inspect-return → ticket create/resolve → OOS-guard check → dashboard reads, all succeeding. `unconfigured transport stays silent on all six endpoints` — unconfigured (null URL/key) providers return `NotConfigured` on bootstrap/refresh/postStatus/getOpenTickets/postTicket/patchTicket without opening a socket |
@@ -27,8 +28,7 @@ first-sync roster, disconnect warning, upgrade purge, and migration
 
 ## Blockers
 
-None. Zero failures across 125 tests; no crash was exposed, so no
-product fix was applied.
+None. Zero failures across 145 tests; no crash was exposed.
 
 ## Dynamic alignment checks (need the live W2 PMS)
 

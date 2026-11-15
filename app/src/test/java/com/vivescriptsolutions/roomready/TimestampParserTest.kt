@@ -58,7 +58,7 @@ class TimestampParserTest {
   }
 
   @Test
-  fun `parseUnit degrades unparseable housekeepingAt to null but rejects structural defects`() {
+  fun `parseUnit degrades missing or unparseable housekeepingAt to null but rejects wrong types`() {
     val validUnit =
       JSONObject()
         .put("id", "u1")
@@ -80,7 +80,7 @@ class TimestampParserTest {
     assertFalse(debugLogs.any { it.msg.contains("rk.") })
 
     val missingTimestampUnit = JSONObject(validUnit.toString()).apply { remove("housekeepingAt") }
-    assertThrows(MalformedPayloadException::class.java) { parseUnit(missingTimestampUnit) }
+    assertNull(parseUnit(missingTimestampUnit).housekeepingAtMillis)
 
     val wrongTypeUnit = JSONObject(validUnit.toString()).put("housekeepingAt", 12345)
     assertThrows(MalformedPayloadException::class.java) { parseUnit(wrongTypeUnit) }
@@ -140,13 +140,23 @@ class TimestampParserTest {
                 .put("unitStatus", "AVAILABLE")
                 .put("housekeeping", "CLEAN")
                 .put("housekeepingAt", "bad-stamp")
+            )
+            .put(
+              JSONObject()
+                .put("id", "u3")
+                .put("roomTypeId", "t1")
+                .put("unitNumber", "03")
+                .put("floor", 1)
+                .put("unitStatus", "AVAILABLE")
+                .put("housekeeping", "DIRTY")
             ),
         )
         .toString()
 
     val parsed = parseBootstrap(bootstrapBody)
-    assertEquals(2, parsed.units.size)
+    assertEquals(3, parsed.units.size)
     assertEquals(1_794_028_610_651L, parsed.units[0].housekeepingAtMillis)
     assertNull(parsed.units[1].housekeepingAtMillis)
+    assertNull(parsed.units[2].housekeepingAtMillis)
   }
 }

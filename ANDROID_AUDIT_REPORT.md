@@ -66,7 +66,7 @@ below names the command, file, or test that proves it.
   security-crypto, CameraX, OkHttp, Robolectric, androidx.test. Each
   implementation dep is imported by main sources (surveyed).
 - Release: R8 minify + resource shrink enabled; signed AAB built
-  (6,557,051 bytes / ~6.25 MiB) with a throwaway local key, then key
+  (~16.25 MiB (exact bytes: RELEASE_GATE.md)) with a throwaway local key, then key
   shredded. Release
   without secrets fails fast with "Keystore file not set for signing
   config release" (operator key documented, never generated/committed).
@@ -114,12 +114,12 @@ below names the command, file, or test that proves it.
 
 | Check | Command / source | Result |
 |---|---|---|
-| Unit tests | `:app:testDebugUnitTest` | 125/125 pass across 19 suites, 0 fail |
+| Unit tests | `:app:testDebugUnitTest` | 145/145 pass across 22 suites, 0 fail |
 | Lint debug+release | `:app:lintDebug :app:lintRelease` | 0 errors both |
 | Debug build | `:app:assembleDebug` | success, APK produced |
-| Release bundle | `:app:bundleRelease` (+throwaway key) | 6,557,051-byte AAB, R8 (rebuild with operator key at submission) |
+| Release bundle | `:app:bundleRelease` (+throwaway key) | ~16.25 MiB AAB (exact bytes: RELEASE_GATE.md), R8 (rebuild with operator key at submission) |
 | Release fail-fast | `:app:bundleRelease` (no secrets) | clean signing error |
-| BN parity | `LanguageCompletenessTest` | 240/240, green |
+| BN parity | `LanguageCompletenessTest` | 251/251, green |
 | Listing counts | char-count script | all within limits |
 | Merged release manifest | manifest dump | 4 app + 4 SDK/internal perms |
 | No-demo grep | dataset/names/URL grep over `app/src/main` | zero hits |

@@ -12,10 +12,21 @@
 |---|---|
 | Command | `:app:bundleRelease` (R8 + `shrinkResources`, verified enabled in `app/build.gradle.kts`) |
 | Result | BUILD SUCCESSFUL, signed with a throwaway local key (created, used, shredded — never in the repo) |
-| AAB size | 6,557,051 bytes (**~6.25 MiB**) — target <25 MB: PASS (rebuild with the operator key at submission) |
+| AAB size | 17,044,129 bytes (**~16.25 MiB**) — target <25 MB: PASS (ephemeral-key measurement; rebuild with the operator key at submission). Delta vs pre-QR baseline (6,576,673 bytes, same method): +10,467,456 bytes from bundled ML Kit barcode scanning |
 | versionCode / versionName | 1 / "1.0" |
 | Toolchain | AGP 9.1.1, Gradle wrapper 9.9.1, Kotlin 2.3.21, KSP 2.3.14, compileSdk 36.1, targetSdk 36, minSdk 24 (founder-pinned stable set) |
 | lintRelease | 0 errors, 34 warnings |
+
+### Dependency delta (QR feature)
+
+- Added: `com.google.mlkit:barcode-scanning:17.3.0` (**bundled**
+  model — scanning works fully offline, no downloads) and
+  `com.android.tools:desugar_jdk_libs:2.1.5` (core library
+  desugaring, required for `java.time` on API 24+).
+- Toolchain pins untouched: AGP 9.1.1, Kotlin 2.3.21, KSP 2.3.14,
+  compileSdk 36.1, targetSdk 36, Gradle wrapper 9.9.1.
+- Permissions unchanged: no manifest changes (verified: the QR
+  commit touches no manifest; CAMERA is reused for the scanner).
 
 ## 2. Signing
 
@@ -96,7 +107,7 @@ encrypted storage.
 
 ## Verdict
 
-**READY** — all six engineering gates pass (bundle ~6.25 MiB, loud
+**READY** — all six engineering gates pass (bundle ~16.25 MiB, loud
 signing failure, exact permission set, clean secret sweep,
 1/"1.0", lintRelease 0 errors). Remaining work is founder-only (§6
 + decision D1). No engineering blockers.

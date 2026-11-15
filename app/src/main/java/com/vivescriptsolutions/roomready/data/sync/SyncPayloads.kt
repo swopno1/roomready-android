@@ -133,7 +133,7 @@ fun parseUnit(json: JSONObject): PmsUnit {
   if (housekeeping !in HOUSEKEEPING_VALUES) {
     throw MalformedPayloadException("Unknown housekeeping: $housekeeping")
   }
-  val rawHousekeepingAt = json.requiredString("housekeepingAt")
+  val housekeepingAtMillis = optionalTimestampMillis(json, "housekeepingAt", unitId)
   return PmsUnit(
     id = unitId,
     roomTypeId = json.requiredString("roomTypeId"),
@@ -148,10 +148,26 @@ fun parseUnit(json: JSONObject): PmsUnit {
     block = json.optString("block", null)?.takeIf { it.isNotBlank() },
     unitStatus = unitStatus,
     housekeeping = housekeeping,
-    housekeepingAtMillis =
-      parseUnitTimestampOrNull(rawHousekeepingAt, field = "housekeepingAt", unitId = unitId),
+    housekeepingAtMillis = housekeepingAtMillis,
     departsToday = json.optBoolean("departsToday", false),
   )
+}
+
+/**
+ * Timestamp-or-nothing: the server legitimately omits `housekeepingAt`
+ * on some units, so absent/null/blank degrades to null (with a debug
+ * line) instead of failing the whole payload. A present-but-wrongly-
+ * typed value is still structural and rejects.
+ */
+private fun optionalTimestampMillis(json: JSONObject, field: String, unitId: String): Long? {
+  val raw = json.opt(field)
+  if (raw == null || raw === JSONObject.NULL) {
+    runCatching { Log.d(TAG, "Missing $field timestamp for unit $unitId") }
+    return null
+  }
+  if (raw !is String) throw MalformedPayloadException("Bad type '$field'")
+  if (raw.isBlank()) return null
+  return parseUnitTimestampOrNull(raw, field = field, unitId = unitId)
 }
 
 fun parseRoomType(json: JSONObject): PmsRoomType {
@@ -235,12 +251,10 @@ fun parseStatusResult(body: String): StatusResult {
   if (housekeeping !in HOUSEKEEPING_VALUES) {
     throw MalformedPayloadException("Unknown housekeeping: $housekeeping")
   }
-  val rawHousekeepingAt = json.requiredString("housekeepingAt")
   return StatusResult(
     unitId = unitId,
     housekeeping = housekeeping,
-    housekeepingAtMillis =
-      parseUnitTimestampOrNull(rawHousekeepingAt, field = "housekeepingAt", unitId = unitId),
+    housekeepingAtMillis = optionalTimestampMillis(json, "housekeepingAt", unitId),
   )
 }
 
