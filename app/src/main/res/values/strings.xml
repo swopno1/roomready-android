@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RoomReady</string>
+
+    <!-- Branding & Demo Notice -->
+    <string name="demo_resort_name">Sundarban Palms</string>
+    <string name="demo_mode_badge">DEMO</string>
+    <string name="demo_mode_banner_title">Demo Resort Mode</string>
+    <string name="demo_mode_banner_subtitle">12 sample rooms across 3 room types are loaded locally so you can try RoomReady in airplane mode.</string>
+    <string name="offline_badge">Offline-ready</string>
+    <string name="app_tagline">Calm, offline-first housekeeping for small resorts</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_rooms">Rooms</string>
+    <string name="nav_tickets">Tickets</string>
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_me">Me</string>
+
+    <!-- Roles -->
+    <string name="role_housekeeper">Housekeeper</string>
+    <string name="role_supervisor">Supervisor</string>
+    <string name="role_housekeeper_desc">Clean rooms, complete the 8-step checklist, and send rooms to inspection.</string>
+    <string name="role_supervisor_desc">Inspect finished rooms, approve Ready status, and manage out-of-service rooms.</string>
+
+    <!-- Room Statuses -->
+    <string name="status_all">All</string>
+    <string name="status_dirty">Dirty</string>
+    <string name="status_cleaning">Cleaning</string>
+    <string name="status_inspected">Inspected</string>
+    <string name="status_ready">Ready</string>
+    <string name="status_out_of_service">Out of Service</string>
+    <string name="filter_count_format">%1$s (%2$d)</string>
+
+    <!-- Room Types & Floors -->
+    <string name="room_type_deluxe_king">Deluxe King</string>
+    <string name="room_type_family_suite">Family Suite</string>
+    <string name="room_type_garden_cottage">Garden Cottage</string>
+    <string name="floor_ground">Ground Wing</string>
+    <string name="floor_number">Floor %1$d</string>
+    <string name="room_title_format">Room %1$s</string>
+    <string name="room_meta_format">%1$s · %2$s</string>
+    <string name="assigned_to_format">Assigned: %1$s</string>
+    <string name="unassigned_label">Unassigned</string>
+    <string name="updated_at_format">Updated %1$s</string>
+    <string name="open_tickets_badge_format">%1$d open</string>
+
+    <!-- Onboarding / Who Are You -->
+    <string name="onboarding_title">Welcome to RoomReady</string>
+    <string name="onboarding_subtitle">No login or internet needed. Pick your role and name for this shift.</string>
+    <string name="onboarding_step_role">1. Choose your role</string>
+    <string name="onboarding_step_staff">2. Who are you?</string>
+    <string name="staff_custom_hint">Or type another staff name</string>
+    <string name="staff_add_button">Use Name</string>
+    <string name="onboarding_continue">Open Rooms Board</string>
+    <string name="onboarding_select_prompt">Please select both a role and your name to continue.</string>
+
+    <!-- Rooms Board -->
+    <string name="rooms_search_placeholder">Search room number, type, or staff…</string>
+    <string name="rooms_empty_title">No matching rooms</string>
+    <string name="rooms_empty_subtitle">Try clearing your search or switching the status filter.</string>
+    <string name="rooms_clear_filters">Show all rooms</string>
+    <string name="rooms_summary_format">%1$d of %2$d rooms shown</string>
+
+    <!-- Room Detail & Legal Actions -->
+    <string name="cd_back">Go back</string>
+    <string name="cd_clear_search">Clear search</string>
+    <string name="cd_search_icon">Search rooms</string>
+    <string name="cd_status_icon">Room status</string>
+    <string name="cd_role_icon">Staff role</string>
+    <string name="cd_offline_icon">Offline mode active</string>
+    <string name="cd_add_note">Add or edit step note</string>
+
+    <string name="detail_next_actions">Next Actions</string>
+    <string name="detail_supervisor_wait_note">Waiting for a Supervisor to inspect and approve Ready status. You can switch roles in the Me tab.</string>
+    <string name="action_start_cleaning">Start cleaning</string>
+    <string name="action_finish_to_inspection">Finish — send to inspection</string>
+    <string name="action_mark_ready">Mark Ready</string>
+    <string name="action_return_to_dirty">Return to Dirty</string>
+    <string name="action_mark_dirty_turnover">Mark Dirty (new turnover)</string>
+    <string name="action_mark_out_of_service">Mark out of service</string>
+    <string name="action_back_in_service">Back in service</string>
+
+    <!-- 8-Step Turnover Checklist -->
+    <string name="detail_checklist_title">8-Step Turnover Checklist</string>
+    <string name="checklist_progress_format">%1$d of %2$d steps done</string>
+    <string name="checklist_by_format">Started by %1$s</string>
+    <string name="checklist_finished_format">Completed by %1$s · %2$s</string>
+    <string name="checklist_preview_hint">Template preview. Tap Start cleaning to begin checking steps.</string>
+    <string name="checklist_note_label_format">Note: %1$s</string>
+    <string name="checklist_note_dialog_title">Step Note</string>
+    <string name="checklist_note_hint">Add any note for this step (e.g., extra towels)</string>
+    <string name="dialog_save">Save</string>
+    <string name="dialog_cancel">Cancel</string>
+
+    <string name="step_bathroom">Bathroom</string>
+    <string name="step_beds_linen">Beds &amp; linen</string>
+    <string name="step_dusting">Dusting</string>
+    <string name="step_floors">Floors</string>
+    <string name="step_amenities_restock">Amenities restock</string>
+    <string name="step_fridge_minibar">Fridge/minibar</string>
+    <string name="step_windows_curtains">Windows &amp; curtains</string>
+    <string name="step_final_look">Final look</string>
+
+    <!-- Room Tickets & Reporting -->
+    <string name="detail_tickets_title">Room Issues</string>
+    <string name="detail_report_issue">Report issue</string>
+    <string name="detail_no_tickets">No open issues recorded for this room.</string>
+    <string name="ticket_dialog_title">Report Room Issue</string>
+    <string name="ticket_title_hint">Describe the issue (e.g., leaking tap)</string>
+    <string name="ticket_priority_label">Priority</string>
+    <string name="ticket_priority_low">Low</string>
+    <string name="ticket_priority_normal">Normal</string>
+    <string name="ticket_priority_urgent">Urgent</string>
+    <string name="ticket_status_open">Open</string>
+    <string name="ticket_status_done">Done</string>
+    <string name="ticket_mark_done">Mark Done</string>
+    <string name="ticket_reopen">Reopen</string>
+
+    <!-- Status Activity Log -->
+    <string name="detail_status_log_title">Status Log</string>
+    <string name="detail_no_logs">No status changes logged yet.</string>
+    <string name="status_log_transition_format">%1$s → %2$s</string>
+    <string name="status_log_by_format">%1$s (%2$s) · %3$s</string>
+
+    <!-- Tickets Tab (Placeholder + Live Local Tickets) -->
+    <string name="tickets_header_title">Maintenance &amp; Tickets</string>
+    <string name="tickets_placeholder_note">Full ticket assignment and photo attachments are coming in a future pass. Local tickets saved on this device appear below.</string>
+    <string name="tickets_empty_state">No tickets logged yet. Open any room to report an issue.</string>
+    <string name="tickets_room_badge_format">Room %1$s</string>
+
+    <!-- Dashboard Tab (Placeholder + Live Local Counts) -->
+    <string name="dashboard_header_title">Resort Snapshot</string>
+    <string name="dashboard_placeholder_note">Shift KPIs, turnaround timers, and PMS sync come in a future pass. Live room counts from your local database are shown below.</string>
+    <string name="dashboard_total_rooms_label">Total Demo Rooms</string>
+    <string name="dashboard_recent_activity">Recent Status Activity</string>
+    <string name="dashboard_no_activity">No recent status changes recorded.</string>
+
+    <!-- Me Tab -->
+    <string name="me_header_title">Shift Profile</string>
+    <string name="me_active_staff_format">Active Staff Member: %1$s</string>
+    <string name="staff_role_header_format">%1$s · %2$s</string>
+    <string name="ticket_meta_format">%1$s · %2$s · %3$s</string>
+    <string name="dashboard_log_room_format">%1$s · %2$s</string>
+    <string name="me_switch_role_title">Switch Role</string>
+    <string name="me_who_are_you_title">Who are you?</string>
+    <string name="me_offline_card_title">100% Offline Local Storage</string>
+    <string name="me_offline_card_body">All rooms, checklists, tickets, and status logs are saved locally in Room &amp; DataStore. Airplane mode is fully supported; PMS sync is optional and comes later.</string>
+    <string name="me_demo_section_title">Demo Resort Data</string>
+    <string name="me_demo_section_body">Currently running Demo Mode for Sundarban Palms (12 rooms across Deluxe King, Family Suite, and Garden Cottage).</string>
+    <string name="me_reset_demo_button">Reset Demo Data</string>
+    <string name="me_reset_dialog_title">Reset Demo Data?</string>
+    <string name="me_reset_dialog_body">This will restore the 12 demo rooms, checklists, tickets, and status logs back to their starting state.</string>
+    <string name="me_reset_confirm">Reset</string>
+    <string name="me_reset_done_snackbar">Demo resort data restored</string>
+</resources>
