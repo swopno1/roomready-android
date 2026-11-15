@@ -313,7 +313,7 @@ class RoomReadyRobolectricTest {
           onTransition = {},
           onToggleStep = {},
           onSaveStepNote = { _, _ -> },
-          onCreateTicket = { _, _ -> },
+          onCreateTicket = { _, _, _, _ -> },
           onToggleTicketStatus = {},
         )
       }

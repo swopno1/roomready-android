@@ -314,22 +314,27 @@ class HousekeepingRepository(
     }
   }
 
+  fun observeTicket(ticketId: Long): Flow<TicketEntity?> =
+    db.ticketDao().observeTicketById(ticketId)
+
   suspend fun createTicket(
     roomId: Long,
     roomName: String,
     title: String,
+    description: String,
     priority: TicketPriority,
     createdBy: String,
     nowMillis: Long = System.currentTimeMillis(),
-  ) {
+  ): Long? {
     val cleanTitle = title.trim()
-    if (cleanTitle.isEmpty()) return
-    db.ticketDao()
+    if (cleanTitle.isEmpty()) return null
+    return db.ticketDao()
       .insert(
         TicketEntity(
           roomId = roomId,
           roomName = roomName,
           title = cleanTitle,
+          description = description.trim(),
           priority = priority,
           status = TicketStatus.OPEN,
           createdBy = createdBy,
@@ -339,9 +344,28 @@ class HousekeepingRepository(
       )
   }
 
-  suspend fun toggleTicketStatus(ticket: TicketEntity) {
-    val nextStatus =
-      if (ticket.status == TicketStatus.OPEN) TicketStatus.DONE else TicketStatus.OPEN
-    db.ticketDao().update(ticket.copy(status = nextStatus))
+  suspend fun resolveTicket(
+    ticketId: Long,
+    resolvedBy: String,
+    nowMillis: Long = System.currentTimeMillis(),
+  ) {
+    val ticket = db.ticketDao().getTicketById(ticketId) ?: return
+    if (ticket.status == TicketStatus.DONE) return
+    db.ticketDao()
+      .update(ticket.copy(status = TicketStatus.DONE, resolvedBy = resolvedBy, resolvedAt = nowMillis))
+  }
+
+  suspend fun reopenTicket(ticketId: Long) {
+    val ticket = db.ticketDao().getTicketById(ticketId) ?: return
+    if (ticket.status == TicketStatus.OPEN) return
+    db.ticketDao().update(ticket.copy(status = TicketStatus.OPEN, resolvedBy = null, resolvedAt = null))
+  }
+
+  suspend fun toggleTicketStatus(ticket: TicketEntity, staffName: String) {
+    if (ticket.status == TicketStatus.OPEN) {
+      resolveTicket(ticket.id, resolvedBy = staffName)
+    } else {
+      reopenTicket(ticket.id)
+    }
   }
 }

@@ -32,7 +32,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -85,8 +84,9 @@ fun RoomDetailScreen(
   onTransition: (RoomStatus) -> Unit,
   onToggleStep: (Int) -> Unit,
   onSaveStepNote: (Int, String) -> Unit,
-  onCreateTicket: (String, TicketPriority) -> Unit,
+  onCreateTicket: (String, String, TicketPriority, String) -> Unit,
   onToggleTicketStatus: (TicketEntity) -> Unit,
+  onOpenTicket: (Long) -> Unit = {},
   onOpenRun: () -> Unit = {},
   onStartCleaning: (ChecklistRunKind) -> Unit = {},
   modifier: Modifier = Modifier,
@@ -392,6 +392,7 @@ fun RoomDetailScreen(
                 TicketRow(
                   ticket = ticket,
                   onToggleStatus = { onToggleTicketStatus(ticket) },
+                  onOpen = { onOpenTicket(ticket.id) },
                 )
               }
             }
@@ -532,58 +533,19 @@ fun RoomDetailScreen(
     )
   }
 
-  // Report Room Ticket Dialog
-  if (showTicketDialog) {
-    var titleDraft by remember { mutableStateOf("") }
-    var priorityDraft by remember { mutableStateOf(TicketPriority.NORMAL) }
-    AlertDialog(
-      onDismissRequest = { showTicketDialog = false },
-      title = { Text(text = stringResource(R.string.ticket_dialog_title)) },
-      text = {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-          OutlinedTextField(
-            value = titleDraft,
-            onValueChange = { titleDraft = it },
-            placeholder = { Text(text = stringResource(R.string.ticket_title_hint)) },
-            textStyle = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.fillMaxWidth().testTag("ticket_title_input"),
-          )
-          Text(
-            text = stringResource(R.string.ticket_priority_label),
-            style = MaterialTheme.typography.titleSmall,
-          )
-          Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TicketPriority.entries.forEach { priority ->
-              FilterChip(
-                selected = priority == priorityDraft,
-                onClick = { priorityDraft = priority },
-                label = { Text(text = stringResource(priority.labelRes)) },
-                modifier = Modifier.heightIn(min = 48.dp),
-              )
-            }
-          }
-        }
+  // Report Room Ticket Sheet (room fixed to this detail room)
+  val sheetRoom = room
+  if (showTicketDialog && sheetRoom != null) {
+    TicketCreateSheet(
+      rooms = listOf(sheetRoom),
+      fixedRoomId = sheetRoom.id,
+      staffName = uiState.session.staffName.orEmpty(),
+      staffRoster = uiState.session.staffRoster,
+      onSubmit = { _, title, description, priority, createdBy ->
+        onCreateTicket(title, description, priority, createdBy)
+        showTicketDialog = false
       },
-      confirmButton = {
-        Button(
-          onClick = {
-            onCreateTicket(titleDraft, priorityDraft)
-            showTicketDialog = false
-          },
-          enabled = titleDraft.trim().isNotEmpty(),
-          modifier = Modifier.heightIn(min = 48.dp).testTag("save_ticket_button"),
-        ) {
-          Text(text = stringResource(R.string.dialog_save))
-        }
-      },
-      dismissButton = {
-        TextButton(
-          onClick = { showTicketDialog = false },
-          modifier = Modifier.heightIn(min = 48.dp),
-        ) {
-          Text(text = stringResource(R.string.dialog_cancel))
-        }
-      },
+      onDismiss = { showTicketDialog = false },
     )
   }
 }
@@ -647,12 +609,15 @@ private fun ChecklistStepRow(
 private fun TicketRow(
   ticket: TicketEntity,
   onToggleStatus: () -> Unit,
+  onOpen: () -> Unit,
 ) {
   val (badgeBg, badgeFg) = ticket.priority.badgeColors()
   Surface(
+    onClick = onOpen,
     shape = MaterialTheme.shapes.small,
     color = MaterialTheme.colorScheme.surfaceVariant,
     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+    modifier = Modifier.testTag("detail_ticket_${ticket.id}"),
   ) {
     Row(
       modifier = Modifier.fillMaxWidth().padding(12.dp),

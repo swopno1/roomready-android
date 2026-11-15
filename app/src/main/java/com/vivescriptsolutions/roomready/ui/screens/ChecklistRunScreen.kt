@@ -54,6 +54,8 @@ import com.vivescriptsolutions.roomready.R
 import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
 import com.vivescriptsolutions.roomready.domain.ChecklistTemplates
+import com.vivescriptsolutions.roomready.domain.TicketPriority
+import com.vivescriptsolutions.roomready.domain.TicketStatus
 import com.vivescriptsolutions.roomready.ui.components.CalmSectionCard
 import com.vivescriptsolutions.roomready.ui.components.localizedChecklistStepTitle
 import com.vivescriptsolutions.roomready.ui.viewmodel.RoomDetailUiState
@@ -72,6 +74,7 @@ fun ChecklistRunScreen(
   onToggleStep: (Int) -> Unit,
   onSaveStepNote: (Int, String) -> Unit,
   onFinish: () -> Unit,
+  onOpenTicket: (Long) -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   BackHandler(onBack = onBack)
@@ -162,6 +165,44 @@ fun ChecklistRunScreen(
       contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
       verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+      val urgentTickets =
+        uiState.tickets.filter {
+          it.status == TicketStatus.OPEN && it.priority == TicketPriority.URGENT
+        }
+      urgentTickets.forEach { ticket ->
+        item(key = "urgent_${ticket.id}") {
+          androidx.compose.material3.Surface(
+            onClick = { onOpenTicket(ticket.id) },
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.errorContainer,
+            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+            modifier = Modifier.fillMaxWidth().testTag("run_urgent_ticket_banner"),
+          ) {
+            Row(
+              modifier = Modifier.fillMaxWidth().padding(14.dp),
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+              Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                  text = stringResource(R.string.run_urgent_banner_title),
+                  style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                )
+                Text(
+                  text = ticket.title,
+                  style = MaterialTheme.typography.bodyLarge,
+                  maxLines = 2,
+                )
+              }
+              Text(
+                text = stringResource(R.string.run_urgent_view),
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+              )
+            }
+          }
+        }
+      }
+
       item {
         CalmSectionCard {
           Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

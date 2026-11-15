@@ -88,10 +88,13 @@ data class TicketEntity(
   val roomId: Long,
   val roomName: String,
   val title: String,
+  val description: String = "",
   val priority: TicketPriority,
   val status: TicketStatus,
   val createdBy: String,
   val createdAt: Long,
+  val resolvedBy: String? = null,
+  val resolvedAt: Long? = null,
   val isDemo: Boolean = true,
 )
 

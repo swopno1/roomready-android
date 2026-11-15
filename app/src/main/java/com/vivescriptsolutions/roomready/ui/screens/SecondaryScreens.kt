@@ -43,6 +43,7 @@ import com.vivescriptsolutions.roomready.data.local.TicketEntity
 import com.vivescriptsolutions.roomready.data.preferences.UserSession
 import com.vivescriptsolutions.roomready.domain.RoomStatus
 import com.vivescriptsolutions.roomready.domain.StaffRole
+import com.vivescriptsolutions.roomready.domain.TicketPriority
 import com.vivescriptsolutions.roomready.domain.TicketStatus
 import com.vivescriptsolutions.roomready.ui.components.CalmSectionCard
 import com.vivescriptsolutions.roomready.ui.components.DemoModePill
@@ -58,10 +59,15 @@ import com.vivescriptsolutions.roomready.ui.viewmodel.TicketsTabUiState
 @Composable
 fun TicketsScreen(
   uiState: TicketsTabUiState,
+  onSelectFilter: (TicketStatus?) -> Unit,
+  onCreateTicket: (roomId: Long, title: String, description: String, priority: TicketPriority, createdBy: String) -> Unit,
+  onOpenTicket: (Long) -> Unit,
   onToggleTicketStatus: (TicketEntity) -> Unit,
   onOpenRoom: (Long) -> Unit,
   modifier: Modifier = Modifier,
 ) {
+  var showCreateSheet by remember { mutableStateOf(false) }
+
   Column(
     modifier =
       modifier
@@ -106,21 +112,66 @@ fun TicketsScreen(
         }
       }
 
-      if (uiState.tickets.isEmpty()) {
+      item {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          TicketFilterChip(
+            selected = uiState.selectedFilter == null,
+            onClick = { onSelectFilter(null) },
+            label = stringResource(R.string.ticket_filter_all),
+            tag = "ticket_filter_all",
+          )
+          TicketStatus.entries.forEach { status ->
+            TicketFilterChip(
+              selected = uiState.selectedFilter == status,
+              onClick = { onSelectFilter(if (uiState.selectedFilter == status) null else status) },
+              label = stringResource(status.labelRes),
+              tag = "ticket_filter_${status.name.lowercase()}",
+            )
+          }
+        }
+      }
+
+      item {
+        Button(
+          onClick = { showCreateSheet = true },
+          modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("report_issue_button"),
+        ) {
+          Text(text = stringResource(R.string.ticket_create_title))
+        }
+      }
+
+      if (uiState.filteredTickets.isEmpty()) {
         item {
           CalmSectionCard {
             Text(
-              text = stringResource(R.string.tickets_empty_state),
+              text =
+                if (uiState.selectedFilter == null) {
+                  stringResource(R.string.tickets_empty_state)
+                } else {
+                  stringResource(
+                    R.string.tickets_empty_filtered_format,
+                    stringResource(uiState.selectedFilter.labelRes),
+                  )
+                },
               style = MaterialTheme.typography.bodyLarge,
               color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
           }
         }
       } else {
-        items(uiState.tickets, key = { it.id }) { ticket ->
+        items(uiState.filteredTickets, key = { it.id }) { ticket ->
           val (badgeBg, badgeFg) = ticket.priority.badgeColors()
-          CalmSectionCard {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+          Surface(
+            onClick = { onOpenTicket(ticket.id) },
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+            modifier = Modifier.testTag("ticket_card_${ticket.id}"),
+          ) {
+            Column(
+              modifier = Modifier.padding(16.dp),
+              verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
               Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -191,6 +242,35 @@ fun TicketsScreen(
       }
     }
   }
+
+  if (showCreateSheet) {
+    TicketCreateSheet(
+      rooms = uiState.rooms,
+      fixedRoomId = null,
+      staffName = uiState.session.staffName.orEmpty(),
+      staffRoster = uiState.session.staffRoster,
+      onSubmit = { roomId, title, description, priority, createdBy ->
+        onCreateTicket(roomId, title, description, priority, createdBy)
+        showCreateSheet = false
+      },
+      onDismiss = { showCreateSheet = false },
+    )
+  }
+}
+
+@Composable
+private fun TicketFilterChip(
+  selected: Boolean,
+  onClick: () -> Unit,
+  label: String,
+  tag: String,
+) {
+  androidx.compose.material3.FilterChip(
+    selected = selected,
+    onClick = onClick,
+    label = { Text(text = label, style = MaterialTheme.typography.labelLarge) },
+    modifier = Modifier.heightIn(min = 48.dp).testTag(tag),
+  )
 }
 
 @Composable

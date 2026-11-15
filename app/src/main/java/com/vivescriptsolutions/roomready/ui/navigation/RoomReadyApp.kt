@@ -17,6 +17,8 @@ import androidx.compose.material.icons.outlined.Assessment
 import androidx.compose.material.icons.outlined.ConfirmationNumber
 import androidx.compose.material.icons.outlined.KingBed
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -57,9 +59,11 @@ import com.vivescriptsolutions.roomready.ui.screens.MeScreen
 import com.vivescriptsolutions.roomready.ui.screens.OnboardingScreen
 import com.vivescriptsolutions.roomready.ui.screens.RoomDetailScreen
 import com.vivescriptsolutions.roomready.ui.screens.RoomsBoardScreen
+import com.vivescriptsolutions.roomready.ui.screens.TicketDetailScreen
 import com.vivescriptsolutions.roomready.ui.screens.TicketsScreen
 import com.vivescriptsolutions.roomready.ui.viewmodel.MainAppViewModel
 import com.vivescriptsolutions.roomready.ui.viewmodel.RoomDetailViewModel
+import com.vivescriptsolutions.roomready.ui.viewmodel.TicketDetailViewModel
 import kotlinx.coroutines.launch
 
 object Routes {
@@ -69,10 +73,13 @@ object Routes {
   const val ME = "me"
   const val ROOM_DETAIL = "room_detail/{roomId}"
   const val CHECKLIST_RUN = "checklist_run/{roomId}"
+  const val TICKET_DETAIL = "ticket_detail/{ticketId}"
 
   fun roomDetail(roomId: Long): String = "room_detail/$roomId"
 
   fun checklistRun(roomId: Long): String = "checklist_run/$roomId"
+
+  fun ticketDetail(ticketId: Long): String = "ticket_detail/$ticketId"
 }
 
 enum class BottomNavTab(
@@ -122,6 +129,7 @@ fun RoomReadyApp(repository: HousekeepingRepository) {
   }
 
   val navController = rememberNavController()
+  val ticketsTabState by mainViewModel.ticketsTabState.collectAsStateWithLifecycle()
   val navBackStackEntry by navController.currentBackStackEntryAsState()
   val currentDestination = navBackStackEntry?.destination
   val showBottomBar =
@@ -159,10 +167,25 @@ fun RoomReadyApp(repository: HousekeepingRepository) {
                 }
               },
               icon = {
-                Icon(
-                  imageVector = if (selected) tab.selectedIcon else tab.unselectedIcon,
-                  contentDescription = label,
-                )
+                if (tab == BottomNavTab.TICKETS && ticketsTabState.urgentOpenCount > 0) {
+                  BadgedBox(
+                    badge = {
+                      Badge(modifier = Modifier.testTag("tickets_nav_urgent_badge")) {
+                        Text(text = ticketsTabState.urgentOpenCount.toString())
+                      }
+                    }
+                  ) {
+                    Icon(
+                      imageVector = if (selected) tab.selectedIcon else tab.unselectedIcon,
+                      contentDescription = label,
+                    )
+                  }
+                } else {
+                  Icon(
+                    imageVector = if (selected) tab.selectedIcon else tab.unselectedIcon,
+                    contentDescription = label,
+                  )
+                }
               },
               label = {
                 Text(
@@ -211,12 +234,37 @@ fun RoomReadyApp(repository: HousekeepingRepository) {
       }
 
       composable(Routes.TICKETS) {
-        val ticketsState by mainViewModel.ticketsTabState.collectAsStateWithLifecycle()
         TicketsScreen(
-          uiState = ticketsState,
+          uiState = ticketsTabState,
+          onSelectFilter = mainViewModel::setTicketFilter,
+          onCreateTicket = { roomId, title, description, priority, createdBy ->
+            mainViewModel.createTicket(roomId, title, description, priority, createdBy)
+          },
+          onOpenTicket = { ticketId -> navController.navigate(Routes.ticketDetail(ticketId)) },
           onToggleTicketStatus = mainViewModel::toggleTicketStatus,
           onOpenRoom = { roomId -> navController.navigate(Routes.roomDetail(roomId)) },
           modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
+        )
+      }
+
+      composable(
+        route = Routes.TICKET_DETAIL,
+        arguments = listOf(navArgument("ticketId") { type = NavType.LongType }),
+      ) { backStackEntry ->
+        val ticketId = backStackEntry.arguments?.getLong("ticketId") ?: return@composable
+        val ticketViewModel: TicketDetailViewModel =
+          viewModel(
+            key = "ticket_detail_$ticketId",
+            factory = TicketDetailViewModel.Factory(ticketId, repository),
+          )
+        val ticketState by ticketViewModel.uiState.collectAsStateWithLifecycle()
+        TicketDetailScreen(
+          ticket = ticketState.ticket,
+          staffName = ticketState.session.staffName,
+          onBack = { navController.popBackStack() },
+          onOpenRoom = { roomId -> navController.navigate(Routes.roomDetail(roomId)) },
+          onMarkDone = ticketViewModel::markDone,
+          onReopen = ticketViewModel::reopen,
         )
       }
 
@@ -272,6 +320,7 @@ fun RoomReadyApp(repository: HousekeepingRepository) {
           onSaveStepNote = detailViewModel::updateChecklistStepNote,
           onCreateTicket = detailViewModel::createTicket,
           onToggleTicketStatus = detailViewModel::toggleTicketStatus,
+          onOpenTicket = { ticketId -> navController.navigate(Routes.ticketDetail(ticketId)) },
           onOpenRun = { navController.navigate(Routes.checklistRun(roomId)) },
           onStartCleaning = { kind ->
             detailViewModel.startCleaning(kind) {
@@ -304,6 +353,7 @@ fun RoomReadyApp(repository: HousekeepingRepository) {
           onBack = { navController.popBackStack() },
           onToggleStep = detailViewModel::toggleChecklistStep,
           onSaveStepNote = detailViewModel::updateChecklistStepNote,
+          onOpenTicket = { ticketId -> navController.navigate(Routes.ticketDetail(ticketId)) },
           onFinish = {
             detailViewModel.finishCleaning {
               navController.popBackStack()

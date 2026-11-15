@@ -128,7 +128,6 @@
     <string name="detail_tickets_title">Room Issues</string>
     <string name="detail_report_issue">Report issue</string>
     <string name="detail_no_tickets">No open issues recorded for this room.</string>
-    <string name="ticket_dialog_title">Report Room Issue</string>
     <string name="ticket_title_hint">Describe the issue (e.g., leaking tap)</string>
     <string name="ticket_priority_label">Priority</string>
     <string name="ticket_priority_low">Low</string>
@@ -138,6 +137,19 @@
     <string name="ticket_status_done">Done</string>
     <string name="ticket_mark_done">Mark Done</string>
     <string name="ticket_reopen">Reopen</string>
+    <string name="ticket_create_title">Report an issue</string>
+    <string name="ticket_room_label">Room</string>
+    <string name="ticket_pick_room_hint">Choose a room</string>
+    <string name="ticket_desc_hint">Details (what, where, since when)</string>
+    <string name="ticket_submit">Save ticket</string>
+    <string name="ticket_filter_all">All</string>
+    <string name="tickets_empty_filtered_format">No %1$s tickets right now.</string>
+    <string name="ticket_resolved_by_format">Resolved by %1$s · %2$s</string>
+    <string name="ticket_created_at_format">Reported by %1$s · %2$s</string>
+    <string name="ticket_open_room_button">Open room</string>
+    <string name="run_urgent_banner_title">Urgent issue in this room</string>
+    <string name="run_urgent_view">View</string>
+    <string name="urgent_badge_format">%1$d urgent</string>
 
     <!-- Status Activity Log -->
     <string name="detail_status_log_title">Status Log</string>

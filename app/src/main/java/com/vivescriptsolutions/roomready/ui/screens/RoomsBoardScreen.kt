@@ -288,6 +288,7 @@ fun RoomsBoardScreen(
             RoomCard(
               room = room,
               openTicketCount = uiState.openTicketsByRoomId[room.id] ?: 0,
+              urgentOpenCount = uiState.urgentOpenByRoomId[room.id] ?: 0,
               onClick = { onRoomClick(room.id) },
             )
           }
@@ -301,6 +302,7 @@ fun RoomsBoardScreen(
 private fun RoomCard(
   room: RoomEntity,
   openTicketCount: Int,
+  urgentOpenCount: Int,
   onClick: () -> Unit,
 ) {
   Surface(
@@ -364,6 +366,20 @@ private fun RoomCard(
           verticalAlignment = Alignment.CenterVertically,
           horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+          if (urgentOpenCount > 0) {
+            Surface(
+              shape = RoundedCornerShapePill,
+              color = MaterialTheme.colorScheme.error,
+              contentColor = MaterialTheme.colorScheme.onError,
+              modifier = Modifier.testTag("room_urgent_badge_${room.name}"),
+            ) {
+              Text(
+                text = stringResource(R.string.urgent_badge_format, urgentOpenCount),
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+              )
+            }
+          }
           if (openTicketCount > 0) {
             Surface(
               shape = RoundedCornerShapePill,

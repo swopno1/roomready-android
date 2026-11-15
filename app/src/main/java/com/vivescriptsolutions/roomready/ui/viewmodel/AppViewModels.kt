@@ -13,11 +13,15 @@ import com.vivescriptsolutions.roomready.data.preferences.UserSession
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
 import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
+import com.vivescriptsolutions.roomready.data.repository.filterTicketsByStatus
+import com.vivescriptsolutions.roomready.data.repository.urgentOpenByRoom
+import com.vivescriptsolutions.roomready.data.repository.urgentOpenCount
 import com.vivescriptsolutions.roomready.domain.RoomStatus
 import com.vivescriptsolutions.roomready.domain.RoomTransitionAction
 import com.vivescriptsolutions.roomready.domain.RoomTransitionEngine
 import com.vivescriptsolutions.roomready.domain.StaffRole
 import com.vivescriptsolutions.roomready.domain.TicketPriority
+import com.vivescriptsolutions.roomready.domain.TicketStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -34,6 +38,7 @@ data class RoomsBoardUiState(
   val searchQuery: String = "",
   val statusCounts: Map<RoomStatus, Int> = emptyMap(),
   val openTicketsByRoomId: Map<Long, Int> = emptyMap(),
+  val urgentOpenByRoomId: Map<Long, Int> = emptyMap(),
 )
 
 data class RoomDetailUiState(
@@ -51,6 +56,15 @@ data class RoomDetailUiState(
 
 data class TicketsTabUiState(
   val tickets: List<TicketEntity> = emptyList(),
+  val filteredTickets: List<TicketEntity> = emptyList(),
+  val selectedFilter: TicketStatus? = null,
+  val urgentOpenCount: Int = 0,
+  val rooms: List<RoomEntity> = emptyList(),
+  val session: UserSession = UserSession(),
+)
+
+data class TicketDetailUiState(
+  val ticket: TicketEntity? = null,
   val session: UserSession = UserSession(),
 )
 
@@ -64,6 +78,7 @@ data class DashboardTabUiState(
 class MainAppViewModel(private val repository: HousekeepingRepository) : ViewModel() {
   private val selectedFilter = MutableStateFlow<RoomStatus?>(null)
   private val searchQuery = MutableStateFlow("")
+  private val selectedTicketFilter = MutableStateFlow<TicketStatus?>(null)
   private val isReady = MutableStateFlow(false)
 
   init {
@@ -122,6 +137,7 @@ class MainAppViewModel(private val repository: HousekeepingRepository) : ViewMod
           searchQuery = query,
           statusCounts = counts,
           openTicketsByRoomId = openTicketsByRoom,
+          urgentOpenByRoomId = urgentOpenByRoom(tickets),
         )
       }
       .stateIn(
@@ -131,8 +147,20 @@ class MainAppViewModel(private val repository: HousekeepingRepository) : ViewMod
       )
 
   val ticketsTabState: StateFlow<TicketsTabUiState> =
-    combine(repository.observeAllTickets(), repository.sessionFlow) { tickets, session ->
-        TicketsTabUiState(tickets = tickets, session = session)
+    combine(
+        repository.observeAllTickets(),
+        repository.observeAllRooms(),
+        repository.sessionFlow,
+        selectedTicketFilter,
+      ) { tickets, rooms, session, filter ->
+        TicketsTabUiState(
+          tickets = tickets,
+          filteredTickets = filterTicketsByStatus(tickets, filter),
+          selectedFilter = filter,
+          urgentOpenCount = urgentOpenCount(tickets),
+          rooms = rooms,
+          session = session,
+        )
       }
       .stateIn(
         scope = viewModelScope,
@@ -180,8 +208,35 @@ class MainAppViewModel(private val repository: HousekeepingRepository) : ViewMod
     viewModelScope.launch { repository.switchStaffName(staffName) }
   }
 
+  fun setTicketFilter(status: TicketStatus?) {
+    selectedTicketFilter.value = status
+  }
+
+  fun createTicket(
+    roomId: Long,
+    title: String,
+    description: String,
+    priority: TicketPriority,
+    createdBy: String? = null,
+  ) {
+    val reporter = createdBy?.takeIf { it.isNotBlank() } ?: sessionState.value.staffName ?: return
+    viewModelScope.launch {
+      val rooms = roomsBoardState.value.allRooms
+      val room = rooms.firstOrNull { it.id == roomId } ?: return@launch
+      repository.createTicket(
+        roomId = room.id,
+        roomName = room.name,
+        title = title,
+        description = description,
+        priority = priority,
+        createdBy = reporter,
+      )
+    }
+  }
+
   fun toggleTicketStatus(ticket: TicketEntity) {
-    viewModelScope.launch { repository.toggleTicketStatus(ticket) }
+    val staffName = sessionState.value.staffName ?: return
+    viewModelScope.launch { repository.toggleTicketStatus(ticket, staffName) }
   }
 
   fun resetDemoData(onComplete: () -> Unit = {}) {
@@ -336,22 +391,29 @@ class RoomDetailViewModel(
     }
   }
 
-  fun createTicket(title: String, priority: TicketPriority) {
+  fun createTicket(
+    title: String,
+    description: String,
+    priority: TicketPriority,
+    createdBy: String? = null,
+  ) {
     val room = uiState.value.room ?: return
-    val staffName = uiState.value.session.staffName ?: return
+    val reporter = createdBy?.takeIf { it.isNotBlank() } ?: uiState.value.session.staffName ?: return
     viewModelScope.launch {
       repository.createTicket(
         roomId = room.id,
         roomName = room.name,
         title = title,
+        description = description,
         priority = priority,
-        createdBy = staffName,
+        createdBy = reporter,
       )
     }
   }
 
   fun toggleTicketStatus(ticket: TicketEntity) {
-    viewModelScope.launch { repository.toggleTicketStatus(ticket) }
+    val staffName = uiState.value.session.staffName ?: return
+    viewModelScope.launch { repository.toggleTicketStatus(ticket, staffName) }
   }
 
   class Factory(
@@ -361,5 +423,38 @@ class RoomDetailViewModel(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
       RoomDetailViewModel(roomId, repository) as T
+  }
+}
+
+class TicketDetailViewModel(
+  private val ticketId: Long,
+  private val repository: HousekeepingRepository,
+) : ViewModel() {
+  val uiState: StateFlow<TicketDetailUiState> =
+    combine(repository.observeTicket(ticketId), repository.sessionFlow) { ticket, session ->
+        TicketDetailUiState(ticket = ticket, session = session)
+      }
+      .stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = TicketDetailUiState(),
+      )
+
+  fun markDone() {
+    val staffName = uiState.value.session.staffName ?: return
+    viewModelScope.launch { repository.resolveTicket(ticketId, resolvedBy = staffName) }
+  }
+
+  fun reopen() {
+    viewModelScope.launch { repository.reopenTicket(ticketId) }
+  }
+
+  class Factory(
+    private val ticketId: Long,
+    private val repository: HousekeepingRepository,
+  ) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T =
+      TicketDetailViewModel(ticketId, repository) as T
   }
 }

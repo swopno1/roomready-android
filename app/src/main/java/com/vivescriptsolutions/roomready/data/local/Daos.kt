@@ -75,6 +75,12 @@ interface TicketDao {
   @Query("SELECT * FROM tickets ORDER BY status ASC, createdAt DESC")
   fun observeAllTickets(): Flow<List<TicketEntity>>
 
+  @Query("SELECT * FROM tickets WHERE id = :ticketId")
+  fun observeTicketById(ticketId: Long): Flow<TicketEntity?>
+
+  @Query("SELECT * FROM tickets WHERE id = :ticketId")
+  suspend fun getTicketById(ticketId: Long): TicketEntity?
+
   @Query("SELECT * FROM tickets WHERE roomId = :roomId ORDER BY status ASC, createdAt DESC")
   fun observeTicketsForRoom(roomId: Long): Flow<List<TicketEntity>>
 
