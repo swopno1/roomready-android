@@ -395,6 +395,87 @@ class SyncEngineTest {
   }
 
   @Test
+  fun `push bodies carry exactly the contracted keys`() {
+    runBlocking {
+      liveMode()
+      server.enqueue(MockResponse().setBody(bootstrapJson(listOf(unitJson(unitA, "01", "DIRTY")))))
+      engine.bootstrap()
+      server.takeRequest()
+      val room = db.roomDao().observeAllRooms().first()[0]
+      repository.startChecklistRun(
+        room.id, ChecklistRunKind.FULL, "Rahim", StaffRole.HOUSEKEEPER).getOrThrow()
+      repeat(8) { repository.toggleChecklistStep(room.id, it, "Rahim", StaffRole.HOUSEKEEPER) }
+      repository.skipRunPhoto(room.id, "test").getOrThrow()
+      repository.finishChecklistRun(room.id, "Rahim", StaffRole.HOUSEKEEPER).getOrThrow()
+      repository.createTicket(
+        room.id, room.name, "Leaking tap", "Bathroom tap drips",
+        TicketPriority.URGENT, "Rahim",
+      )!!
+      val patchTicketId =
+        repository.createTicket(
+          room.id, room.name, "Dead bulb", "", TicketPriority.LOW, "Rahim",
+        )!!
+      val synced = db.ticketDao().getTicketById(patchTicketId)!!
+      db.ticketDao().update(synced.copy(pmsTicketId = "pms-t2"))
+      db.outboxDao().deleteById(db.outboxDao().getAllOrdered().last().id)
+      repository.resolveTicket(patchTicketId, "Karim")
+
+      server.enqueue(
+        MockResponse().setBody(
+          JSONObject().put("unitId", unitA).put("housekeeping", "CLEAN")
+            .put("housekeepingAt", "2026-11-18T07:00:00Z").toString()
+        )
+      )
+      server.enqueue(MockResponse().setBody(ticketJson("pms-t1", unitA)))
+      server.enqueue(MockResponse().setBody(ticketJson("pms-t2", unitA)))
+      server.enqueue(MockResponse().setBody(roomsJson(unitJson(unitA, "01", "CLEAN"))))
+      server.enqueue(MockResponse().setBody(JSONArray().toString()))
+      val outcome = engine.syncOnce()
+      assertTrue(outcome is SyncOutcome.Completed)
+      assertEquals(0, db.outboxDao().count())
+
+      // The PMS zod schemas are .strict(): any extra key is a 400.
+      val statusReq = server.takeRequest()
+      assertEquals("POST", statusReq.method)
+      assertEquals("/api/housekeeping/rooms/$unitA/status", statusReq.path)
+      assertEquals(
+        setOf("expected", "action", "staffName"),
+        statusReq.body.readUtf8().keys(),
+      )
+      val createReq = server.takeRequest()
+      assertEquals("POST", createReq.method)
+      assertEquals("/api/housekeeping/tickets", createReq.path)
+      assertEquals(
+        setOf("unitId", "title", "description", "priority", "staffName"),
+        createReq.body.readUtf8().keys(),
+      )
+      val patchReq = server.takeRequest()
+      assertEquals("PATCH", patchReq.method)
+      assertEquals("/api/housekeeping/tickets/pms-t2", patchReq.path)
+      assertEquals(
+        setOf("status", "staffName"),
+        patchReq.body.readUtf8().keys(),
+      )
+    }
+  }
+
+  private fun ticketJson(id: String, unitId: String): String =
+    JSONObject()
+      .put("id", id)
+      .put("unitId", unitId)
+      .put("title", "T")
+      .put("description", "")
+      .put("priority", "NORMAL")
+      .put("status", "OPEN")
+      .put("createdBy", "Rahim")
+      .put("createdAt", "2026-11-18T07:00:00Z")
+      .put("doneBy", JSONObject.NULL)
+      .put("doneAt", JSONObject.NULL)
+      .toString()
+
+  private fun String.keys(): Set<String> = JSONObject(this).keys().asSequence().toSet()
+
+  @Test
   fun `retry after failure keeps entry and drains on success`() {
     runBlocking {
       liveMode()
@@ -475,6 +556,127 @@ class SyncEngineTest {
       assertEquals(RoomStatus.CLEANED, db.roomDao().getRoomById(room.id)!!.status)
       val logs = db.statusLogDao().observeLogsForRoom(room.id).first()
       assertTrue(logs.any { it.source == "pms" && (it.reason ?: "").contains("Conflict", ignoreCase = true) })
+    }
+  }
+
+  @Test
+  fun `400 drops the status entry instead of retrying forever`() {
+    runBlocking {
+      liveMode()
+      server.enqueue(MockResponse().setBody(bootstrapJson(listOf(unitJson(unitA, "01", "DIRTY")))))
+      engine.bootstrap()
+      server.takeRequest()
+      val room = db.roomDao().observeAllRooms().first()[0]
+      repository.startChecklistRun(
+        room.id, ChecklistRunKind.FULL, "Rahim", StaffRole.HOUSEKEEPER).getOrThrow()
+      repeat(8) { repository.toggleChecklistStep(room.id, it, "Rahim", StaffRole.HOUSEKEEPER) }
+      repository.skipRunPhoto(room.id, "test").getOrThrow()
+      repository.finishChecklistRun(room.id, "Rahim", StaffRole.HOUSEKEEPER).getOrThrow()
+      assertEquals(1, db.outboxDao().count())
+
+      server.enqueue(MockResponse().setResponseCode(400).setBody("""{"error":"invalid_input"}"""))
+      server.enqueue(MockResponse().setBody(roomsJson(unitJson(unitA, "01", "DIRTY"))))
+      server.enqueue(MockResponse().setBody(JSONArray().toString()))
+      val outcome = engine.syncOnce()
+
+      assertEquals(0, db.outboxDao().count())
+      assertTrue(outcome is SyncOutcome.Completed)
+      outcome as SyncOutcome.Completed
+      assertEquals(1, outcome.dropped)
+      assertFalse(outcome.needsRetry)
+      assertTrue(outcome.errors.any { it.contains("400") })
+    }
+  }
+
+  @Test
+  fun `400 drops the ticket create instead of retrying forever`() {
+    runBlocking {
+      liveMode()
+      server.enqueue(MockResponse().setBody(bootstrapJson(listOf(unitJson(unitA, "01", "DIRTY")))))
+      engine.bootstrap()
+      server.takeRequest()
+      val room = db.roomDao().observeAllRooms().first()[0]
+      val ticketId =
+        repository.createTicket(
+          room.id, room.name, "Leaking tap", "Bathroom tap drips",
+          TicketPriority.URGENT, "Rahim",
+        )
+      assertNotNull(ticketId)
+      assertEquals(1, db.outboxDao().count())
+
+      server.enqueue(MockResponse().setResponseCode(400).setBody("""{"error":"invalid_input"}"""))
+      server.enqueue(MockResponse().setBody(roomsJson(unitJson(unitA, "01", "DIRTY"))))
+      server.enqueue(MockResponse().setBody(JSONArray().toString()))
+      val outcome = engine.syncOnce()
+
+      assertEquals(0, db.outboxDao().count())
+      assertTrue(outcome is SyncOutcome.Completed)
+      outcome as SyncOutcome.Completed
+      assertEquals(1, outcome.dropped)
+      assertFalse(outcome.needsRetry)
+      // The local ticket survives; only the server push is abandoned.
+      assertNotNull(db.ticketDao().getTicketById(ticketId!!))
+    }
+  }
+
+  @Test
+  fun `403 keeps the entry queued without blocking the sync`() {
+    runBlocking {
+      liveMode()
+      server.enqueue(MockResponse().setBody(bootstrapJson(listOf(unitJson(unitA, "01", "DIRTY")))))
+      engine.bootstrap()
+      server.takeRequest()
+      val room = db.roomDao().observeAllRooms().first()[0]
+      repository.startChecklistRun(
+        room.id, ChecklistRunKind.FULL, "Rahim", StaffRole.HOUSEKEEPER).getOrThrow()
+      repeat(8) { repository.toggleChecklistStep(room.id, it, "Rahim", StaffRole.HOUSEKEEPER) }
+      repository.skipRunPhoto(room.id, "test").getOrThrow()
+      repository.finishChecklistRun(room.id, "Rahim", StaffRole.HOUSEKEEPER).getOrThrow()
+
+      server.enqueue(MockResponse().setResponseCode(403).setBody("""{"error":"scope_forbidden"}"""))
+      server.enqueue(MockResponse().setBody(roomsJson(unitJson(unitA, "01", "DIRTY"))))
+      server.enqueue(MockResponse().setBody(JSONArray().toString()))
+      val outcome = engine.syncOnce()
+
+      // Still queued: a re-pair with a supervisor key can flush it later.
+      assertEquals(1, db.outboxDao().count())
+      assertTrue(outcome is SyncOutcome.Completed)
+      outcome as SyncOutcome.Completed
+      assertFalse(outcome.needsRetry)
+      assertTrue(outcome.errors.any { it.contains("403") && it.contains("scope_forbidden") })
+    }
+  }
+
+  @Test
+  fun `400 drops the ticket patch instead of retrying forever`() {
+    runBlocking {
+      liveMode()
+      server.enqueue(MockResponse().setBody(bootstrapJson(listOf(unitJson(unitA, "01", "DIRTY")))))
+      engine.bootstrap()
+      server.takeRequest()
+      val room = db.roomDao().observeAllRooms().first()[0]
+      val ticketId =
+        repository.createTicket(
+          room.id, room.name, "Leaking tap", "Bathroom tap drips",
+          TicketPriority.NORMAL, "Rahim",
+        )!!
+      // Simulate a ticket that already reached the server.
+      val synced = db.ticketDao().getTicketById(ticketId)!!
+      db.ticketDao().update(synced.copy(pmsTicketId = "pms-t1"))
+      db.outboxDao().deleteById(db.outboxDao().getAllOrdered().first { it.kind.name == "TICKET_CREATE" }.id)
+      repository.resolveTicket(ticketId, "Karim")
+      assertEquals(1, db.outboxDao().count())
+
+      server.enqueue(MockResponse().setResponseCode(400).setBody("""{"error":"invalid_input"}"""))
+      server.enqueue(MockResponse().setBody(roomsJson(unitJson(unitA, "01", "DIRTY"))))
+      server.enqueue(MockResponse().setBody(JSONArray().toString()))
+      val outcome = engine.syncOnce()
+
+      assertEquals(0, db.outboxDao().count())
+      assertTrue(outcome is SyncOutcome.Completed)
+      outcome as SyncOutcome.Completed
+      assertEquals(1, outcome.dropped)
+      assertFalse(outcome.needsRetry)
     }
   }
 

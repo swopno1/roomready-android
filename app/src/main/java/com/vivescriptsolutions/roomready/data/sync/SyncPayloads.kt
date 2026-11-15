@@ -14,6 +14,15 @@ private const val TAG = "SyncPayloads"
 
 const val PMS_CONTRACT_VERSION = 1
 
+/**
+ * PMS zod BodySchema wire limits (travel-scaffold
+ * src/app/api/housekeeping/...). Inputs that reach the API must stay within
+ * these, or the PMS answers 400 invalid_input and the entry is dropped.
+ */
+const val PMS_TITLE_MAX = 120
+const val PMS_DESCRIPTION_MAX = 1000
+const val PMS_NOTE_MAX = 500
+
 class MalformedPayloadException(message: String) : Exception(message)
 
 data class PmsRoomType(

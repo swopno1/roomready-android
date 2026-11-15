@@ -14,6 +14,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.vivescriptsolutions.roomready.data.local.AppDatabase
 import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesRepository
+import com.vivescriptsolutions.roomready.data.sync.BootstrapOutcome
 import com.vivescriptsolutions.roomready.data.sync.PairingQrParser
 import com.vivescriptsolutions.roomready.data.sync.PairingQrResult
 import com.vivescriptsolutions.roomready.data.sync.PmsApi
@@ -265,6 +266,26 @@ class QrPairingFlowTest {
       .onNodeWithText("The key was rejected. Enter a new property API key.")
       .assertIsDisplayed()
     assertNull(keys.getKey())
+  }
+
+  @Test
+  fun `typed url with spaces is rejected before any network call`() {
+    runBlocking {
+      val outcome = syncRepository.saveConnection("https://demo 13.example", "rk.k1.secret")
+      assertTrue(outcome is BootstrapOutcome.Failed)
+      assertEquals(0, server.requestCount)
+      assertFalse(prefs.connection().isConfigured)
+    }
+  }
+
+  @Test
+  fun `typed url without https is rejected before any network call`() {
+    runBlocking {
+      val outcome = syncRepository.saveConnection("demo13.example", "rk.k1.secret")
+      assertTrue(outcome is BootstrapOutcome.Failed)
+      assertEquals(0, server.requestCount)
+      assertFalse(prefs.connection().isConfigured)
+    }
   }
 
   private fun bootstrapJson(): String {

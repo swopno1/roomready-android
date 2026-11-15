@@ -15,6 +15,7 @@ import com.vivescriptsolutions.roomready.data.local.TicketPriorityCount
 import com.vivescriptsolutions.roomready.data.preferences.PmsConnection
 import com.vivescriptsolutions.roomready.data.preferences.UserPreferencesRepository
 import com.vivescriptsolutions.roomready.data.preferences.UserSession
+import com.vivescriptsolutions.roomready.data.sync.PMS_NOTE_MAX
 import com.vivescriptsolutions.roomready.data.notifications.NotificationEvent
 import com.vivescriptsolutions.roomready.data.notifications.findStuckRunIds
 import com.vivescriptsolutions.roomready.domain.AppLanguage
@@ -521,7 +522,9 @@ class HousekeepingRepository(
     if (!prefs.connection().isConfigured) return
     val unitPmsId = room.pmsUnitId ?: return
     val payload = JSONObject().put("expected", expectedPms).put("action", action).put("staffName", staffName)
-    if (!note.isNullOrBlank()) payload.put("note", note)
+    // The composed "Label: note" can overshoot the UI cap by the label
+    // length; trim the wire copy (the local record keeps the full text).
+    if (!note.isNullOrBlank()) payload.put("note", note.take(PMS_NOTE_MAX))
     db.outboxDao().insert(
       OutboxEntry(
         createdAt = nowMillis,

@@ -52,6 +52,8 @@ import androidx.compose.ui.unit.dp
 import com.vivescriptsolutions.roomready.R
 import com.vivescriptsolutions.roomready.data.local.RoomEntity
 import com.vivescriptsolutions.roomready.data.local.TicketEntity
+import com.vivescriptsolutions.roomready.data.sync.PMS_DESCRIPTION_MAX
+import com.vivescriptsolutions.roomready.data.sync.PMS_TITLE_MAX
 import com.vivescriptsolutions.roomready.domain.TicketPriority
 import com.vivescriptsolutions.roomready.domain.TicketStatus
 import com.vivescriptsolutions.roomready.ui.components.CalmSectionCard
@@ -139,7 +141,7 @@ fun TicketCreateSheet(
       item {
         OutlinedTextField(
           value = titleDraft,
-          onValueChange = { titleDraft = it },
+          onValueChange = { titleDraft = it.take(PMS_TITLE_MAX) },
           placeholder = { Text(text = stringResource(R.string.ticket_title_hint)) },
           textStyle = MaterialTheme.typography.bodyLarge,
           singleLine = true,
@@ -150,7 +152,7 @@ fun TicketCreateSheet(
       item {
         OutlinedTextField(
           value = descDraft,
-          onValueChange = { descDraft = it },
+          onValueChange = { descDraft = it.take(PMS_DESCRIPTION_MAX) },
           placeholder = { Text(text = stringResource(R.string.ticket_desc_hint)) },
           textStyle = MaterialTheme.typography.bodyLarge,
           minLines = 2,

@@ -47,6 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vivescriptsolutions.roomready.R
+import com.vivescriptsolutions.roomready.data.sync.PMS_NOTE_MAX
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
 import com.vivescriptsolutions.roomready.domain.ChecklistTemplates
 import com.vivescriptsolutions.roomready.domain.ReturnReason
@@ -249,7 +250,7 @@ fun InspectionScreen(
         item {
           OutlinedTextField(
             value = noteDraft,
-            onValueChange = { noteDraft = it },
+            onValueChange = { noteDraft = it.take(PMS_NOTE_MAX) },
             placeholder = { Text(text = stringResource(R.string.return_note_hint)) },
             textStyle = MaterialTheme.typography.bodyLarge,
             minLines = 2,

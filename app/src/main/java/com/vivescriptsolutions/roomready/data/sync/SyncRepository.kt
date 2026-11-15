@@ -44,8 +44,7 @@ class SyncRepository(
   fun observeOutboxCount(): Flow<Int> = db.outboxDao().observeCount()
 
   suspend fun saveConnection(baseUrl: String, rawKey: String): BootstrapOutcome {
-    val url = baseUrl.trim().trimEnd('/')
-    if (!url.startsWith("https://")) return BootstrapOutcome.Failed("Enter an https:// PMS origin")
+    val url = validatePmsBaseUrl(baseUrl.trim()) ?: return BootstrapOutcome.Failed("Enter an https:// PMS origin")
     if (rawKey.isBlank()) return BootstrapOutcome.Failed("Paste the property API key")
     prefs.setBaseUrl(url)
     keys.saveKey(rawKey)

@@ -343,11 +343,17 @@ class SyncEngine(
       is ApiOutcome.Http ->
         when (result.code) {
           401 -> PushResult.AuthRevoked
-          403 -> PushResult.KeepQueued("Key scope forbids this action; kept queued")
+          403 -> PushResult.KeepQueued("Room update refused (403 ${result.error ?: "forbidden"}); kept queued")
           404 -> PushResult.Dropped(rebootstrap = true, note = "Unknown unit; re-bootstrapping")
           409 -> {
             conflictLog(unitPmsId, "Sync conflict: PMS moved on; local change not forced")
             PushResult.Dropped(repull = true)
+          }
+          400 -> {
+            // Malformed for this server (over-long name/note, bad enum):
+            // retrying the identical body can never succeed.
+            transitionLog(unitPmsId, "Sync rejected (400): ${result.error ?: "invalid_input"}")
+            PushResult.Dropped(note = "Server rejected entry (400)")
           }
           422 -> {
             transitionLog(unitPmsId, "Sync rejected (422): ${result.error ?: "illegal"}")
@@ -384,9 +390,10 @@ class SyncEngine(
       is ApiOutcome.Http ->
         when (result.code) {
           401 -> PushResult.AuthRevoked
-          403 -> PushResult.KeepQueued("Key scope forbids ticket creation; kept queued")
+          403 -> PushResult.KeepQueued("Ticket create refused (403 ${result.error ?: "forbidden"}); kept queued")
           404 -> PushResult.Dropped(rebootstrap = true, note = "Unknown unit; re-bootstrapping")
           409 -> PushResult.Dropped(note = "Ticket create conflicted; dropped")
+          400 -> PushResult.Dropped(note = "Server rejected ticket (400)")
           422 -> PushResult.Dropped(note = "Server rejected ticket (422)")
           else -> PushResult.RetryLater("Server error ${result.code}")
         }
@@ -414,9 +421,10 @@ class SyncEngine(
       is ApiOutcome.Http ->
         when (result.code) {
           401 -> PushResult.AuthRevoked
-          403 -> PushResult.KeepQueued("Supervisor key required for ticket status; kept queued")
+          403 -> PushResult.KeepQueued("Ticket update refused (403 ${result.error ?: "forbidden"}); kept queued")
           404 -> PushResult.Dropped(note = "Unknown ticket; dropped")
           409 -> PushResult.Dropped(note = "Ticket patch conflicted; dropped")
+          400 -> PushResult.Dropped(note = "Server rejected ticket patch (400)")
           422 -> PushResult.Dropped(note = "Server rejected ticket patch (422)")
           else -> PushResult.RetryLater("Server error ${result.code}")
         }

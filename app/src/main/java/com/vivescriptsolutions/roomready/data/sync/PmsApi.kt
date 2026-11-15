@@ -43,12 +43,16 @@ class PmsApi(
       val key = keyProvider()
       if (base.isNullOrBlank() || key.isNullOrBlank()) return@withContext ApiOutcome.NotConfigured
       val request =
-        Request.Builder()
-          .url(base + path)
-          .header("Authorization", "Bearer $key")
-          .header("Accept", "application/json")
-          .get()
-          .build()
+        try {
+          Request.Builder()
+            .url(base + path)
+            .header("Authorization", "Bearer $key")
+            .header("Accept", "application/json")
+            .get()
+            .build()
+        } catch (_: IllegalArgumentException) {
+          return@withContext ApiOutcome.Malformed("Bad server URL — check Settings → Connection")
+        }
       execute(request, parse)
     }
 
@@ -72,12 +76,16 @@ class PmsApi(
     val key = keyProvider()
     if (base.isNullOrBlank() || key.isNullOrBlank()) return ApiOutcome.NotConfigured
     val request =
-      Request.Builder()
-        .url(base + path)
-        .header("Authorization", "Bearer $key")
-        .header("Accept", "application/json")
-        .method(method, json.toString().toRequestBody("application/json".toMediaType()))
-        .build()
+      try {
+        Request.Builder()
+          .url(base + path)
+          .header("Authorization", "Bearer $key")
+          .header("Accept", "application/json")
+          .method(method, json.toString().toRequestBody("application/json".toMediaType()))
+          .build()
+      } catch (_: IllegalArgumentException) {
+        return ApiOutcome.Malformed("Bad server URL — check Settings → Connection")
+      }
     return execute(request, parse)
   }
 

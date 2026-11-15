@@ -70,7 +70,7 @@ object PairingQrParser {
     }
 
     val rawUrl = params["url"]?.trim() ?: return PairingQrResult.InvalidCode
-    val normalizedUrl = validateHttpsBaseUrl(rawUrl) ?: return PairingQrResult.InvalidCode
+    val normalizedUrl = validatePmsBaseUrl(rawUrl) ?: return PairingQrResult.InvalidCode
 
     val rawKey = params["key"]?.trim() ?: return PairingQrResult.InvalidCode
     if (!KEY_REGEX.matches(rawKey)) return PairingQrResult.InvalidCode
@@ -81,22 +81,6 @@ object PairingQrParser {
         apiKey = rawKey,
       )
     )
-  }
-
-  private fun validateHttpsBaseUrl(rawUrl: String): String? {
-    if (rawUrl.isEmpty() || rawUrl.any { it.isWhitespace() || it.isISOControl() }) return null
-    val uri =
-      try {
-        URI(rawUrl)
-      } catch (_: URISyntaxException) {
-        return null
-      }
-    if (!uri.scheme.equals("https", ignoreCase = true)) return null
-    if (uri.host.isNullOrBlank()) return null
-    if (uri.userInfo != null) return null
-    if (uri.fragment != null) return null
-    val afterScheme = rawUrl.substringAfter("://")
-    return ("https://$afterScheme").trimEnd('/')
   }
 
   private fun percentDecode(input: String): String? {
@@ -119,4 +103,27 @@ object PairingQrParser {
     }
     return out.toString(StandardCharsets.UTF_8.name())
   }
+}
+
+/**
+ * Shared PMS origin check for the QR and typed-entry paths: https only,
+ * with a host, no credentials or fragment. Returns the normalized origin
+ * (trailing slash trimmed) or null. Anything it rejects would either
+ * fail or throw inside the HTTP client, so callers treat null as
+ * "not a usable PMS address".
+ */
+internal fun validatePmsBaseUrl(rawUrl: String): String? {
+  if (rawUrl.isEmpty() || rawUrl.any { it.isWhitespace() || it.isISOControl() }) return null
+  val uri =
+    try {
+      URI(rawUrl)
+    } catch (_: URISyntaxException) {
+      return null
+    }
+  if (!uri.scheme.equals("https", ignoreCase = true)) return null
+  if (uri.host.isNullOrBlank()) return null
+  if (uri.userInfo != null) return null
+  if (uri.fragment != null) return null
+  val afterScheme = rawUrl.substringAfter("://")
+  return ("https://$afterScheme").trimEnd('/')
 }
