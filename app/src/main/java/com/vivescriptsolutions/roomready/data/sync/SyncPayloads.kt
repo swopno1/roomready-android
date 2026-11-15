@@ -1,13 +1,16 @@
 package com.vivescriptsolutions.roomready.data.sync
 
+import android.util.Log
 import com.vivescriptsolutions.roomready.domain.StaffRole
-import java.text.ParseException
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.TimeZone
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+
+private const val TAG = "SyncPayloads"
 
 const val PMS_CONTRACT_VERSION = 1
 
@@ -27,7 +30,7 @@ data class PmsUnit(
   val block: String?,
   val unitStatus: String,
   val housekeeping: String,
-  val housekeepingAtMillis: Long,
+  val housekeepingAtMillis: Long?,
   val departsToday: Boolean,
 )
 
@@ -55,7 +58,7 @@ data class RoomsPayload(
 data class StatusResult(
   val unitId: String,
   val housekeeping: String,
-  val housekeepingAtMillis: Long,
+  val housekeepingAtMillis: Long?,
 )
 
 data class PmsTicket(
@@ -77,27 +80,35 @@ private val HOUSEKEEPING_VALUES = setOf("DIRTY", "CLEAN", "INSPECTED")
 private val BUSINESS_DATE_REGEX = Regex("""\d{4}-\d{2}-\d{2}""")
 
 fun parseInstantMillis(raw: String): Long {
-  val formats =
-    listOf(
-      SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
-        timeZone = TimeZone.getTimeZone("UTC")
-      },
-      SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US),
-    )
-  formats.forEach { format ->
+  val trimmed = raw.trim()
+  if (trimmed.isEmpty()) throw MalformedPayloadException("Bad timestamp: $raw")
+  val instant =
     try {
-      return format.parse(raw)?.time ?: throw ParseException(raw, 0)
-    } catch (_: ParseException) {
-      // try next format
+      Instant.parse(trimmed)
+    } catch (_: DateTimeParseException) {
+      try {
+        OffsetDateTime.parse(trimmed, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant()
+      } catch (_: DateTimeParseException) {
+        throw MalformedPayloadException("Bad timestamp: $raw")
+      }
     }
-  }
-  throw MalformedPayloadException("Bad timestamp: $raw")
+  return instant.toEpochMilli()
 }
 
+private fun parseUnitTimestampOrNull(raw: String, field: String, unitId: String): Long? =
+  try {
+    parseInstantMillis(raw)
+  } catch (_: MalformedPayloadException) {
+    runCatching { Log.d(TAG, "Unparseable $field timestamp for unit $unitId") }
+    null
+  }
+
 private fun JSONObject.requiredString(key: String): String {
-  val value = optString(key, null) ?: throw MalformedPayloadException("Missing '$key'")
-  if (value.isBlank()) throw MalformedPayloadException("Blank '$key'")
-  return value
+  val raw = opt(key) ?: throw MalformedPayloadException("Missing '$key'")
+  if (raw === JSONObject.NULL) throw MalformedPayloadException("Missing '$key'")
+  if (raw !is String) throw MalformedPayloadException("Expected string '$key'")
+  if (raw.isBlank()) throw MalformedPayloadException("Blank '$key'")
+  return raw
 }
 
 private fun JSONObject.requiredObject(key: String): JSONObject =
@@ -115,14 +126,16 @@ private fun JSONObject.requiredArray(key: String): JSONArray =
   }
 
 fun parseUnit(json: JSONObject): PmsUnit {
+  val unitId = json.requiredString("id")
   val unitStatus = json.requiredString("unitStatus")
   if (unitStatus !in UNIT_STATUSES) throw MalformedPayloadException("Unknown unitStatus: $unitStatus")
   val housekeeping = json.requiredString("housekeeping")
   if (housekeeping !in HOUSEKEEPING_VALUES) {
     throw MalformedPayloadException("Unknown housekeeping: $housekeeping")
   }
+  val rawHousekeepingAt = json.requiredString("housekeepingAt")
   return PmsUnit(
-    id = json.requiredString("id"),
+    id = unitId,
     roomTypeId = json.requiredString("roomTypeId"),
     unitNumber = json.requiredString("unitNumber"),
     floor =
@@ -135,7 +148,8 @@ fun parseUnit(json: JSONObject): PmsUnit {
     block = json.optString("block", null)?.takeIf { it.isNotBlank() },
     unitStatus = unitStatus,
     housekeeping = housekeeping,
-    housekeepingAtMillis = parseInstantMillis(json.requiredString("housekeepingAt")),
+    housekeepingAtMillis =
+      parseUnitTimestampOrNull(rawHousekeepingAt, field = "housekeepingAt", unitId = unitId),
     departsToday = json.optBoolean("departsToday", false),
   )
 }
@@ -216,14 +230,17 @@ fun parseStatusResult(body: String): StatusResult {
     } catch (_: JSONException) {
       throw MalformedPayloadException("Response is not JSON")
     }
+  val unitId = json.requiredString("unitId")
   val housekeeping = json.requiredString("housekeeping")
   if (housekeeping !in HOUSEKEEPING_VALUES) {
     throw MalformedPayloadException("Unknown housekeeping: $housekeeping")
   }
+  val rawHousekeepingAt = json.requiredString("housekeepingAt")
   return StatusResult(
-    unitId = json.requiredString("unitId"),
+    unitId = unitId,
     housekeeping = housekeeping,
-    housekeepingAtMillis = parseInstantMillis(json.requiredString("housekeepingAt")),
+    housekeepingAtMillis =
+      parseUnitTimestampOrNull(rawHousekeepingAt, field = "housekeepingAt", unitId = unitId),
   )
 }
 
@@ -237,8 +254,8 @@ fun parseTicket(json: JSONObject): PmsTicket =
     status = json.requiredString("status"),
     createdBy = json.optString("createdBy", ""),
     createdAt = json.optString("createdAt", ""),
-    doneBy = json.optString("doneBy", null)?.takeIf { it.isNotBlank() },
-    doneAt = json.optString("doneAt", null)?.takeIf { it.isNotBlank() },
+    doneBy = if (json.isNull("doneBy")) null else json.optString("doneBy", null)?.takeIf { it.isNotBlank() },
+    doneAt = if (json.isNull("doneAt")) null else json.optString("doneAt", null)?.takeIf { it.isNotBlank() },
   )
 
 fun parseSingleTicket(body: String): PmsTicket {

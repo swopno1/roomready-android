@@ -39,8 +39,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -81,6 +83,7 @@ import com.vivescriptsolutions.roomready.data.photos.PhotoShare
 import com.vivescriptsolutions.roomready.data.photos.PhotoStore
 import com.vivescriptsolutions.roomready.ui.screens.PhotoCaptureMode
 import com.vivescriptsolutions.roomready.ui.screens.PhotoCaptureScreen
+import com.vivescriptsolutions.roomready.ui.screens.QrScannerScreen
 import com.vivescriptsolutions.roomready.ui.screens.TicketDetailScreen
 import com.vivescriptsolutions.roomready.ui.screens.TicketsScreen
 import com.vivescriptsolutions.roomready.ui.viewmodel.ConnectionViewModel
@@ -191,14 +194,30 @@ private fun RoomReadyContent(
     val connectionViewModel: ConnectionViewModel =
       viewModel(factory = ConnectionViewModel.Factory(syncRepository))
     val connectionState by connectionViewModel.uiState.collectAsStateWithLifecycle()
-    ConnectionScreen(
-      uiState = connectionState,
-      onBack = {},
-      onSaveConnection = connectionViewModel::saveConnection,
-      onSyncNow = connectionViewModel::syncNow,
-      onDisconnect = connectionViewModel::disconnect,
-      isSetup = true,
-    )
+    var showScanner by remember { mutableStateOf(false) }
+    if (showScanner) {
+      QrScannerScreen(
+        onPayloadScanned = { payload ->
+          showScanner = false
+          connectionViewModel.connectWithScannedQr(payload)
+        },
+        onTypeInstead = { showScanner = false },
+        onBack = { showScanner = false },
+        modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
+      )
+    } else {
+      ConnectionScreen(
+        uiState = connectionState,
+        onBack = {},
+        onSaveConnection = connectionViewModel::saveConnection,
+        onSyncNow = connectionViewModel::syncNow,
+        onDisconnect = connectionViewModel::disconnect,
+        isSetup = true,
+        onScanQr = { showScanner = true },
+        onScannedPairingApplied = connectionViewModel::consumeScannedPairing,
+        modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
+      )
+    }
     return
   }
 
@@ -423,14 +442,29 @@ private fun RoomReadyContent(
         val connectionViewModel: ConnectionViewModel =
           viewModel(factory = ConnectionViewModel.Factory(syncRepository))
         val connectionState by connectionViewModel.uiState.collectAsStateWithLifecycle()
-        ConnectionScreen(
-          uiState = connectionState,
-          onBack = { navController.popBackStack() },
-          onSaveConnection = connectionViewModel::saveConnection,
-          onSyncNow = connectionViewModel::syncNow,
-          onDisconnect = connectionViewModel::disconnect,
-          modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
-        )
+        var showScanner by remember { mutableStateOf(false) }
+        if (showScanner) {
+          QrScannerScreen(
+            onPayloadScanned = { payload ->
+              showScanner = false
+              connectionViewModel.connectWithScannedQr(payload)
+            },
+            onTypeInstead = { showScanner = false },
+            onBack = { showScanner = false },
+            modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
+          )
+        } else {
+          ConnectionScreen(
+            uiState = connectionState,
+            onBack = { navController.popBackStack() },
+            onSaveConnection = connectionViewModel::saveConnection,
+            onSyncNow = connectionViewModel::syncNow,
+            onDisconnect = connectionViewModel::disconnect,
+            onScanQr = { showScanner = true },
+            onScannedPairingApplied = connectionViewModel::consumeScannedPairing,
+            modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
+          )
+        }
       }
 
       composable(

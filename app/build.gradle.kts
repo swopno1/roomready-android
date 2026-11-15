@@ -55,6 +55,7 @@ android {
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+    isCoreLibraryDesugaringEnabled = true
   }
   buildFeatures {
     compose = true
@@ -79,6 +80,7 @@ ksp {
 }
 
 dependencies {
+  coreLibraryDesugaring(libs.desugar.jdk.libs)
   implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.activity.compose)
   implementation(libs.androidx.camera.core)
@@ -104,6 +106,7 @@ dependencies {
   implementation(libs.okhttp)
   implementation(libs.androidx.security.crypto)
   implementation(libs.androidx.work.runtime)
+  implementation(libs.mlkit.barcode.scanning)
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)

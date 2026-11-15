@@ -265,6 +265,17 @@
     <string name="connection_unauthorized">The key was rejected. Enter a new property API key.</string>
     <string name="connection_update_required">This property needs a newer RoomReady. Please update the app — nothing was changed.</string>
     <string name="connection_property_format">%1$s · business date %2$s</string>
+    <string name="connection_scan_qr_button">Scan QR code</string>
+    <string name="qr_scanner_title">Scan connection code</string>
+    <string name="qr_scanner_hint">Point the camera at the RoomReady QR code in your PMS admin.</string>
+    <string name="qr_rationale_title">Camera needed to scan code</string>
+    <string name="qr_rationale_body">RoomReady uses the camera only to read the connection QR code. Nothing is saved or sent.</string>
+    <string name="qr_invalid_title">Could not read code</string>
+    <string name="qr_invalid_message">This code isn\'t a RoomReady connection code</string>
+    <string name="qr_update_required_message">This connection code needs a newer RoomReady. Please update the app.</string>
+    <string name="qr_rescan_button">Rescan</string>
+    <string name="qr_type_instead_button">Type instead</string>
+    <string name="qr_camera_unavailable">Camera preview could not start on this device. You can type the details instead.</string>
 
     <!-- Local Notifications -->
     <string name="notif_channel_attention">Needs attention</string>

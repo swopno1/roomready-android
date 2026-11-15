@@ -1,5 +1,6 @@
 package com.vivescriptsolutions.roomready.data.sync
 
+import android.util.Log
 import androidx.room.withTransaction
 import com.vivescriptsolutions.roomready.data.local.AppDatabase
 import com.vivescriptsolutions.roomready.data.local.OutboxEntry
@@ -153,7 +154,7 @@ class SyncEngine(
                   floor = unit.floor ?: UNKNOWN_FLOOR,
                   status = mapped,
                   assignedTo = null,
-                  updatedAt = unit.housekeepingAtMillis,
+                  updatedAt = unit.housekeepingAtMillis ?: clock(),
                   pmsUnitId = unit.id,
                   block = unit.block,
                   departsToday = unit.departsToday,
@@ -174,7 +175,7 @@ class SyncEngine(
                 departsToday = unit.departsToday,
                 pmsUnitStatus = unit.unitStatus,
                 pmsHousekeepingAt = unit.housekeepingAtMillis,
-                updatedAt = unit.housekeepingAtMillis,
+                updatedAt = unit.housekeepingAtMillis ?: existing.updatedAt,
               )
             )
           }
@@ -502,7 +503,7 @@ class SyncEngine(
                 floor = unit.floor ?: UNKNOWN_FLOOR,
                 status = mapped,
                 assignedTo = null,
-                updatedAt = unit.housekeepingAtMillis,
+                updatedAt = unit.housekeepingAtMillis ?: clock(),
                 pmsUnitId = unit.id,
                 block = unit.block,
                 departsToday = unit.departsToday,
@@ -515,6 +516,7 @@ class SyncEngine(
         }
         val latestRun = db.checklistRunDao().getLatestForRoom(existing.id)
         val inProgress = latestRun != null && latestRun.finishedAt == null
+        val pmsAt = unit.housekeepingAtMillis
         val refreshed =
           existing.copy(
             name = unit.unitNumber,
@@ -524,13 +526,13 @@ class SyncEngine(
             block = unit.block,
             departsToday = unit.departsToday,
             pmsUnitStatus = unit.unitStatus,
-            pmsHousekeepingAt = unit.housekeepingAtMillis,
+            pmsHousekeepingAt = pmsAt,
           )
         if (inProgress && mapped != RoomStatus.DIRTY) {
           // Both sides moved: last write wins by timestamp.
-          if (unit.housekeepingAtMillis >= existing.updatedAt) {
+          if (pmsAt != null && pmsAt >= existing.updatedAt) {
             db.roomDao().update(
-              refreshed.copy(status = mapped, updatedAt = unit.housekeepingAtMillis)
+              refreshed.copy(status = mapped, updatedAt = pmsAt)
             )
             mergeLog(existing, mapped, "PMS update applied (newer than local touch)", StatusLogEntity.SOURCE_PMS)
           } else {
@@ -543,7 +545,7 @@ class SyncEngine(
         } else if (!inProgress && mapped != existing.status) {
           // PMS is source of truth for settled rooms (covers departed-dirty).
           db.roomDao().update(
-            refreshed.copy(status = mapped, updatedAt = unit.housekeepingAtMillis)
+            refreshed.copy(status = mapped, updatedAt = pmsAt ?: clock())
           )
           mergeLog(existing, mapped, "PMS update applied", StatusLogEntity.SOURCE_PMS)
         } else {
@@ -601,7 +603,7 @@ class SyncEngine(
                     priority = mappedPriority,
                     status = mappedStatus,
                     createdBy = ticket.createdBy.ifBlank { "PMS" },
-                    createdAt = parseLenientInstant(ticket.createdAt),
+                    createdAt = parseLenientInstant(ticket.createdAt, field = "createdAt", ticketId = ticket.id),
                     pmsTicketId = ticket.id,
                     )
                 )
@@ -616,7 +618,7 @@ class SyncEngine(
                   priority = mappedPriority,
                   status = mappedStatus,
                   resolvedBy = ticket.doneBy,
-                  resolvedAt = ticket.doneAt?.let { parseLenientInstant(it) },
+                  resolvedAt = ticket.doneAt?.let { parseLenientInstant(it, field = "doneAt", ticketId = ticket.id) },
                 )
               )
             }
@@ -638,6 +640,11 @@ class SyncEngine(
     }
   }
 
-  private fun parseLenientInstant(raw: String): Long =
-    runCatching { parseInstantMillis(raw) }.getOrDefault(clock())
+  private fun parseLenientInstant(raw: String, field: String, ticketId: String): Long =
+    try {
+      parseInstantMillis(raw)
+    } catch (_: MalformedPayloadException) {
+      runCatching { Log.d("SyncEngine", "Unparseable $field timestamp for ticket $ticketId") }
+      clock()
+    }
 }

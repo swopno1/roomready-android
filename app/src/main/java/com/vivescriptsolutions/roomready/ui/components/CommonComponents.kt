@@ -295,6 +295,7 @@ fun StaffPickerSection(
 @Composable
 fun CalmSectionCard(
   modifier: Modifier = Modifier,
+  contentPadding: androidx.compose.ui.unit.Dp = 16.dp,
   content: @Composable () -> Unit,
 ) {
   Box(
@@ -310,7 +311,7 @@ fun CalmSectionCard(
           color = MaterialTheme.colorScheme.outline,
           shape = MaterialTheme.shapes.medium,
         )
-        .padding(16.dp),
+        .padding(contentPadding),
   ) {
     content()
   }

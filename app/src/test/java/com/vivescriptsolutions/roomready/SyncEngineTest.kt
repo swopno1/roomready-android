@@ -294,13 +294,45 @@ class SyncEngineTest {
         "{ not json",
         JSONObject().put("contractVersion", 1).toString(), // missing everything
         bootstrapJson(listOf(unitJson(unitA, "01", "SPARKLING"))), // bad enum
-        bootstrapJson(listOf(unitJson(unitA, "01", "DIRTY", at = "yesterday"))), // bad timestamp
+        bootstrapJson(
+          listOf(unitJson(unitA, "01", "DIRTY").apply { remove("housekeepingAt") })
+        ), // missing housekeepingAt structural failure
+        bootstrapJson(
+          listOf(unitJson(unitA, "01", "DIRTY").apply { put("housekeepingAt", 12345) })
+        ), // wrong type structural failure
       ).forEach { body ->
         server.enqueue(MockResponse().setBody(body))
         val outcome = engine.bootstrap()
         assertTrue("expected Failed for: $body", outcome is BootstrapOutcome.Failed)
         assertEquals(beforeCount, db.roomDao().observeAllRooms().first().size)
       }
+    }
+  }
+
+  @Test
+  fun `single unit bad housekeepingAt degrades to null without failing bootstrap`() {
+    runBlocking {
+      server.enqueue(
+        MockResponse().setBody(
+          bootstrapJson(
+            listOf(
+              unitJson(unitA, "01", "DIRTY", at = "2026-11-07T05:16:50.651Z"),
+              unitJson(unitB, "02", "CLEAN", at = "not-a-timestamp"),
+            )
+          )
+        )
+      )
+
+      val outcome = engine.bootstrap()
+      assertTrue(outcome is BootstrapOutcome.Applied)
+
+      val rooms = db.roomDao().observeAllRooms().first()
+      assertEquals(2, rooms.size)
+      val roomA = rooms.first { it.pmsUnitId == unitA }
+      val roomB = rooms.first { it.pmsUnitId == unitB }
+      assertEquals(1_794_028_610_651L, roomA.pmsHousekeepingAt)
+      assertNull(roomB.pmsHousekeepingAt)
+      assertEquals(RoomStatus.CLEANED, roomB.status)
     }
   }
 

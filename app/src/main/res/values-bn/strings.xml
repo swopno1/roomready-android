@@ -265,6 +265,17 @@
     <string name="connection_unauthorized">কি প্রত্যাখ্যাত হয়েছে। নতুন প্রপার্টি API কি দিন।</string>
     <string name="connection_update_required">এই প্রপার্টির জন্য নতুন RoomReady দরকার। অ্যাপ আপডেট করুন — কিছুই বদলানো হয়নি।</string>
     <string name="connection_property_format">%1$s · ব্যবসায়িক তারিখ %2$s</string>
+    <string name="connection_scan_qr_button">QR কোড স্ক্যান করুন</string>
+    <string name="qr_scanner_title">সংযোগ কোড স্ক্যান করুন</string>
+    <string name="qr_scanner_hint">আপনার PMS অ্যাডমিনে থাকা RoomReady QR কোডের দিকে ক্যামেরা ধরুন।</string>
+    <string name="qr_rationale_title">কোড স্ক্যান করতে ক্যামেরা দরকার</string>
+    <string name="qr_rationale_body">সংযোগ QR কোড পড়তে RoomReady শুধু ক্যামেরা ব্যবহার করে। কিছুই সংরক্ষণ বা পাঠানো হয় না।</string>
+    <string name="qr_invalid_title">কোড পড়া যায়নি</string>
+    <string name="qr_invalid_message">এই কোডটি RoomReady সংযোগ কোড নয়</string>
+    <string name="qr_update_required_message">এই সংযোগ কোডের জন্য নতুন RoomReady দরকার। অ্যাপ আপডেট করুন।</string>
+    <string name="qr_rescan_button">আবার স্ক্যান করুন</string>
+    <string name="qr_type_instead_button">নিজে লিখুন</string>
+    <string name="qr_camera_unavailable">এই ডিভাইসে ক্যামেরা চালু করা যায়নি। আপনি নিজেই তথ্য লিখতে পারেন।</string>
 
     <!-- Local Notifications -->
     <string name="notif_channel_attention">মনোযোগ দরকার</string>

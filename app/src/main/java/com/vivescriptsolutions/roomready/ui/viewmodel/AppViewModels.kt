@@ -27,6 +27,7 @@ import com.vivescriptsolutions.roomready.data.repository.stuckCleaningRooms
 import com.vivescriptsolutions.roomready.data.repository.urgentOpenByRoom
 import com.vivescriptsolutions.roomready.data.repository.urgentOpenCount
 import com.vivescriptsolutions.roomready.data.sync.BootstrapOutcome
+import com.vivescriptsolutions.roomready.data.sync.PairingQrPayload
 import com.vivescriptsolutions.roomready.data.sync.SyncOutcome
 import com.vivescriptsolutions.roomready.data.sync.SyncRepository
 import kotlinx.coroutines.delay
@@ -103,6 +104,15 @@ sealed interface ConnectionMessage {
   data object UpdateRequired : ConnectionMessage
 }
 
+data class ScannedPairing(
+  val baseUrl: String,
+  val apiKey: String,
+  val eventId: Long,
+) {
+  override fun toString(): String =
+    "ScannedPairing(baseUrl=$baseUrl, apiKey=REDACTED, eventId=$eventId)"
+}
+
 data class ConnectionUiState(
   val isConfigured: Boolean = false,
   val baseUrl: String? = null,
@@ -113,6 +123,7 @@ data class ConnectionUiState(
   val pendingCount: Int = 0,
   val syncing: Boolean = false,
   val message: ConnectionMessage? = null,
+  val scannedPairing: ScannedPairing? = null,
 )
 
 private data class DashboardNumbers(
@@ -690,15 +701,19 @@ class ConnectionViewModel(
 ) : ViewModel() {
   private val syncing = MutableStateFlow(false)
   private val message = MutableStateFlow<ConnectionMessage?>(null)
+  private val scannedPairing = MutableStateFlow<ScannedPairing?>(null)
+  private var nextScanEventId = 1L
 
   val uiState: StateFlow<ConnectionUiState> =
     combine(
       sync.observeConnection(),
       sync.observeSyncState(),
       sync.observeOutboxCount(),
-      syncing,
-      message,
-    ) { connection, syncState, pending, syncingNow, msg ->
+      combine(syncing, message, scannedPairing) { syncingNow, msg, scanned ->
+        Triple(syncingNow, msg, scanned)
+      },
+    ) { connection, syncState, pending, transient ->
+      val (syncingNow, msg, scanned) = transient
       ConnectionUiState(
         isConfigured = connection.isConfigured,
         baseUrl = connection.baseUrl,
@@ -709,6 +724,7 @@ class ConnectionViewModel(
         pendingCount = pending,
         syncing = syncingNow,
         message = msg,
+        scannedPairing = scanned,
       )
     }.stateIn(
       scope = viewModelScope,
@@ -718,6 +734,20 @@ class ConnectionViewModel(
 
   init {
     sync.clearAuthRevoked()
+  }
+
+  fun connectWithScannedQr(payload: PairingQrPayload) {
+    scannedPairing.value =
+      ScannedPairing(
+        baseUrl = payload.baseUrl,
+        apiKey = payload.apiKey,
+        eventId = nextScanEventId++,
+      )
+    saveConnection(payload.baseUrl, payload.apiKey)
+  }
+
+  fun consumeScannedPairing() {
+    scannedPairing.value = null
   }
 
   fun saveConnection(baseUrl: String, rawKey: String) {
