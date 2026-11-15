@@ -16,3 +16,9 @@
 local.properties
 .env
 debug.keystore
+# Release keystores are human-owned and must never be committed.
+/my-upload-key.jks
+*.jks
+*.keystore
+*.p12
+*.keystore.properties
