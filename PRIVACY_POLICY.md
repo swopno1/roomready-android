@@ -35,14 +35,16 @@ We practice strict data minimization:
   email addresses, phone numbers, postal addresses, or government
   identification. Staff names you enter stay on your device (see §3).
 - **No Account System:** The Application has no sign-in or registration.
-- **No Sensitive Permissions:** We request no Camera, Microphone,
-  Location, Contacts, SMS, Phone State, Storage, Calendar, or Nearby
-  Devices permission. The single declared permission is the normal-level
-  `ACCESS_NETWORK_STATE`, used only to show the dashboard's live
-  online/offline indicator — it reveals nothing about you and the app
-  still makes zero network requests. The merged release manifest
-  otherwise contains only the app's own signature-level internal
-  permission (verified).
+- **Minimal Permissions:** We request no Microphone, Location,
+  Contacts, SMS, Phone State, Storage, Calendar, or Nearby Devices
+  permission. Only two permissions are declared: the normal-level
+  `ACCESS_NETWORK_STATE` (dashboard connectivity indicator only) and
+  `CAMERA`, requested at first photo use with a plain-language
+  explanation, solely for optional in-app evidence photos. Photos stay
+  in app-private storage and are shared only if you tap share (system
+  share sheet via FileProvider). The app still makes zero network
+  requests itself. The merged release manifest otherwise contains only
+  the app's own signature-level internal permission (verified).
 - **No Network Activity:** The app declares no `INTERNET` permission and
   contains no networking code, so it cannot transmit anything.
 - **No Advertising, Analytics, or Crash SDKs:** No AdMob, Firebase,
@@ -62,6 +64,14 @@ by the Application.
 
 Demo content shipped with the app (sample rooms, staff roster names, and
 example tickets) is fictional seed data, also stored only on-device.
+
+Evidence photos you take (room after-photos, ticket photos) are stored
+in the app's private files directory, referenced from the local
+database, and never transmitted by the app. They leave the device only
+if you explicitly tap a photo's share button, which opens the system
+share sheet. Skipping a run photo records only your one-line reason
+(no photo is taken). Deleting data (§5) removes photo references;
+photo files live and die with the app's private storage.
 
 ---
 

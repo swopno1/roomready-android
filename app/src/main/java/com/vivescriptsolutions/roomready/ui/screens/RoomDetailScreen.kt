@@ -66,6 +66,7 @@ import com.vivescriptsolutions.roomready.domain.RoomStatus
 import com.vivescriptsolutions.roomready.domain.TicketPriority
 import com.vivescriptsolutions.roomready.domain.TicketStatus
 import com.vivescriptsolutions.roomready.ui.components.CalmSectionCard
+import com.vivescriptsolutions.roomready.ui.components.EvidencePhotoThumbnail
 import com.vivescriptsolutions.roomready.ui.components.RoomStatusChip
 import com.vivescriptsolutions.roomready.ui.components.SectionHeading
 import com.vivescriptsolutions.roomready.ui.components.formatTimeShort
@@ -89,6 +90,7 @@ fun RoomDetailScreen(
   onOpenTicket: (Long) -> Unit = {},
   onOpenRun: () -> Unit = {},
   onOpenInspection: () -> Unit = {},
+  onSharePhoto: (String) -> Unit = {},
   onStartCleaning: (ChecklistRunKind) -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
@@ -335,6 +337,12 @@ fun RoomDetailScreen(
                 color = MaterialTheme.colorScheme.primary,
               )
             }
+
+            EvidencePhotoThumbnail(
+              photoName = activeRun?.photoPath,
+              onShare = onSharePhoto,
+              testTagPrefix = "run",
+            )
 
             if (activeRun != null) {
               val runSubtitle =

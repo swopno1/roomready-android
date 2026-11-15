@@ -466,6 +466,21 @@ class RoomDetailViewModel(
     }
   }
 
+  fun setRunPhoto(photoName: String, onDone: () -> Unit = {}) {
+    viewModelScope.launch {
+      repository.setRunPhoto(roomId, photoName)
+      onDone()
+    }
+  }
+
+  fun skipRunPhoto(reason: String, onDone: () -> Unit = {}) {
+    viewModelScope.launch {
+      repository.skipRunPhoto(roomId, reason)
+        .onSuccess { onDone() }
+        .onFailure { error -> actionError.value = error.message }
+    }
+  }
+
   fun clearActionError() {
     actionError.value = null
   }
@@ -570,6 +585,10 @@ class TicketDetailViewModel(
 
   fun reopen() {
     viewModelScope.launch { repository.reopenTicket(ticketId) }
+  }
+
+  fun setTicketPhoto(photoName: String) {
+    viewModelScope.launch { repository.setTicketPhoto(ticketId, photoName) }
   }
 
   class Factory(

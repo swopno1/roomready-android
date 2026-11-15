@@ -96,6 +96,27 @@
     <string name="dash_to_inspect_title">পরিদর্শনের অপেক্ষায়</string>
     <string name="dash_to_inspect_empty">পরিদর্শনের অপেক্ষায় কিছু নেই।</string>
     <string name="dash_to_inspect_view_all">সব দেখুন</string>
+
+    <!-- Photo Evidence -->
+    <string name="photo_title_run_format">পরের ছবি — রুম %1$s</string>
+    <string name="photo_title_ticket">টিকিটের ছবি</string>
+    <string name="photo_rationale_title">রুমের ছবির জন্য ক্যামেরা</string>
+    <string name="photo_rationale_body">RoomReady ক্যামেরা শুধু আপনার চাওয়া প্রমাণ-ছবি তুলতে ব্যবহার করে। ছবি এই ডিভাইসেই থাকে এবং শেয়ার চাপলেই শুধু শেয়ার হয়।</string>
+    <string name="photo_allow_button">ক্যামেরার অনুমতি দিন</string>
+    <string name="photo_open_settings">সেটিংস খুলুন</string>
+    <string name="photo_denied_title">ক্যামেরার অনুমতি নেই</string>
+    <string name="photo_denied_body">ছবি ছাড়াই সমাপ্ত করতে পারবেন — এক লাইনে কারণ লিখুন।</string>
+    <string name="photo_capture_button">ছবি তুলুন</string>
+    <string name="cd_take_photo">ছবি তুলুন</string>
+    <string name="photo_retake">আবার তুলুন</string>
+    <string name="photo_use">ছবিটি ব্যবহার করুন</string>
+    <string name="photo_skip">ছবি বাদ দিন</string>
+    <string name="photo_skip_reason_hint">এক লাইনের কারণ (যেমন: এই ফোনে ক্যামেরা নেই)</string>
+    <string name="photo_skip_confirm">বাদ দিয়ে এগিয়ে যান</string>
+    <string name="cd_share_photo">ছবি শেয়ার করুন</string>
+    <string name="photo_after_label">পরের ছবি</string>
+    <string name="ticket_add_photo">ছবি যোগ করুন</string>
+    <string name="ticket_change_photo">ছবি বদলান</string>
     <string name="action_return_to_dirty">নোংরায় ফেরত পাঠান</string>
     <string name="action_mark_dirty_turnover">নোংরা চিহ্নিত করুন (নতুন টার্নওভার)</string>
     <string name="action_mark_out_of_service">সার্ভিসের বাইরে রাখুন</string>

@@ -55,6 +55,7 @@ import com.vivescriptsolutions.roomready.data.local.TicketEntity
 import com.vivescriptsolutions.roomready.domain.TicketPriority
 import com.vivescriptsolutions.roomready.domain.TicketStatus
 import com.vivescriptsolutions.roomready.ui.components.CalmSectionCard
+import com.vivescriptsolutions.roomready.ui.components.EvidencePhotoThumbnail
 import com.vivescriptsolutions.roomready.ui.components.formatTimeShort
 import com.vivescriptsolutions.roomready.ui.theme.badgeColors
 
@@ -242,6 +243,8 @@ fun TicketDetailScreen(
   onOpenRoom: (Long) -> Unit,
   onMarkDone: () -> Unit,
   onReopen: () -> Unit,
+  onAddPhoto: () -> Unit = {},
+  onSharePhoto: (String) -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   Scaffold(
@@ -323,6 +326,23 @@ fun TicketDetailScreen(
                 text = ticket.description,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+              )
+            }
+            EvidencePhotoThumbnail(
+              photoName = ticket.photoPath,
+              onShare = onSharePhoto,
+              testTagPrefix = "ticket",
+            )
+            OutlinedButton(
+              onClick = onAddPhoto,
+              modifier = Modifier.heightIn(min = 48.dp).testTag("ticket_photo_button"),
+            ) {
+              Text(
+                text =
+                  stringResource(
+                    if (ticket.photoPath.isNullOrBlank()) R.string.ticket_add_photo
+                    else R.string.ticket_change_photo
+                  )
               )
             }
             Text(

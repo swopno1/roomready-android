@@ -96,6 +96,27 @@
     <string name="dash_to_inspect_title">To inspect</string>
     <string name="dash_to_inspect_empty">Nothing waiting for inspection.</string>
     <string name="dash_to_inspect_view_all">View all</string>
+
+    <!-- Photo Evidence -->
+    <string name="photo_title_run_format">After photo — Room %1$s</string>
+    <string name="photo_title_ticket">Ticket photo</string>
+    <string name="photo_rationale_title">Camera for room photos</string>
+    <string name="photo_rationale_body">RoomReady uses the camera only to take evidence photos you ask for. Photos stay on this device and are shared only if you tap share.</string>
+    <string name="photo_allow_button">Allow camera</string>
+    <string name="photo_open_settings">Open Settings</string>
+    <string name="photo_denied_title">Camera not allowed</string>
+    <string name="photo_denied_body">You can still finish without a photo — tell us why in one line.</string>
+    <string name="photo_capture_button">Take photo</string>
+    <string name="cd_take_photo">Take photo</string>
+    <string name="photo_retake">Retake</string>
+    <string name="photo_use">Use photo</string>
+    <string name="photo_skip">Skip photo</string>
+    <string name="photo_skip_reason_hint">One-line reason (e.g., no camera on this phone)</string>
+    <string name="photo_skip_confirm">Skip and continue</string>
+    <string name="cd_share_photo">Share photo</string>
+    <string name="photo_after_label">After photo</string>
+    <string name="ticket_add_photo">Add photo</string>
+    <string name="ticket_change_photo">Change photo</string>
     <string name="action_return_to_dirty">Return to Dirty</string>
     <string name="action_mark_dirty_turnover">Mark Dirty (new turnover)</string>
     <string name="action_mark_out_of_service">Mark out of service</string>

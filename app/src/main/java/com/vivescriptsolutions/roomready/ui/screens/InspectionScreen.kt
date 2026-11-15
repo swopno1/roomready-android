@@ -51,6 +51,7 @@ import com.vivescriptsolutions.roomready.domain.ChecklistStepState
 import com.vivescriptsolutions.roomready.domain.ChecklistTemplates
 import com.vivescriptsolutions.roomready.domain.ReturnReason
 import com.vivescriptsolutions.roomready.ui.components.CalmSectionCard
+import com.vivescriptsolutions.roomready.ui.components.EvidencePhotoThumbnail
 import com.vivescriptsolutions.roomready.ui.components.RoomStatusChip
 import com.vivescriptsolutions.roomready.ui.components.localizedChecklistStepTitle
 import com.vivescriptsolutions.roomready.ui.viewmodel.RoomDetailUiState
@@ -62,6 +63,7 @@ fun InspectionScreen(
   onBack: () -> Unit,
   onPass: () -> Unit,
   onReturn: (ReturnReason?, String) -> Unit,
+  onSharePhoto: (String) -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   BackHandler(onBack = onBack)
@@ -145,6 +147,11 @@ fun InspectionScreen(
               text = stringResource(R.string.checklist_by_format, run.performedBy),
               style = MaterialTheme.typography.bodyMedium,
               color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            EvidencePhotoThumbnail(
+              photoName = run.photoPath,
+              onShare = onSharePhoto,
+              testTagPrefix = "run",
             )
           }
         }

@@ -6,6 +6,11 @@
          The app makes no network requests; nothing is transmitted. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- Dangerous: requested at first photo use only, for optional in-app
+         evidence photos stored on-device. Camera hardware itself is optional. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
     <application
         android:name=".RoomReadyApplication"
         android:allowBackup="true"
@@ -28,6 +33,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- FileProvider serves app-private evidence photos to the system
+             share sheet ONLY on explicit user tap. Photos never leave the
+             device any other way in this build. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

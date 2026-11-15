@@ -4,6 +4,21 @@ All notable changes to the RoomReady Android application.
 
 ## [Unreleased]
 
+### P6 — Photo evidence (CameraX)
+
+- Finishing a checklist requires an after photo (full-resolution
+  CameraX capture with preview + retake) or a visible Skip escape with
+  a mandatory one-line reason; tickets accept an optional photo.
+- Photos in app-private `files/photos/`, referenced from runs/tickets,
+  shown as thumbnails (room detail, inspection, ticket detail), shared
+  only via FileProvider on explicit tap. Nothing leaves the device
+  otherwise.
+- CAMERA requested on first use with a plain-language rationale;
+  denied/absent camera degrades to skip-with-reason (runs) or plain
+  back navigation (tickets). Camera hardware `required="false"`.
+- Schema v7 + migration 6→7; legal/declaration/data-safety docs
+  updated for camera + photos.
+
 ### P5 — Supervisor inspection loop
 
 - Inspection screen for CLEANED rooms: read-only completed checklist

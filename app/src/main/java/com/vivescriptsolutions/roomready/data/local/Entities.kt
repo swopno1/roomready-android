@@ -70,6 +70,8 @@ data class ChecklistRunEntity(
   val runKind: ChecklistRunKind = ChecklistRunKind.FULL,
   val returnReasonKey: String? = null,
   val returnNote: String = "",
+  val photoPath: String? = null,
+  val photoSkippedReason: String? = null,
 )
 
 @Entity(
@@ -97,6 +99,7 @@ data class TicketEntity(
   val createdAt: Long,
   val resolvedBy: String? = null,
   val resolvedAt: Long? = null,
+  val photoPath: String? = null,
   val isDemo: Boolean = true,
 )
 

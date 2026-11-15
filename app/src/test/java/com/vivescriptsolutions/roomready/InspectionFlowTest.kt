@@ -74,6 +74,7 @@ class InspectionFlowTest {
         staffName = "Amina Rahman", role = StaffRole.HOUSEKEEPER,
       )
     }
+    repository.skipRunPhoto(dirtyRoom.id, "test fixture without camera").getOrThrow()
     repository.finishChecklistRun(
       roomId = dirtyRoom.id, staffName = "Amina Rahman", role = StaffRole.HOUSEKEEPER,
     ).getOrThrow()

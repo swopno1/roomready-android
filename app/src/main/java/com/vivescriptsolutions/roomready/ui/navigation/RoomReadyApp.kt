@@ -37,6 +37,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -60,6 +61,10 @@ import com.vivescriptsolutions.roomready.ui.screens.OnboardingScreen
 import com.vivescriptsolutions.roomready.ui.screens.RoomDetailScreen
 import com.vivescriptsolutions.roomready.ui.screens.RoomsBoardScreen
 import com.vivescriptsolutions.roomready.data.connectivity.ConnectivityMonitor
+import com.vivescriptsolutions.roomready.data.photos.PhotoShare
+import com.vivescriptsolutions.roomready.data.photos.PhotoStore
+import com.vivescriptsolutions.roomready.ui.screens.PhotoCaptureMode
+import com.vivescriptsolutions.roomready.ui.screens.PhotoCaptureScreen
 import com.vivescriptsolutions.roomready.ui.screens.TicketDetailScreen
 import com.vivescriptsolutions.roomready.ui.screens.TicketsScreen
 import com.vivescriptsolutions.roomready.ui.viewmodel.MainAppViewModel
@@ -76,10 +81,15 @@ object Routes {
   const val CHECKLIST_RUN = "checklist_run/{roomId}"
   const val TICKET_DETAIL = "ticket_detail/{ticketId}"
   const val INSPECTION = "inspection/{roomId}"
+  const val PHOTO_CAPTURE = "photo_capture/{mode}/{refId}"
 
   fun roomDetail(roomId: Long): String = "room_detail/$roomId"
 
   fun inspection(roomId: Long): String = "inspection/$roomId"
+
+  fun photoCaptureRun(roomId: Long): String = "photo_capture/run/$roomId"
+
+  fun photoCaptureTicket(ticketId: Long): String = "photo_capture/ticket/$ticketId"
 
   fun checklistRun(roomId: Long): String = "checklist_run/$roomId"
 
@@ -146,6 +156,9 @@ fun RoomReadyApp(
 
   val snackbarHostState = remember { SnackbarHostState() }
   val coroutineScope = rememberCoroutineScope()
+  val context = LocalContext.current
+  val photoStore = remember(context) { PhotoStore(context) }
+  fun sharePhoto(name: String) = PhotoShare.sharePhoto(context, photoStore, name)
   // Resolved via stringResource (not context.getString) so configuration
   // changes such as locale switches recompose with fresh values.
   val resetDoneMessage = stringResource(R.string.me_reset_done_snackbar)
@@ -275,6 +288,8 @@ fun RoomReadyApp(
           onOpenRoom = { roomId -> navController.navigate(Routes.roomDetail(roomId)) },
           onMarkDone = ticketViewModel::markDone,
           onReopen = ticketViewModel::reopen,
+          onAddPhoto = { navController.navigate(Routes.photoCaptureTicket(ticketId)) },
+          onSharePhoto = ::sharePhoto,
         )
       }
 
@@ -339,6 +354,7 @@ fun RoomReadyApp(
           onToggleTicketStatus = detailViewModel::toggleTicketStatus,
           onOpenTicket = { ticketId -> navController.navigate(Routes.ticketDetail(ticketId)) },
           onOpenInspection = { navController.navigate(Routes.inspection(roomId)) },
+          onSharePhoto = ::sharePhoto,
           onOpenRun = { navController.navigate(Routes.checklistRun(roomId)) },
           onStartCleaning = { kind ->
             detailViewModel.startCleaning(kind) {
@@ -372,15 +388,64 @@ fun RoomReadyApp(
           onToggleStep = detailViewModel::toggleChecklistStep,
           onSaveStepNote = detailViewModel::updateChecklistStepNote,
           onOpenTicket = { ticketId -> navController.navigate(Routes.ticketDetail(ticketId)) },
-          onFinish = {
+          onFinish = { navController.navigate(Routes.photoCaptureRun(roomId)) },
+        )
+      }
+
+      composable(
+        route = Routes.PHOTO_CAPTURE,
+        arguments =
+          listOf(
+            navArgument("mode") { type = NavType.StringType },
+            navArgument("refId") { type = NavType.LongType },
+          ),
+      ) { backStackEntry ->
+        val mode = backStackEntry.arguments?.getString("mode")
+        val refId = backStackEntry.arguments?.getLong("refId") ?: return@composable
+        if (mode == "run") {
+          val detailViewModel: RoomDetailViewModel =
+            viewModel(
+              key = "room_detail_$refId",
+              factory = RoomDetailViewModel.Factory(refId, repository),
+            )
+          val detailState by detailViewModel.uiState.collectAsStateWithLifecycle()
+          fun finishAfterPhoto() {
             detailViewModel.finishCleaning {
+              navController.popBackStack()
               navController.popBackStack()
               coroutineScope.launch {
                 snackbarHostState.showSnackbar(runFinishedMessage)
               }
             }
-          },
-        )
+          }
+          PhotoCaptureScreen(
+            mode = PhotoCaptureMode.Run(detailState.room?.name.orEmpty()),
+            onPhotoTaken = { file ->
+              detailViewModel.setRunPhoto(file.name) { finishAfterPhoto() }
+            },
+            onSkip = { reason ->
+              detailViewModel.skipRunPhoto(reason) { finishAfterPhoto() }
+            },
+            onBack = { navController.popBackStack() },
+          )
+        } else if (mode == "ticket") {
+          val ticketViewModel: TicketDetailViewModel =
+            viewModel(
+              key = "ticket_detail_$refId",
+              factory = TicketDetailViewModel.Factory(refId, repository),
+            )
+          PhotoCaptureScreen(
+            mode = PhotoCaptureMode.Ticket,
+            onPhotoTaken = { file ->
+              ticketViewModel.setTicketPhoto(file.name)
+              navController.popBackStack()
+            },
+            onSkip = {},
+            onBack = { navController.popBackStack() },
+          )
+        } else {
+          navController.popBackStack()
+        }
       }
 
       composable(
@@ -408,6 +473,7 @@ fun RoomReadyApp(
           onReturn = { reason, note ->
             detailViewModel.inspectReturn(reason, note) { navController.popBackStack() }
           },
+          onSharePhoto = ::sharePhoto,
         )
       }
     }

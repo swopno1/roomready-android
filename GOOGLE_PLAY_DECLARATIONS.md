@@ -48,16 +48,22 @@ human decision or Console-only action.
 
 ## 5. Permissions & Sensitive Permissions
 
-- **Status:** One normal permission; nothing sensitive to declare.
-- **Evidence:** App manifest declares only `ACCESS_NETWORK_STATE`
-  (normal protection level, install-time, no runtime prompt, no Play
-  declaration required), used solely for the dashboard's live
-  connectivity indicator. Merged release manifest confirms no
-  `INTERNET`, location, camera, microphone, storage, contacts,
-  calendar, or nearby-devices entries — only the app's own
-  signature-level `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`
-  (androidx-core internal) alongside it.
-- **Recommended answer:** No sensitive-permission declarations required.
+- **Status:** One normal + one runtime permission; no Play permission
+  declaration required for either.
+- **Evidence:** App manifest declares `ACCESS_NETWORK_STATE` (normal,
+  connectivity indicator only) and `CAMERA` (dangerous, requested at
+  first photo use with an in-app plain-language rationale; declining
+  degrades to skip-with-reason, and camera hardware is
+  `required="false"` so camera-less devices can install). Photos stay
+  in app-private storage; FileProvider sharing fires only on explicit
+  user tap. Merged manifest confirms no `INTERNET`, location,
+  microphone, storage, contacts, calendar, or nearby-devices entries —
+  only the app's own signature-level
+  `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` (androidx-core internal)
+  alongside.
+- **Recommended answer:** No sensitive-permission declarations required
+  (CAMERA needs no special Play declaration; runtime prompt handled
+  in-app).
 - **Human confirmation:** No.
 
 ## 6. Background / Foreground Services

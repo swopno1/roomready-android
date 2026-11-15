@@ -27,6 +27,7 @@ mapping.
 | Data | Store | Notes |
 |---|---|---|
 | Staff display name + role (+ custom roster names) | DataStore preferences | User-entered shift labels |
+| Evidence photos (room after-photos, ticket photos) | App-private files (`files/photos/`) | Captured in-app via CameraX; referenced from Room; user-initiated FileProvider share only |
 | Room statuses, assignments, checklist runs + step notes | Room database | Operational data |
 | Ticket titles + descriptions, status log (staff names + timestamps) | Room database | Operational data |
 
@@ -46,7 +47,7 @@ rules, user-controlled), which is platform behavior, not app collection.
 
 | Question | Answer |
 |---|---|
-| Does your app collect or share any of the required user data types? | **No** |
+| Does your app collect or share any of the required user data types? | **No** (incl. Photos: captured and stored on-device only; a user-tapped system share sheet is user-initiated sharing, not app collection) |
 | Is all collected data encrypted in transit? | N/A — no transmission (answer Yes/exempt path per Console; nothing leaves the device) |
 | Do you provide a way for users to request data deletion? | In-app Reset Demo Data + uninstall removes all on-device data; no server data exists |
 | Account types /Deletion URL | No accounts — no URL required |

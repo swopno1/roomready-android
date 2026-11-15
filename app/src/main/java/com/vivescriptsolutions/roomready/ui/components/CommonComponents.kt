@@ -1,6 +1,7 @@
 package com.vivescriptsolutions.roomready.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -23,11 +24,13 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.ReportProblem
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -39,7 +42,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -48,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vivescriptsolutions.roomready.R
 import com.vivescriptsolutions.roomready.data.local.DemoSeeder
+import com.vivescriptsolutions.roomready.data.photos.PhotoStore
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
 import com.vivescriptsolutions.roomready.domain.ChecklistTemplates
 import com.vivescriptsolutions.roomready.domain.RoomStatus
@@ -174,6 +182,49 @@ fun localizedRoomTypeName(rawName: String): String =
 fun localizedChecklistStepTitle(step: ChecklistStepState): String {
   val labelRes = ChecklistTemplates.labelResForKey(step.key.ifBlank { step.title })
   return if (labelRes != null) stringResource(labelRes) else step.title
+}
+
+/**
+ * Evidence photo thumbnail with an explicit share action. Renders nothing
+ * when there is no photo or the file is unreadable. Sharing goes through
+ * FileProvider and only fires on tap.
+ */
+@Composable
+fun EvidencePhotoThumbnail(
+  photoName: String?,
+  onShare: (String) -> Unit,
+  modifier: Modifier = Modifier,
+  testTagPrefix: String = "photo",
+) {
+  if (photoName.isNullOrBlank()) return
+  val context = LocalContext.current
+  val store = remember(context) { PhotoStore(context) }
+  val bitmap = remember(photoName) { store.loadThumbnail(photoName) }
+  if (bitmap == null) return
+  Row(
+    modifier = modifier.testTag("${testTagPrefix}_thumbnail"),
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+  ) {
+    Image(
+      bitmap = bitmap.asImageBitmap(),
+      contentDescription = null,
+      contentScale = ContentScale.Crop,
+      modifier =
+        Modifier.size(72.dp)
+          .clip(RoundedCornerShape(8.dp))
+          .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp)),
+    )
+    IconButton(
+      onClick = { onShare(photoName) },
+      modifier = Modifier.size(48.dp).testTag("${testTagPrefix}_share_button"),
+    ) {
+      Icon(
+        imageVector = Icons.Filled.Share,
+        contentDescription = stringResource(R.string.cd_share_photo),
+      )
+    }
+  }
 }
 
 fun formatTimeShort(millis: Long): String {

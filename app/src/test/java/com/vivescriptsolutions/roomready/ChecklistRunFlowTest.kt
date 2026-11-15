@@ -200,6 +200,7 @@ class ChecklistRunFlowTest {
         )
       }
 
+      repository.setRunPhoto(dirtyRoom.id, "run_after.jpg")
       val result =
         repository.finishChecklistRun(
           roomId = dirtyRoom.id,
@@ -290,6 +291,7 @@ class ChecklistRunFlowTest {
               role = StaffRole.HOUSEKEEPER,
             )
           }
+        reopenedRepo.skipRunPhoto(dirtyRoom.id, " resumed on lab device without camera ")
         val finishResult =
           reopenedRepo.finishChecklistRun(
             roomId = dirtyRoom.id,

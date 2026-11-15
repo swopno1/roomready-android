@@ -295,6 +295,9 @@ class HousekeepingRepository(
     require(ChecklistTemplates.canFinish(latest.steps)) {
       "Checklist incomplete: $doneCount of ${latest.steps.size} steps done"
     }
+    require(!latest.photoPath.isNullOrBlank() || !latest.photoSkippedReason.isNullOrBlank()) {
+      "An after photo or a skip reason is required to finish"
+    }
     db.checklistRunDao().update(latest.copy(finishedAt = nowMillis))
     db.roomDao()
       .update(room.copy(status = RoomStatus.CLEANED, assignedTo = staffName, updatedAt = nowMillis))
@@ -371,6 +374,33 @@ class HousekeepingRepository(
       room, RoomStatus.CLEANING, staffName, role, nowMillis,
       reason = formatReturnReason(reason.defaultLabel, note),
     )
+  }
+
+  /**
+   * Records the after-photo filename on the latest run. The file itself is
+   * written by the capture screen into [PhotoStore]; this only stores the ref.
+   */
+  suspend fun setRunPhoto(roomId: Long, photoName: String) {
+    val latest = db.checklistRunDao().getLatestForRoom(roomId) ?: return
+    db.checklistRunDao().update(latest.copy(photoPath = photoName, photoSkippedReason = null))
+  }
+
+  /**
+   * Records a skip reason instead of a photo. Blank reasons are rejected —
+   * the escape hatch always carries a one-line explanation.
+   */
+  suspend fun skipRunPhoto(roomId: Long, reason: String): Result<Unit> {
+    return runCatching {
+      require(reason.isNotBlank()) { "A one-line reason is required to skip the photo" }
+      val latest = db.checklistRunDao().getLatestForRoom(roomId)
+        ?: error("No checklist run for room $roomId")
+      db.checklistRunDao().update(latest.copy(photoPath = null, photoSkippedReason = reason.trim()))
+    }
+  }
+
+  suspend fun setTicketPhoto(ticketId: Long, photoName: String) {
+    val ticket = db.ticketDao().getTicketById(ticketId) ?: return
+    db.ticketDao().update(ticket.copy(photoPath = photoName))
   }
 
   suspend fun toggleChecklistStep(
