@@ -132,6 +132,27 @@ class PairingQrParserTest {
   }
 
   @Test
+  fun `base64url secret with hyphen and underscore is accepted`() {
+    // PMS secrets are randomBytes(32).base64url — both - and _ occur.
+    // (Regression: the secret class once omitted the hyphen, rejecting
+    // most generated keys at scan time.)
+    val key = "rk.k1abcdef.dBjf-vX2pR7QmY4sT9wE1aZ6cH8gF0dS5hJ3kL2mN4o-P6q"
+    val result =
+      PairingQrParser.parse(
+        "roomready://connect?v=1&url=https%3A%2F%2Fpms.example.com&key=$key"
+      )
+    assertEquals(
+      PairingQrResult.Valid(
+        PairingQrPayload(
+          baseUrl = "https://pms.example.com",
+          apiKey = key,
+        )
+      ),
+      result,
+    )
+  }
+
+  @Test
   fun `url-encoded values with port path and plus-preserving secret decode correctly`() {
     val result =
       PairingQrParser.parse(

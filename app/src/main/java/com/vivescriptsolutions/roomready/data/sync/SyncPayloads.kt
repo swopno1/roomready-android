@@ -138,19 +138,33 @@ fun parseUnit(json: JSONObject): PmsUnit {
     id = unitId,
     roomTypeId = json.requiredString("roomTypeId"),
     unitNumber = json.requiredString("unitNumber"),
-    floor =
-      if (json.isNull("floor")) {
-        null
-      } else {
-        (json.opt("floor") as? Number)?.toInt()
-          ?: throw MalformedPayloadException("Bad floor value")
-      },
+    floor = parseUnitFloor(json, unitId),
     block = json.optString("block", null)?.takeIf { it.isNotBlank() },
     unitStatus = unitStatus,
     housekeeping = housekeeping,
     housekeepingAtMillis = housekeepingAtMillis,
     departsToday = json.optBoolean("departsToday", false),
   )
+}
+
+/**
+ * The PMS floor is free-form text, so accept a JSON number or a numeric
+ * string; named floors ("G") and blanks degrade to null (unknown, same
+ * as a missing floor) with a debug line instead of failing the whole
+ * payload. Any other JSON type is structural and rejects.
+ */
+private fun parseUnitFloor(json: JSONObject, unitId: String): Int? {
+  val raw = json.opt("floor")
+  if (raw == null || raw === JSONObject.NULL) return null
+  if (raw is Number) return raw.toInt()
+  if (raw is String) {
+    val parsed = raw.trim().toIntOrNull()
+    if (parsed == null) {
+      runCatching { Log.d(TAG, "Non-numeric floor value for unit $unitId") }
+    }
+    return parsed
+  }
+  throw MalformedPayloadException("Bad floor value")
 }
 
 /**

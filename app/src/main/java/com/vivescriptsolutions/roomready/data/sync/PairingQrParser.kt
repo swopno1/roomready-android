@@ -32,6 +32,8 @@ sealed interface PairingQrResult {
  */
 object PairingQrParser {
   private const val PREFIX = "roomready://connect?"
+  // Secret alphabet is base64url (PMS: randomBytes(32)) plus tolerated
+  // legacy chars; the trailing "-" MUST stay (base64url includes it).
   private val KEY_REGEX = Regex("""^rk\.[A-Za-z0-9_-]{1,64}\.[A-Za-z0-9_~+/-]{6,256}$""")
 
   fun parse(raw: String): PairingQrResult {

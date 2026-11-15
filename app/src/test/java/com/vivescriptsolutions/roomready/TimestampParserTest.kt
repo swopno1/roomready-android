@@ -87,6 +87,45 @@ class TimestampParserTest {
   }
 
   @Test
+  fun `parseUnit accepts numeric floors as number or string`() {
+    val base =
+      JSONObject()
+        .put("id", "u1")
+        .put("roomTypeId", "t1")
+        .put("unitNumber", "101")
+        .put("unitStatus", "AVAILABLE")
+        .put("housekeeping", "CLEAN")
+        .put("departsToday", false)
+
+    assertEquals(2, parseUnit(JSONObject(base.toString()).put("floor", 2)).floor)
+    assertEquals(2, parseUnit(JSONObject(base.toString()).put("floor", "2")).floor)
+    assertEquals(2, parseUnit(JSONObject(base.toString()).put("floor", " 2 ")).floor)
+    assertNull(parseUnit(JSONObject(base.toString())).floor)
+    assertNull(parseUnit(JSONObject(base.toString()).put("floor", JSONObject.NULL)).floor)
+  }
+
+  @Test
+  fun `parseUnit degrades named floors to unknown instead of failing the payload`() {
+    val base =
+      JSONObject()
+        .put("id", "u1")
+        .put("roomTypeId", "t1")
+        .put("unitNumber", "101")
+        .put("unitStatus", "AVAILABLE")
+        .put("housekeeping", "CLEAN")
+        .put("departsToday", false)
+
+    // PMS floor is free-form text ("G", "L2", ...): unknown, not fatal.
+    assertNull(parseUnit(JSONObject(base.toString()).put("floor", "G")).floor)
+    assertNull(parseUnit(JSONObject(base.toString()).put("floor", "")).floor)
+
+    // Anything else is structural and still rejects.
+    assertThrows(MalformedPayloadException::class.java) {
+      parseUnit(JSONObject(base.toString()).put("floor", true))
+    }
+  }
+
+  @Test
   fun `parseStatusResult and parseBootstrap accept ISO-8601 instants and offsets`() {
     val statusBody =
       JSONObject()
