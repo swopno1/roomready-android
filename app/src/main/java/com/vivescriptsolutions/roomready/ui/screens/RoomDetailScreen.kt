@@ -179,7 +179,7 @@ fun RoomDetailScreen(
           .widthIn(max = 720.dp)
           .fillMaxSize()
           .testTag("room_detail_list"),
-      contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+      contentPadding = PaddingValues(start = 16.dp, top = 18.dp, end = 16.dp, bottom = 16.dp),
       verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
       // 1. Legal Next Actions

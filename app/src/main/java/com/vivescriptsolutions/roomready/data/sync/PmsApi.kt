@@ -89,7 +89,7 @@ class PmsApi(
         return ApiOutcome.Network(e)
       }
     response.use { res ->
-      val body = res.body.string()
+      val body = res.body?.string().orEmpty()
       if (!res.isSuccessful) return ApiOutcome.Http(res.code, parseErrorMessage(body))
       return try {
         ApiOutcome.Ok(parse(body))
