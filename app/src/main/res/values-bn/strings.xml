@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RoomReady</string>
+
+    <!-- Branding & Demo Notice -->
+    <string name="demo_resort_name">Sundarban Palms</string>
+    <string name="demo_mode_badge">ডেমো</string>
+    <string name="demo_mode_banner_title">ডেমো রিসোর্ট মোড</string>
+    <string name="demo_mode_banner_subtitle">বিমান মোডেও RoomReady ব্যবহার করে দেখতে ৩ ধরনের ১২টি নমুনা রুম লোড করা আছে।</string>
+    <string name="offline_badge">অফলাইন</string>
+    <string name="app_tagline">ছোট রিসোর্টের জন্য শান্ত, অফলাইন-ফার্স্ট হাউসকিপিং</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_rooms">রুম</string>
+    <string name="nav_tickets">টিকিট</string>
+    <string name="nav_dashboard">ড্যাশবোর্ড</string>
+    <string name="nav_me">আমি</string>
+
+    <!-- Roles -->
+    <string name="role_housekeeper">হাউসকিপার</string>
+    <string name="role_supervisor">সুপারভাইজার</string>
+    <string name="role_housekeeper_desc">রুম পরিষ্কার করুন, ৮ ধাপের চেকলিস্ট সম্পন্ন করুন এবং রুম পরিদর্শনে পাঠান।</string>
+    <string name="role_supervisor_desc">সমাপ্ত রুম পরিদর্শন করুন, প্রস্তুত অবস্থা অনুমোদন করুন এবং বন্ধ রুম পরিচালনা করুন।</string>
+
+    <!-- Room Statuses -->
+    <string name="status_all">সব</string>
+    <string name="status_dirty">নোংরা</string>
+    <string name="status_cleaning">পরিষ্কার চলছে</string>
+    <string name="status_cleaned">পরিষ্কৃত</string>
+    <string name="status_ready">প্রস্তুত</string>
+    <string name="status_out_of_service">সার্ভিসের বাইরে</string>
+    <string name="filter_count_format">%1$s (%2$d)</string>
+
+    <!-- Room Types & Floors -->
+    <string name="room_type_deluxe_king">Deluxe King</string>
+    <string name="room_type_family_suite">Family Suite</string>
+    <string name="room_type_garden_cottage">Garden Cottage</string>
+    <string name="floor_ground">নিচতলা উইং</string>
+    <string name="floor_number">%1$d তলা</string>
+    <string name="room_title_format">রুম %1$s</string>
+    <string name="room_meta_format">%1$s · %2$s</string>
+    <string name="assigned_to_format">দায়িত্বে: %1$s</string>
+    <string name="unassigned_label">অনির্ধারিত</string>
+    <string name="updated_at_format">হালনাগাদ %1$s</string>
+    <string name="open_tickets_badge_format">%1$dটি খোলা</string>
+
+    <!-- Onboarding / Who Are You -->
+    <string name="onboarding_title">RoomReady-তে স্বাগতম</string>
+    <string name="onboarding_subtitle">লগইন বা ইন্টারনেট দরকার নেই। এই শিফটের জন্য ভূমিকা ও নাম বেছে নিন।</string>
+    <string name="onboarding_step_role">১. ভূমিকা বেছে নিন</string>
+    <string name="onboarding_step_staff">২. আপনি কে?</string>
+    <string name="staff_custom_hint">অথবা অন্য কর্মীর নাম লিখুন</string>
+    <string name="staff_add_button">নাম ব্যবহার করুন</string>
+    <string name="onboarding_continue">রুম বোর্ড খুলুন</string>
+    <string name="onboarding_select_prompt">এগিয়ে যেতে ভূমিকা ও আপনার নাম দুটোই বেছে নিন।</string>
+
+    <!-- Rooms Board -->
+    <string name="rooms_search_placeholder">রুম নম্বর, ধরন বা কর্মী খুঁজুন…</string>
+    <string name="rooms_empty_title">কোনো রুম মেলেনি</string>
+    <string name="rooms_empty_subtitle">সার্চ মুছে ফেলুন অথবা অবস্থার ফিল্টার বদলে দেখুন।</string>
+    <string name="rooms_clear_filters">সব রুম দেখুন</string>
+    <string name="rooms_summary_format">%2$dটির মধ্যে %1$dটি রুম দেখানো হচ্ছে</string>
+
+    <!-- Room Detail & Legal Actions -->
+    <string name="cd_back">পেছনে যান</string>
+    <string name="cd_clear_search">সার্চ মুছুন</string>
+    <string name="cd_search_icon">রুম খুঁজুন</string>
+    <string name="cd_status_icon">রুমের অবস্থা</string>
+    <string name="cd_role_icon">কর্মীর ভূমিকা</string>
+    <string name="cd_offline_icon">অফলাইন মোড চালু</string>
+    <string name="cd_add_note">ধাপের নোট যোগ বা সম্পাদনা করুন</string>
+
+    <string name="detail_next_actions">পরবর্তী পদক্ষেপ</string>
+    <string name="detail_supervisor_wait_note">প্রস্তুত অবস্থা অনুমোদনের জন্য সুপারভাইজারের পরিদর্শনের অপেক্ষায়। Me ট্যাব থেকে ভূমিকা বদলাতে পারেন।</string>
+    <string name="action_start_cleaning">পরিষ্কার শুরু করুন</string>
+    <string name="action_finish_to_inspection">সমাপ্ত — পরিদর্শনে পাঠান</string>
+    <string name="action_mark_ready">প্রস্তুত চিহ্নিত করুন</string>
+    <string name="action_return_to_dirty">নোংরায় ফেরত পাঠান</string>
+    <string name="action_mark_dirty_turnover">নোংরা চিহ্নিত করুন (নতুন টার্নওভার)</string>
+    <string name="action_mark_out_of_service">সার্ভিসের বাইরে রাখুন</string>
+    <string name="action_back_in_service">আবার সার্ভিসে আনুন</string>
+
+    <!-- 8-Step Turnover Checklist -->
+    <string name="detail_checklist_title">৮ ধাপের টার্নওভার চেকলিস্ট</string>
+    <string name="checklist_progress_format">%2$dটির মধ্যে %1$dটি ধাপ সম্পন্ন</string>
+    <string name="checklist_by_format">শুরু করেছেন %1$s</string>
+    <string name="checklist_finished_format">সম্পন্ন করেছেন %1$s · %2$s</string>
+    <string name="checklist_preview_hint">নমুনা টেমপ্লেট। ধাপ চেক করা শুরু করতে ‘পরিষ্কার শুরু করুন’ চাপুন।</string>
+    <string name="checklist_note_label_format">নোট: %1$s</string>
+    <string name="checklist_note_dialog_title">ধাপের নোট</string>
+    <string name="checklist_note_hint">এই ধাপের জন্য নোট যোগ করুন (যেমন: অতিরিক্ত তোয়ালে)</string>
+    <string name="dialog_save">সংরক্ষণ</string>
+    <string name="dialog_cancel">বাতিল</string>
+
+    <string name="step_bathroom">বাথরুম</string>
+    <string name="step_beds_linen">বিছানা ও লিনেন</string>
+    <string name="step_dusting">ধুলো মোছা</string>
+    <string name="step_floors">মেঝে</string>
+    <string name="step_amenities_restock">সরঞ্জাম সরবরাহ</string>
+    <string name="step_fridge_minibar">ফ্রিজ/মিনিবার</string>
+    <string name="step_windows_curtains">জানালা ও পর্দা</string>
+    <string name="step_final_look">চূড়ান্ত পরীক্ষা</string>
+    <string name="step_stayover_bathroom_quick">বাথরুম (দ্রুত)</string>
+    <string name="step_stayover_beds_made">বিছানা গোছানো</string>
+    <string name="step_stayover_towels">তোয়ালে</string>
+    <string name="step_stayover_bins">ডাস্টবিন</string>
+
+    <!-- Turnover Checklist Run -->
+    <string name="run_title_format">রুম %1$s পরিষ্কার চলছে</string>
+    <string name="run_kind_full">সম্পূর্ণ টার্নওভার · ৮ ধাপ</string>
+    <string name="run_kind_stayover">স্টেওভার রিফ্রেশ · ৪ ধাপ</string>
+    <string name="run_elapsed_format">অতিবাহিত %1$s</string>
+    <string name="run_started_by_format">শুরু করেছেন %1$s</string>
+    <string name="run_pause">বিরতি</string>
+    <string name="run_finish">সমাপ্ত — পরিদর্শনে পাঠান</string>
+    <string name="run_finish_locked_hint">সমাপ্ত চালু করতে সব %1$dটি ধাপ চেক করুন। কোনো বিকল্প পথ নেই।</string>
+    <string name="run_finished_snackbar">পরিষ্কার সম্পন্ন — রুম পরিদর্শনে পাঠানো হয়েছে</string>
+    <string name="action_resume_cleaning">পরিষ্কার আবার শুরু করুন</string>
+    <string name="template_picker_title">পরিষ্কারের ধরন বেছে নিন</string>
+    <string name="template_picker_body">রুম %1$s-তে অতিথি আছেন। সম্পূর্ণ ৮ ধাপের টার্নওভার অথবা হালকা ৪ ধাপের স্টেওভার রিফ্রেশ বেছে নিন।</string>
+    <string name="template_full_title">সম্পূর্ণ টার্নওভার</string>
+    <string name="template_full_desc">সব ৮টি ধাপ: বাথরুম, বিছানা ও লিনেন, ধুলো মোছা, মেঝে, সরঞ্জাম, মিনিবার, জানালা, চূড়ান্ত পরীক্ষা।</string>
+    <string name="template_stayover_title">স্টেওভার রিফ্রেশ</string>
+    <string name="template_stayover_desc">৪টি হালকা ধাপ: দ্রুত বাথরুম, বিছানা গোছানো, তোয়ালে, ডাস্টবিন।</string>
+    <string name="room_occupied_badge">অতিথি আছেন</string>
+
+    <!-- Room Tickets & Reporting -->
+    <string name="detail_tickets_title">রুমের সমস্যা</string>
+    <string name="detail_report_issue">সমস্যা জানান</string>
+    <string name="detail_no_tickets">এই রুমে কোনো খোলা সমস্যা নেই।</string>
+    <string name="ticket_title_hint">সমস্যাটি বর্ণনা করুন (যেমন: পানির কল দিয়ে পানি পড়ছে)</string>
+    <string name="ticket_priority_label">অগ্রাধিকার</string>
+    <string name="ticket_priority_low">কম</string>
+    <string name="ticket_priority_normal">সাধারণ</string>
+    <string name="ticket_priority_urgent">জরুরি</string>
+    <string name="ticket_status_open">খোলা</string>
+    <string name="ticket_status_done">সম্পন্ন</string>
+    <string name="ticket_mark_done">সম্পন্ন চিহ্নিত করুন</string>
+    <string name="ticket_reopen">আবার খুলুন</string>
+    <string name="ticket_create_title">সমস্যা জানান</string>
+    <string name="ticket_room_label">রুম</string>
+    <string name="ticket_pick_room_hint">রুম বেছে নিন</string>
+    <string name="ticket_desc_hint">বিস্তারিত (কী, কোথায়, কখন থেকে)</string>
+    <string name="ticket_submit">টিকিট সংরক্ষণ করুন</string>
+    <string name="ticket_filter_all">সব</string>
+    <string name="tickets_empty_filtered_format">এখন কোনো %1$s টিকিট নেই।</string>
+    <string name="ticket_resolved_by_format">সমাধান করেছেন %1$s · %2$s</string>
+    <string name="ticket_created_at_format">জানিয়েছেন %1$s · %2$s</string>
+    <string name="ticket_open_room_button">রুম খুলুন</string>
+    <string name="run_urgent_banner_title">এই রুমে জরুরি সমস্যা আছে</string>
+    <string name="run_urgent_view">দেখুন</string>
+    <string name="urgent_badge_format">%1$dটি জরুরি</string>
+
+    <!-- Status Activity Log -->
+    <string name="detail_status_log_title">অবস্থার লগ</string>
+    <string name="detail_no_logs">এখনো কোনো অবস্থার পরিবর্তন লগ হয়নি।</string>
+    <string name="status_log_transition_format">%1$s → %2$s</string>
+    <string name="status_log_by_format">%1$s (%2$s) · %3$s</string>
+
+    <!-- Tickets Tab (Placeholder + Live Local Tickets) -->
+    <string name="tickets_header_title">রক্ষণাবেক্ষণ ও টিকিট</string>
+    <string name="tickets_placeholder_note">টিকিট বরাদ্দ ও ছবি সংযুক্তি ভবিষ্যতে আসছে। এই ডিভাইসে সংরক্ষিত টিকিট নিচে দেখা যাবে।</string>
+    <string name="tickets_empty_state">এখনো কোনো টিকিট নেই। সমস্যা জানাতে যেকোনো রুম খুলুন।</string>
+    <string name="tickets_room_badge_format">রুম %1$s</string>
+
+    <!-- Dashboard Tab (Placeholder + Live Local Counts) -->
+    <string name="dashboard_header_title">রিসোর্টের চিত্র</string>
+    <string name="dashboard_placeholder_note">শিফট KPI, টার্নঅ্যারাউন্ড টাইমার ও PMS সিঙ্ক ভবিষ্যতে আসছে। আপনার ডাটাবেসের সরাসরি রুম সংখ্যা নিচে দেখা যাবে।</string>
+    <string name="dashboard_total_rooms_label">মোট ডেমো রুম</string>
+    <string name="dashboard_recent_activity">সাম্প্রতিক অবস্থার কার্যক্রম</string>
+    <string name="dashboard_no_activity">কোনো সাম্প্রতিক অবস্থার পরিবর্তন নেই।</string>
+
+    <!-- Me Tab -->
+    <string name="me_header_title">শিফট প্রোফাইল</string>
+    <string name="me_active_staff_format">সক্রিয় কর্মী: %1$s</string>
+    <string name="staff_role_header_format">%1$s · %2$s</string>
+    <string name="ticket_meta_format">%1$s · %2$s · %3$s</string>
+    <string name="dashboard_log_room_format">%1$s · %2$s</string>
+    <string name="me_switch_role_title">ভূমিকা বদলান</string>
+    <string name="me_who_are_you_title">আপনি কে?</string>
+    <string name="me_offline_card_title">১০০% অফলাইন লোকাল স্টোরেজ</string>
+    <string name="me_offline_card_body">সব রুম, চেকলিস্ট, টিকিট ও অবস্থার লগ Room ও DataStore-এ সংরক্ষিত থাকে। বিমান মোড সম্পূর্ণ সমর্থিত; PMS সিঙ্ক ঐচ্ছিক এবং পরে আসছে।</string>
+    <string name="me_demo_section_title">ডেমো রিসোর্ট ডাটা</string>
+    <string name="me_demo_section_body">বর্তমানে Sundarban Palms-এর ডেমো মোড চলছে (Deluxe King, Family Suite ও Garden Cottage-এর ১২টি রুম)।</string>
+    <string name="me_reset_demo_button">ডেমো ডাটা রিসেট করুন</string>
+    <string name="me_reset_dialog_title">ডেমো ডাটা রিসেট করবেন?</string>
+    <string name="me_reset_dialog_body">এতে ১২টি ডেমো রুম, চেকলিস্ট, টিকিট ও অবস্থার লগ শুরুর অবস্থায় ফিরে যাবে।</string>
+    <string name="me_reset_confirm">রিসেট</string>
+    <string name="me_reset_done_snackbar">ডেমো রিসোর্ট ডাটা পুনরুদ্ধার হয়েছে</string>
+</resources>

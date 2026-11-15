@@ -39,6 +39,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.util.Locale
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -67,6 +68,23 @@ class RoomReadyRobolectricTest {
   @Test
   fun `app name matches RoomReady`() {
     assertEquals("RoomReady", context.getString(R.string.app_name))
+  }
+
+  @Test
+  fun `bengali locale loads translated strings with intact placeholders`() {
+    val bnConfig = android.content.res.Configuration(context.resources.configuration)
+    bnConfig.setLocale(Locale("bn"))
+    val bn = context.createConfigurationContext(bnConfig)
+    assertEquals("রুম", bn.getString(R.string.nav_rooms))
+    assertEquals("পরিষ্কার শুরু করুন", bn.getString(R.string.action_start_cleaning))
+    assertEquals("নোংরা", bn.getString(R.string.status_dirty))
+    assertEquals("রুম 101", bn.getString(R.string.room_title_format, "101"))
+    assertEquals(
+      "৮টির মধ্যে ৭টি ধাপ সম্পন্ন",
+      bn.getString(R.string.checklist_progress_format, 7, 8),
+    )
+    // Default locale stays English.
+    assertEquals("Rooms", context.getString(R.string.nav_rooms))
   }
 
   @Test

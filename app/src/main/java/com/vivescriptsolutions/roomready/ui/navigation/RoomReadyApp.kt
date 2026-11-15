@@ -37,7 +37,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -139,7 +138,10 @@ fun RoomReadyApp(repository: HousekeepingRepository) {
 
   val snackbarHostState = remember { SnackbarHostState() }
   val coroutineScope = rememberCoroutineScope()
-  val context = LocalContext.current
+  // Resolved via stringResource (not context.getString) so configuration
+  // changes such as locale switches recompose with fresh values.
+  val resetDoneMessage = stringResource(R.string.me_reset_done_snackbar)
+  val runFinishedMessage = stringResource(R.string.run_finished_snackbar)
 
   Scaffold(
     modifier = Modifier.fillMaxSize(),
@@ -284,9 +286,7 @@ fun RoomReadyApp(repository: HousekeepingRepository) {
           onResetDemoData = {
             mainViewModel.resetDemoData {
               coroutineScope.launch {
-                snackbarHostState.showSnackbar(
-                  context.getString(R.string.me_reset_done_snackbar)
-                )
+                snackbarHostState.showSnackbar(resetDoneMessage)
               }
             }
           },
@@ -358,9 +358,7 @@ fun RoomReadyApp(repository: HousekeepingRepository) {
             detailViewModel.finishCleaning {
               navController.popBackStack()
               coroutineScope.launch {
-                snackbarHostState.showSnackbar(
-                  context.getString(R.string.run_finished_snackbar)
-                )
+                snackbarHostState.showSnackbar(runFinishedMessage)
               }
             }
           },

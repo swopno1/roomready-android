@@ -1,0 +1,1 @@
+RoomReady 1.0 — first release. Offline housekeeping board with room statuses, 8-step turnover checklists (plus 4-step stayover refresh), and maintenance tickets with urgent badges. Works 100% offline in English and Bengali, no accounts or permissions.

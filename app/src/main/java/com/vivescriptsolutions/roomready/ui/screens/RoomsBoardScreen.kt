@@ -251,7 +251,16 @@ fun RoomsBoardScreen(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
       )
 
-      if (uiState.filteredRooms.isEmpty() && !uiState.isLoading) {
+      if (uiState.isLoading) {
+        Column(
+          modifier = Modifier.fillMaxWidth().padding(32.dp),
+          horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+          androidx.compose.material3.CircularProgressIndicator(
+            modifier = Modifier.testTag("rooms_loading_indicator"),
+          )
+        }
+      } else if (uiState.filteredRooms.isEmpty()) {
         Column(
           modifier = Modifier.fillMaxWidth().padding(32.dp),
           horizontalAlignment = Alignment.CenterHorizontally,

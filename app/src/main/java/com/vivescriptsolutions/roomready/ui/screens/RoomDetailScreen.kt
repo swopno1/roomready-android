@@ -3,6 +3,7 @@ package com.vivescriptsolutions.roomready.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -161,12 +162,19 @@ fun RoomDetailScreen(
       return@Scaffold
     }
 
-    LazyColumn(
+    Box(
       modifier =
         Modifier
           .fillMaxSize()
           .padding(innerPadding)
           .background(MaterialTheme.colorScheme.background),
+      contentAlignment = Alignment.TopCenter,
+    ) {
+    LazyColumn(
+      modifier =
+        Modifier
+          .widthIn(max = 720.dp)
+          .fillMaxSize(),
       contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
       verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -422,6 +430,7 @@ fun RoomDetailScreen(
           }
         }
       }
+    }
     }
   }
 

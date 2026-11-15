@@ -3,6 +3,7 @@ package com.vivescriptsolutions.roomready.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -156,11 +158,15 @@ fun ChecklistRunScreen(
       return@Scaffold
     }
 
+    Box(
+      modifier = Modifier.fillMaxSize().padding(innerPadding),
+      contentAlignment = Alignment.TopCenter,
+    ) {
     LazyColumn(
       modifier =
         Modifier
+          .widthIn(max = 720.dp)
           .fillMaxSize()
-          .padding(innerPadding)
           .testTag("run_steps_list"),
       contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
       verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -293,6 +299,7 @@ fun ChecklistRunScreen(
           Text(text = stringResource(R.string.run_pause))
         }
       }
+    }
     }
   }
 
