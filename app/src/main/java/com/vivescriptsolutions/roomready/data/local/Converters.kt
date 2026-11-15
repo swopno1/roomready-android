@@ -1,6 +1,7 @@
 package com.vivescriptsolutions.roomready.data.local
 
 import androidx.room.TypeConverter
+import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
 import com.vivescriptsolutions.roomready.domain.RoomStatus
 import com.vivescriptsolutions.roomready.domain.StaffRole
@@ -33,6 +34,12 @@ class Converters {
 
   @TypeConverter
   fun toTicketStatus(value: String): TicketStatus = TicketStatus.valueOf(value)
+
+  @TypeConverter
+  fun fromChecklistRunKind(value: ChecklistRunKind): String = value.name
+
+  @TypeConverter
+  fun toChecklistRunKind(value: String): ChecklistRunKind = ChecklistRunKind.valueOf(value)
 
   @TypeConverter
   fun fromStringList(value: List<String>): String {

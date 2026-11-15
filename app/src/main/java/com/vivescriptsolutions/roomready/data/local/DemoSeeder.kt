@@ -3,6 +3,7 @@ package com.vivescriptsolutions.roomready.data.local
 import androidx.room.withTransaction
 import com.vivescriptsolutions.roomready.domain.ChecklistStepKey
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
+import com.vivescriptsolutions.roomready.domain.ChecklistTemplates
 import com.vivescriptsolutions.roomready.domain.RoomStatus
 import com.vivescriptsolutions.roomready.domain.StaffRole
 import com.vivescriptsolutions.roomready.domain.TicketPriority
@@ -80,6 +81,7 @@ object DemoSeeder {
           assignedTo = null,
           updatedAt = nowMillis - 42 * minute,
           isDemo = true,
+          isOccupied = true,
         ),
         RoomEntity(
           name = "102",
@@ -121,6 +123,7 @@ object DemoSeeder {
           assignedTo = null,
           updatedAt = nowMillis - 55 * minute,
           isDemo = true,
+          isOccupied = true,
         ),
         RoomEntity(
           name = "202",
@@ -331,19 +334,8 @@ object DemoSeeder {
       )
   }
 
-  fun buildTemplateSteps(templateKeys: List<String> = ChecklistStepKey.standardTemplateKeys): List<ChecklistStepState> {
-    val keys = if (templateKeys.isEmpty()) ChecklistStepKey.standardTemplateKeys else templateKeys
-    return keys.mapIndexed { index, rawKey ->
-      val known = ChecklistStepKey.fromKeyOrTitle(rawKey)
-      ChecklistStepState(
-        stepIndex = index,
-        key = known?.key ?: rawKey,
-        title = known?.defaultTitle ?: rawKey,
-        isDone = false,
-        note = "",
-      )
-    }
-  }
+  fun buildTemplateSteps(templateKeys: List<String> = ChecklistStepKey.standardTemplateKeys): List<ChecklistStepState> =
+    ChecklistTemplates.buildSteps(templateKeys)
 
   private fun buildSteps(
     doneCount: Int,

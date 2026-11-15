@@ -100,6 +100,29 @@
     <string name="step_fridge_minibar">Fridge/minibar</string>
     <string name="step_windows_curtains">Windows &amp; curtains</string>
     <string name="step_final_look">Final look</string>
+    <string name="step_stayover_bathroom_quick">Bathroom quick</string>
+    <string name="step_stayover_beds_made">Beds made</string>
+    <string name="step_stayover_towels">Towels</string>
+    <string name="step_stayover_bins">Bins</string>
+
+    <!-- Turnover Checklist Run -->
+    <string name="run_title_format">Cleaning Room %1$s</string>
+    <string name="run_kind_full">Full turnover · 8 steps</string>
+    <string name="run_kind_stayover">Stayover refresh · 4 steps</string>
+    <string name="run_elapsed_format">Elapsed %1$s</string>
+    <string name="run_started_by_format">Started by %1$s</string>
+    <string name="run_pause">Pause</string>
+    <string name="run_finish">Finish — send to inspection</string>
+    <string name="run_finish_locked_hint">Check all %1$d steps to enable Finish. There is no override.</string>
+    <string name="run_finished_snackbar">Cleaning finished — room sent to inspection</string>
+    <string name="action_resume_cleaning">Resume cleaning</string>
+    <string name="template_picker_title">Choose cleaning type</string>
+    <string name="template_picker_body">Room %1$s is occupied. Pick a full 8-step turnover or a light 4-step stayover refresh.</string>
+    <string name="template_full_title">Full turnover</string>
+    <string name="template_full_desc">All 8 steps: bathroom, beds &amp; linen, dusting, floors, amenities, minibar, windows, final look.</string>
+    <string name="template_stayover_title">Stayover refresh</string>
+    <string name="template_stayover_desc">4 light steps: bathroom quick, beds made, towels, bins.</string>
+    <string name="room_occupied_badge">Occupied</string>
 
     <!-- Room Tickets & Reporting -->
     <string name="detail_tickets_title">Room Issues</string>

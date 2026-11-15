@@ -48,8 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vivescriptsolutions.roomready.R
 import com.vivescriptsolutions.roomready.data.local.DemoSeeder
-import com.vivescriptsolutions.roomready.domain.ChecklistStepKey
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
+import com.vivescriptsolutions.roomready.domain.ChecklistTemplates
 import com.vivescriptsolutions.roomready.domain.RoomStatus
 import com.vivescriptsolutions.roomready.ui.theme.colorSpec
 import java.text.SimpleDateFormat
@@ -172,8 +172,8 @@ fun localizedRoomTypeName(rawName: String): String =
 
 @Composable
 fun localizedChecklistStepTitle(step: ChecklistStepState): String {
-  val known = ChecklistStepKey.fromKeyOrTitle(step.key.ifBlank { step.title })
-  return if (known != null) stringResource(known.labelRes) else step.title
+  val labelRes = ChecklistTemplates.labelResForKey(step.key.ifBlank { step.title })
+  return if (labelRes != null) stringResource(labelRes) else step.title
 }
 
 fun formatTimeShort(millis: Long): String {

@@ -11,6 +11,7 @@ import com.vivescriptsolutions.roomready.data.local.StatusLogEntity
 import com.vivescriptsolutions.roomready.data.local.TicketEntity
 import com.vivescriptsolutions.roomready.data.preferences.UserSession
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
+import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
 import com.vivescriptsolutions.roomready.domain.RoomStatus
 import com.vivescriptsolutions.roomready.domain.RoomTransitionAction
@@ -45,6 +46,7 @@ data class RoomDetailUiState(
   val statusLogs: List<StatusLogEntity> = emptyList(),
   val legalActions: List<RoomTransitionAction> = emptyList(),
   val session: UserSession = UserSession(),
+  val actionError: String? = null,
 )
 
 data class TicketsTabUiState(
@@ -200,7 +202,9 @@ class RoomDetailViewModel(
   private val roomId: Long,
   private val repository: HousekeepingRepository,
 ) : ViewModel() {
-  val uiState: StateFlow<RoomDetailUiState> =
+  private val actionError = MutableStateFlow<String?>(null)
+
+  private val detailCore: StateFlow<RoomDetailUiState> =
     combine(
         repository.observeRoom(roomId),
         repository.observeRoomTypes(),
@@ -243,17 +247,63 @@ class RoomDetailViewModel(
         initialValue = RoomDetailUiState(),
       )
 
+  val uiState: StateFlow<RoomDetailUiState> =
+    combine(detailCore, actionError) { state, error ->
+        state.copy(actionError = error)
+      }
+      .stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = RoomDetailUiState(),
+      )
+
+  fun startCleaning(kind: ChecklistRunKind, onStarted: () -> Unit = {}) {
+    val session = uiState.value.session
+    val staffName = session.staffName ?: return
+    val role = session.role ?: return
+    viewModelScope.launch {
+      repository.startChecklistRun(
+          roomId = roomId,
+          kind = kind,
+          staffName = staffName,
+          role = role,
+        )
+        .onSuccess { onStarted() }
+        .onFailure { error -> actionError.value = error.message }
+    }
+  }
+
+  fun finishCleaning(onFinished: () -> Unit = {}) {
+    val session = uiState.value.session
+    val staffName = session.staffName ?: return
+    val role = session.role ?: return
+    viewModelScope.launch {
+      repository.finishChecklistRun(
+          roomId = roomId,
+          staffName = staffName,
+          role = role,
+        )
+        .onSuccess { onFinished() }
+        .onFailure { error -> actionError.value = error.message }
+    }
+  }
+
+  fun clearActionError() {
+    actionError.value = null
+  }
+
   fun performTransition(toStatus: RoomStatus) {
     val session = uiState.value.session
     val staffName = session.staffName ?: return
     val role = session.role ?: return
     viewModelScope.launch {
       repository.transitionRoomStatus(
-        roomId = roomId,
-        toStatus = toStatus,
-        staffName = staffName,
-        role = role,
-      )
+          roomId = roomId,
+          toStatus = toStatus,
+          staffName = staffName,
+          role = role,
+        )
+        .onFailure { error -> actionError.value = error.message }
     }
   }
 

@@ -17,7 +17,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
       TicketEntity::class,
       StatusLogEntity::class,
     ],
-  version = 2,
+  version = 3,
   exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -45,9 +45,17 @@ abstract class AppDatabase : RoomDatabase() {
         }
       }
 
+    val MIGRATION_2_3: Migration =
+      object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+          db.execSQL("ALTER TABLE rooms ADD COLUMN isOccupied INTEGER NOT NULL DEFAULT 0")
+          db.execSQL("ALTER TABLE checklist_runs ADD COLUMN runKind TEXT NOT NULL DEFAULT 'FULL'")
+        }
+      }
+
     fun build(context: Context): AppDatabase =
       Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, DATABASE_NAME)
-        .addMigrations(MIGRATION_1_2)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
         .build()
   }
 }

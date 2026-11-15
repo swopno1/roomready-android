@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import com.vivescriptsolutions.roomready.R
 import com.vivescriptsolutions.roomready.data.local.StatusLogEntity
 import com.vivescriptsolutions.roomready.data.local.TicketEntity
+import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
 import com.vivescriptsolutions.roomready.domain.RoomStatus
 import com.vivescriptsolutions.roomready.domain.StaffRole
@@ -86,14 +87,20 @@ fun RoomDetailScreen(
   onSaveStepNote: (Int, String) -> Unit,
   onCreateTicket: (String, TicketPriority) -> Unit,
   onToggleTicketStatus: (TicketEntity) -> Unit,
+  onOpenRun: () -> Unit = {},
+  onStartCleaning: (ChecklistRunKind) -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   BackHandler(onBack = onBack)
 
   var editingStep by remember { mutableStateOf<ChecklistStepState?>(null) }
   var showTicketDialog by remember { mutableStateOf(false) }
+  var showTemplatePicker by remember { mutableStateOf(false) }
 
   val room = uiState.room
+  val activeRun = uiState.latestChecklistRun
+  val hasUnfinishedRun =
+    room?.status == RoomStatus.CLEANING && activeRun != null && activeRun.finishedAt == null
 
   Scaffold(
     modifier = modifier.fillMaxSize(),
@@ -195,12 +202,56 @@ fun RoomDetailScreen(
                 }
               }
 
+              if (room.isOccupied && room.status == RoomStatus.DIRTY) {
+                Surface(
+                  shape = RoundedCornerShape(8.dp),
+                  color = MaterialTheme.colorScheme.secondaryContainer,
+                  contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                  border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                ) {
+                  Text(
+                    text = stringResource(R.string.room_occupied_badge),
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                  )
+                }
+              }
+
               uiState.legalActions.forEach { action ->
+                // While a run is unfinished, the run screen owns finishing: offer
+                // Resume instead of a Finish button that the gate would reject.
+                if (action.toStatus == RoomStatus.INSPECTED && hasUnfinishedRun) {
+                  Button(
+                    onClick = onOpenRun,
+                    modifier =
+                      Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("resume_cleaning_button"),
+                    shape = MaterialTheme.shapes.medium,
+                  ) {
+                    Text(
+                      text = stringResource(R.string.action_resume_cleaning),
+                      style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                    )
+                  }
+                  return@forEach
+                }
                 val targetColors = action.toStatus.colorSpec()
                 val tag = "action_button_${action.toStatus.name.lowercase()}"
+                // Start cleaning opens the run screen; occupied rooms pick a template first.
+                val startCleaningClick: (() -> Unit)? =
+                  if (action.toStatus == RoomStatus.CLEANING) {
+                    {
+                      if (room.isOccupied) {
+                        showTemplatePicker = true
+                      } else {
+                        onStartCleaning(ChecklistRunKind.FULL)
+                      }
+                    }
+                  } else {
+                    null
+                  }
                 if (action.isPrimary) {
                   Button(
-                    onClick = { onTransition(action.toStatus) },
+                    onClick = startCleaningClick ?: { onTransition(action.toStatus) },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag(tag),
                     shape = MaterialTheme.shapes.medium,
                     colors =
@@ -239,7 +290,6 @@ fun RoomDetailScreen(
 
       // 2. 8-Step Turnover Checklist
       item {
-        val activeRun = uiState.latestChecklistRun
         val steps = activeRun?.steps ?: uiState.templatePreviewSteps
         val doneCount = steps.count { it.isDone }
         val isChecklistInteractive =
@@ -415,6 +465,70 @@ fun RoomDetailScreen(
           Text(text = stringResource(R.string.dialog_cancel))
         }
       },
+    )
+  }
+
+  // Cleaning Template Picker (occupied rooms only)
+  val pickerRoom = room
+  if (showTemplatePicker && pickerRoom != null) {
+    AlertDialog(
+      onDismissRequest = { showTemplatePicker = false },
+      title = { Text(text = stringResource(R.string.template_picker_title)) },
+      text = {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+          Text(
+            text = stringResource(R.string.template_picker_body, pickerRoom.name),
+            style = MaterialTheme.typography.bodyLarge,
+          )
+          Button(
+            onClick = {
+              showTemplatePicker = false
+              onStartCleaning(ChecklistRunKind.FULL)
+            },
+            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("template_option_full"),
+          ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+              Text(
+                text = stringResource(R.string.template_full_title),
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+              )
+              Text(
+                text = stringResource(R.string.template_full_desc),
+                style = MaterialTheme.typography.bodySmall,
+              )
+            }
+          }
+          OutlinedButton(
+            onClick = {
+              showTemplatePicker = false
+              onStartCleaning(ChecklistRunKind.STAYOVER)
+            },
+            modifier =
+              Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("template_option_stayover"),
+          ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+              Text(
+                text = stringResource(R.string.template_stayover_title),
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+              )
+              Text(
+                text = stringResource(R.string.template_stayover_desc),
+                style = MaterialTheme.typography.bodySmall,
+              )
+            }
+          }
+        }
+      },
+      confirmButton = {},
+      dismissButton = {
+        TextButton(
+          onClick = { showTemplatePicker = false },
+          modifier = Modifier.heightIn(min = 48.dp),
+        ) {
+          Text(text = stringResource(R.string.dialog_cancel))
+        }
+      },
+      modifier = Modifier.testTag("template_picker_dialog"),
     )
   }
 

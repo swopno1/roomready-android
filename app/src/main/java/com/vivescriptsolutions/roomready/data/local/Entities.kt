@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.vivescriptsolutions.roomready.domain.ChecklistRunKind
 import com.vivescriptsolutions.roomready.domain.ChecklistStepState
 import com.vivescriptsolutions.roomready.domain.RoomStatus
 import com.vivescriptsolutions.roomready.domain.StaffRole
@@ -42,6 +43,7 @@ data class RoomEntity(
   val updatedAt: Long,
   val isDemo: Boolean = true,
   val notes: String = "",
+  val isOccupied: Boolean = false,
 )
 
 @Entity(
@@ -65,6 +67,7 @@ data class ChecklistRunEntity(
   val startedAt: Long,
   val finishedAt: Long?,
   val steps: List<ChecklistStepState>,
+  val runKind: ChecklistRunKind = ChecklistRunKind.FULL,
 )
 
 @Entity(

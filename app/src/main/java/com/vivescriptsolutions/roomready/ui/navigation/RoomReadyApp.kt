@@ -28,6 +28,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -50,6 +51,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.vivescriptsolutions.roomready.R
 import com.vivescriptsolutions.roomready.data.repository.HousekeepingRepository
+import com.vivescriptsolutions.roomready.ui.screens.ChecklistRunScreen
 import com.vivescriptsolutions.roomready.ui.screens.DashboardScreen
 import com.vivescriptsolutions.roomready.ui.screens.MeScreen
 import com.vivescriptsolutions.roomready.ui.screens.OnboardingScreen
@@ -66,8 +68,11 @@ object Routes {
   const val DASHBOARD = "dashboard"
   const val ME = "me"
   const val ROOM_DETAIL = "room_detail/{roomId}"
+  const val CHECKLIST_RUN = "checklist_run/{roomId}"
 
   fun roomDetail(roomId: Long): String = "room_detail/$roomId"
+
+  fun checklistRun(roomId: Long): String = "checklist_run/$roomId"
 }
 
 enum class BottomNavTab(
@@ -252,6 +257,13 @@ fun RoomReadyApp(repository: HousekeepingRepository) {
             factory = RoomDetailViewModel.Factory(roomId, repository),
           )
         val detailState by detailViewModel.uiState.collectAsStateWithLifecycle()
+        LaunchedEffect(detailState.actionError) {
+          val error = detailState.actionError
+          if (error != null) {
+            snackbarHostState.showSnackbar(error)
+            detailViewModel.clearActionError()
+          }
+        }
         RoomDetailScreen(
           uiState = detailState,
           onBack = { navController.popBackStack() },
@@ -260,6 +272,48 @@ fun RoomReadyApp(repository: HousekeepingRepository) {
           onSaveStepNote = detailViewModel::updateChecklistStepNote,
           onCreateTicket = detailViewModel::createTicket,
           onToggleTicketStatus = detailViewModel::toggleTicketStatus,
+          onOpenRun = { navController.navigate(Routes.checklistRun(roomId)) },
+          onStartCleaning = { kind ->
+            detailViewModel.startCleaning(kind) {
+              navController.navigate(Routes.checklistRun(roomId))
+            }
+          },
+        )
+      }
+
+      composable(
+        route = Routes.CHECKLIST_RUN,
+        arguments = listOf(navArgument("roomId") { type = NavType.LongType }),
+      ) { backStackEntry ->
+        val roomId = backStackEntry.arguments?.getLong("roomId") ?: return@composable
+        val detailViewModel: RoomDetailViewModel =
+          viewModel(
+            key = "room_detail_$roomId",
+            factory = RoomDetailViewModel.Factory(roomId, repository),
+          )
+        val detailState by detailViewModel.uiState.collectAsStateWithLifecycle()
+        LaunchedEffect(detailState.actionError) {
+          val error = detailState.actionError
+          if (error != null) {
+            snackbarHostState.showSnackbar(error)
+            detailViewModel.clearActionError()
+          }
+        }
+        ChecklistRunScreen(
+          uiState = detailState,
+          onBack = { navController.popBackStack() },
+          onToggleStep = detailViewModel::toggleChecklistStep,
+          onSaveStepNote = detailViewModel::updateChecklistStepNote,
+          onFinish = {
+            detailViewModel.finishCleaning {
+              navController.popBackStack()
+              coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                  context.getString(R.string.run_finished_snackbar)
+                )
+              }
+            }
+          },
         )
       }
     }
