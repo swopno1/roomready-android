@@ -286,6 +286,25 @@ class SyncEngineTest {
   }
 
   @Test
+  fun `unit referencing an unknown type is skipped while the snapshot applies`() {
+    runBlocking {
+      liveMode()
+      val goodUnit = unitJson(unitA, "01", "DIRTY")
+      val orphanUnit =
+        unitJson(unitB, "02", "DIRTY").put("roomTypeId", "type-ghost")
+      server.enqueue(MockResponse().setBody(bootstrapJson(listOf(goodUnit, orphanUnit))))
+      val outcome = engine.bootstrap()
+      // One inconsistent row (e.g. a unit of an inactive room) must not
+      // fail the property snapshot; structural checks stay strict.
+      assertTrue(outcome is BootstrapOutcome.Applied)
+      assertEquals(1, db.roomTypeDao().count())
+      assertEquals(1, db.roomDao().count())
+      assertNull(db.roomDao().getRoomByPmsUnitId(unitB))
+      assertEquals("Krishnachura Retreat", db.syncStateDao().get()?.propertyName)
+    }
+  }
+
+  @Test
   fun `malformed bootstrap leaves state untouched`() {
     runBlocking {
       TestFixtures.seedIfEmpty(db, nowMillis = 1_700_000_000_000L)

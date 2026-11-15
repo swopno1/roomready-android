@@ -137,10 +137,16 @@ class SyncEngine(
         // which a snapshot never touches.
         val seenUnits = mutableSetOf<String>()
         payload.units.forEach { unit ->
+          // The PMS returns units of inactive rooms without their type: one
+          // such orphan must not fail the whole property snapshot. Skipped
+          // units stay out of seenUnits, so a stale local mirror is removed
+          // with the other unknown units below.
+          val typeId = typeLocalIds[unit.roomTypeId]
+          if (typeId == null) {
+            runCatching { Log.d("SyncEngine", "Skipping unit ${unit.id}: unknown room type ${unit.roomTypeId}") }
+            return@forEach
+          }
           seenUnits += unit.id
-          val typeId =
-            typeLocalIds[unit.roomTypeId]
-              ?: throw MalformedPayloadException("Unit references unknown room type")
           val existing = db.roomDao().getRoomByPmsUnitId(unit.id)
           if (existing != null && existing.id in inProgress) return@forEach
           val mapped = mapUnitToStatus(unit)
