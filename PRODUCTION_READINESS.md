@@ -108,7 +108,7 @@ No previous upload → propose versionCode 1, versionName "1.0"
 
 ## 8. Tests Executed and Results
 
-- `:app:testDebugUnitTest`: **145/145 pass across 22 suites** (state matrix, runs,
+- `:app:testDebugUnitTest`: **167/167 pass across 25 suites** (state matrix, runs,
   tickets, dashboard, inspection, photos, sync fake-server, locale,
   low-literacy UI, notifications, airplane-mode, production-shape).
 - `:app:lintDebug` + `:app:lintRelease`: **0 errors** both
@@ -116,7 +116,7 @@ No previous upload → propose versionCode 1, versionName "1.0"
 - `:app:assembleDebug`: success. `:app:bundleRelease`: ~16.25 MiB AAB (exact bytes: RELEASE_GATE.md)
   with R8 (throwaway local key, shredded after); without secrets it
   fails fast with a clear signing error.
-- BN key/blank/placeholder/untranslated gate: 251/251, green.
+- BN key/blank/placeholder/untranslated gate: 255/255, green.
 - Listing/release-note char counts: script-verified within limits.
 
 ## 9. Critical Unresolved Issues
@@ -145,7 +145,8 @@ closed track first). Nothing has been submitted.
 ## 12. Required Human Decisions
 
 1. Confirm first-upload assumption (else bump versionCode).
-2. Confirm/publish `vivescriptsolutions.com/en/apps/roomready/**` URLs.
+2. Confirm the new canonical `vivereply.com/roomready/**` pages
+   (verified live Nov 16 — all three HTTP 200; re-check at submit time).
 3. Complete all Console forms + verifications + Play App Signing.
 4. Capture/upload screenshots (EN + BN, against the live property).
 5. Sign + upload the release AAB; approve any production rollout.

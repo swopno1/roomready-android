@@ -61,9 +61,12 @@ services/receivers. No FCM, no ads, no analytics receivers.
 ## 4. Secret sweep (source + AAB)
 
 - Source: zero API keys in `app/src/main` (the only `rk.*` strings
-  are test fakes in `app/src/test`). Zero property URLs anywhere:
-  `demo13`/`vivereply` grep over shipped source returns nothing (the
-  old URL-hint placeholder is deleted; the field ships empty).
+  are test fakes in `app/src/test`). Zero property (PMS) URLs anywhere:
+  `demo13` grep over shipped source returns nothing (the old URL-hint
+  placeholder is deleted; the field ships empty). The only first-party
+  URLs in shipped source are the three static About links in
+  `ui/about/AboutLinks.kt` (vivereply.com/roomready/**), opened in the
+  system browser via ACTION_VIEW — no WebView, no user data attached.
 - AAB dex (P11 build): zero `demo13` hits; zero key-pattern hits
   (`rk.*` matches are WorkManager drawable filenames); URLs found
   are SDK/doc links only (schemas.android.com, developer.android.com,

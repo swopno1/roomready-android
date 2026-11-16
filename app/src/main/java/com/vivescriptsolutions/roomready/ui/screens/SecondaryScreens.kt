@@ -805,6 +805,8 @@ fun MeScreen(
         }
       }
 
+      AboutCard()
+
       Spacer(modifier = Modifier.height(16.dp))
     }
   }

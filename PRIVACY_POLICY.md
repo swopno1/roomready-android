@@ -3,13 +3,13 @@
 **Last Updated:** November 15, 2026
 **Effective Date:** November 15, 2026
 **Publisher:** ViveScript Solutions LLC
-**Website:** [https://www.vivescriptsolutions.com/en/apps/roomready](https://www.vivescriptsolutions.com/en/apps/roomready)
-**Live version of this policy:** [https://www.vivescriptsolutions.com/en/apps/roomready/privacy](https://www.vivescriptsolutions.com/en/apps/roomready/privacy)
+**Website:** [https://www.vivereply.com/roomready](https://www.vivereply.com/roomready)
+**Live version of this policy:** [https://www.vivereply.com/roomready/privacy](https://www.vivereply.com/roomready/privacy)
 **Contact:** [privacy@vivescriptsolutions.com](mailto:privacy@vivescriptsolutions.com)
 
-> Status note: the website pages above follow the ViveScript Solutions
-> app-site convention. The founder must confirm the URLs and publish this
-> policy there before release. This document is not a substitute for
+> Status note: the website pages above are the ViveReply canonical tree.
+> The founder must confirm the URLs are live and publish this policy
+> there before release. This document is not a substitute for
 > qualified legal advice.
 
 ---

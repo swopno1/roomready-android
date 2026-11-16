@@ -37,9 +37,9 @@ preserved in both.
 
 | Item | Value |
 |---|---|
-| Website | https://www.vivescriptsolutions.com/en/apps/roomready |
-| Privacy policy | https://www.vivescriptsolutions.com/en/apps/roomready/privacy |
-| Terms | https://www.vivescriptsolutions.com/en/apps/roomready/terms |
+| Website | https://www.vivereply.com/roomready |
+| Privacy policy | https://www.vivereply.com/roomready/privacy |
+| Terms | https://www.vivereply.com/roomready/terms |
 | Support email | support@vivescriptsolutions.com |
 | Privacy contact | privacy@vivescriptsolutions.com |
 | Developer | ViveScript Solutions LLC |

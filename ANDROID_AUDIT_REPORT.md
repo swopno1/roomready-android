@@ -50,9 +50,11 @@ below names the command, file, or test that proves it.
   HTTPS PMS origin only; photos never transmitted; API key
   Keystore-only, never logged.
 - Secret sweep (source): zero keys in `app/src/main` (test fakes in
-  `app/src/test` only); zero property URLs (`demo13`/`vivereply` grep
-  returns nothing); zero keystores tracked (`.gitignore` covers
-  `*.jks`/`*.keystore`/`*.p12`).
+  `app/src/test` only); zero property URLs (`demo13` grep returns
+  nothing); zero keystores tracked (`.gitignore` covers
+  `*.jks`/`*.keystore`/`*.p12`). Deliberate exception: the three static
+  About links in `ui/about/AboutLinks.kt` (vivereply.com/roomready/**),
+  opened in the system browser via ACTION_VIEW with no user data.
 - Logging sweep (`Log\.|println(` in main): zero hits.
 - No vulnerabilities scanner available in this environment (recorded
   limitation); mitigated by: pinned stable dependency set, Keystore
@@ -114,12 +116,12 @@ below names the command, file, or test that proves it.
 
 | Check | Command / source | Result |
 |---|---|---|
-| Unit tests | `:app:testDebugUnitTest` | 145/145 pass across 22 suites, 0 fail |
+| Unit tests | `:app:testDebugUnitTest` | 167/167 pass across 25 suites, 0 fail |
 | Lint debug+release | `:app:lintDebug :app:lintRelease` | 0 errors both |
 | Debug build | `:app:assembleDebug` | success, APK produced |
 | Release bundle | `:app:bundleRelease` (+throwaway key) | ~16.25 MiB AAB (exact bytes: RELEASE_GATE.md), R8 (rebuild with operator key at submission) |
 | Release fail-fast | `:app:bundleRelease` (no secrets) | clean signing error |
-| BN parity | `LanguageCompletenessTest` | 251/251, green |
+| BN parity | `LanguageCompletenessTest` | 255/255, green |
 | Listing counts | char-count script | all within limits |
 | Merged release manifest | manifest dump | 4 app + 4 SDK/internal perms |
 | No-demo grep | dataset/names/URL grep over `app/src/main` | zero hits |

@@ -93,12 +93,13 @@ human decision or Console-only action.
 
 ## 8. Privacy Policy URL
 
-- **Status:** URL drafted, page not yet published.
+- **Status:** Canonical URL set; page verified live Nov 16 (HTTP 200,
+  content matches the repo policy).
 - **Evidence:** `PRIVACY_POLICY.md` written from verified behavior.
 - **Recommended answer:**
-  `https://www.vivescriptsolutions.com/en/apps/roomready/privacy`
-- **Human confirmation:** **[Human]** — founder must publish the page,
-  then paste the URL.
+  `https://www.vivereply.com/roomready/privacy`
+- **Human confirmation:** **[Human]** — founder pastes the URL
+  (liveness verified Nov 16; re-check at submit time).
 
 ## 9. Account Deletion
 

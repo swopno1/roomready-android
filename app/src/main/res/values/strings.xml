@@ -292,4 +292,10 @@
     <string name="notif_prompt_body">RoomReady can remind you here when a room is returned, an urgent ticket arrives, or a clean runs long. You can turn this off anytime in system Settings.</string>
     <string name="notif_prompt_allow">Allow alerts</string>
     <string name="notif_prompt_later">Not now</string>
+
+    <!-- About -->
+    <string name="about_title">About RoomReady</string>
+    <string name="about_website">Website</string>
+    <string name="about_privacy">Privacy Policy</string>
+    <string name="about_terms">Terms of Service</string>
 </resources>

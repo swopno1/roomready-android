@@ -292,4 +292,10 @@
     <string name="notif_prompt_body">রুম ফেরত এলে, জরুরি টিকিট এলে বা পরিষ্কার দীর্ঘ হলে RoomReady এখানে মনে করিয়ে দিতে পারে। সিস্টেম সেটিংস থেকে যেকোনো সময় বন্ধ করতে পারবেন।</string>
     <string name="notif_prompt_allow">সতর্কবার্তা চালু করুন</string>
     <string name="notif_prompt_later">এখন নয়</string>
+
+    <!-- About -->
+    <string name="about_title">RoomReady সম্পর্কে</string>
+    <string name="about_website">ওয়েবসাইট</string>
+    <string name="about_privacy">গোপনীয়তা নীতি</string>
+    <string name="about_terms">সেবার শর্তাবলী</string>
 </resources>
